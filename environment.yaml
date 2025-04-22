@@ -11,6 +11,6 @@ dependencies:
   - python=3.11.11
   - scipy=1.15.2
   - tqdm
-  pip:
+  - pip:
     - tueplots
   
