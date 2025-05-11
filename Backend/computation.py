@@ -86,7 +86,20 @@ def sampling(R, S):
 
 def construct_directions(B):
     """
+    Constructs a sampling function that generates random unit direction vectors 
+    while maintaining the equality constraints defined by the matrix B.
 
+    The function first computes the projection onto the null space of B using 
+    Singular Value Decomposition (SVD) to ensure stability. The resulting 
+    sampling function returns a random unit vector that lies within the 
+    constraint-compliant subspace.
+
+    Args:
+        B (np.ndarray): Matrix representing the equality constraints.
+
+    Returns:
+        function: A sampling function that, when called, returns a random unit 
+                  direction vector that satisfies the equality constraints.
     """
     R, S = svd_projection(B)
     def sample():
