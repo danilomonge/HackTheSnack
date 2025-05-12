@@ -14,4 +14,5 @@ dependencies:
   - tqdm
   - pip:
     - tueplots
+    - flet
   
