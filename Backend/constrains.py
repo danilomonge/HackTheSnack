@@ -10,7 +10,10 @@ def build_inequality_contstraints(number_of_ingredients):
     Creates the matrix A and vector a. Then it creates the >=0 inequality constraint and after that is ordering the constraints.
 
     Args:
-        number_of_ingredients = length ingredients
+        number_of_ingredients = length ingredients     
+
+    Returns:
+        matrix A and vector a.
 
     """
    A = np.zeros((number_of_ingredients + number_of_ingredients - 1, number_of_ingredients))
@@ -23,6 +26,10 @@ def build_inequality_contstraints(number_of_ingredients):
     A[number_of_ingredients + i, i + 1] = 1
     A[number_of_ingredients + i, i] = -1
     a[number_of_ingredients + i] = 0
+
+    
+    return A, a
+   
   
 
 #   Equality Constraints:
@@ -39,6 +46,9 @@ def build_equality_contraints(fixed_values_dict, number_of_ingredients):
         number_of_ingredients = lenghth ingredients
         fixed_values_dict = dictionary that contains all ingredients
 
+    Returns:
+        matrix B and vector b
+
  """
  num_equality_constraints = len(fixed_values_dict)
  B = np.zeros((num_equality_constraints, number_of_ingredients))
@@ -47,8 +57,10 @@ def build_equality_contraints(fixed_values_dict, number_of_ingredients):
  b[0] = 1
 
  equality_constraints_index = 1
+
  for ingredient_index, ingredient_amount in fixed_values_dict.items():
     B[equality_constraints_index, ingredient_index] = 1
     b[equality_constraints_index] = ingredient_amount
     equality_constraints_index += 1
-    
+
+ return B, b
