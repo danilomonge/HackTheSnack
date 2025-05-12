@@ -10,8 +10,9 @@ def summarize_samples(SAMPLES):
     Args:
         samples (np.ndarray): MCMC samples (thinned).
     """
-  mean_sample = np.mean(SAMPLES, axis=0)
-  std_sample = np.std(SAMPLES, axis=0)
+
+mean_sample = np.mean(SAMPLES, axis=0)
+std_sample = np.std(SAMPLES, axis=0)
 
 
 def print_results(Zutaten, SAMPLES, mean_sample, std_sample):
