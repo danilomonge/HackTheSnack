@@ -50,6 +50,7 @@ def main():
     input_ingredients = {
         "Lentils": 0.63,
         "Water": None,
+        "Carrots": 0.10,
         "Onions": None,
         "Oil": None,
         "Salt": None,
