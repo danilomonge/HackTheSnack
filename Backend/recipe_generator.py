@@ -7,7 +7,7 @@ import numpy as np
 from Backend.Input.validation import validate
 from Backend.Input.constraints_preparation import prepare_constraints_dict
 from Backend.constraints import build_inequality_constraints, build_equality_constraints
-from Backend.computation import MCMC
+from Backend.computation import compute_result
 
 
 class RecipeGenerator:
@@ -116,27 +116,28 @@ class RecipeGenerator:
         A, a = build_inequality_constraints(num_ingredients)
         B, b = build_equality_constraints(fixed_values, num_ingredients)
 
-        samples = MCMC(A, a, B, b, num_iter=int(1e5), thinning=int(1e4))
+        mean_result, std_dev_result = compute_result(A, a, B, b, num_iter=int(1e5), thinning=int(1e4))
 
-        if samples is None:
+        if mean_result is None or std_dev_result is None:
             print("⚠️ MCMC failed or returned no valid samples.")
             return None
 
-        return RecipeGenerator.build_output_dict(ingredient_input, samples)
+        return RecipeGenerator.build_output_dict(ingredient_input, mean_result, std_dev_result)
 
     @staticmethod
     def build_output_dict(
-        ingredient_input: dict[str, float | None], samples: np.ndarray
+        ingredient_input: dict[str, float | None], means: np.ndarray, stds: np.ndarray
     ) -> dict[str, dict[str, float]]:
         """
         Formats the output by taking the last sample and calculating the variation
         (standard deviation) for each ingredient.
         """
-        final_sample = samples[-1]
-        std_deviation = samples.std(axis=0)
         ingredient_names = list(ingredient_input.keys())
 
+        #result = dict[means, stds]
+        #output = dict[ingredient_names, result]
+
         return {
-            name: {"value": round(val * 100, 4), "variation": round(std * 100, 4)}
-            for name, val, std in zip(ingredient_names, final_sample, std_deviation)
+            name: {"mean": val , "variation": std }
+            for name, val, std in zip(ingredient_names, means, stds)
         }
