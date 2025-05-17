@@ -190,7 +190,7 @@ def project_and_sample(xi, s, A, a):
     return point_construction(xi, s, A, a)
 
 
-def MCMC(A, a, B, b, num_iter=int(1e7), thinning=int(1e5)):
+def MCMC(A, a, B, b, num_iter=int(1e7), thinning=int(int(1e5)/100)):
     """
     Runs the MCMC sampling algorithm under linear constraints.
 
@@ -223,3 +223,27 @@ def MCMC(A, a, B, b, num_iter=int(1e7), thinning=int(1e5)):
         samples[i + 1, :] = xi
 
     return samples[0::thinning, :]
+
+
+def compute_result(A, a, B, b, num_iter=int(1e5), thinning=int(1e4)):
+    """
+    Runs the MCMC sampling algorithm and calculates the mean and var for each ingredient.
+
+    Args:
+        A (np.ndarray): Matrix for inequality constraints A @ x <= a.
+        a (np.ndarray): Vector for inequality constraints.
+        B (np.ndarray): Matrix for equality constraints B @ x = b.
+        b (np.ndarray): Vector for equality constraints.
+
+    Returns:
+        - mean_sample (np.ndarray): Mean of the sample.
+        - std_sample (np.ndarray): Standard deviation the sample.
+    """
+    SAMPLES = MCMC(A, a, B, b, num_iter, thinning = int(int(1e5)/100))
+    mean_sample = np.mean(SAMPLES, axis=0)*100
+    std_sample = np.std(SAMPLES, axis=0)* 2 * 100
+
+    mean_sample_r = np.round(mean_sample, 2)
+    std_sample_r = np.round(std_sample, 2)
+
+    return mean_sample_r, std_sample_r 

@@ -50,20 +50,19 @@ def main():
     input_ingredients = {
         "Lentils": 0.63,
         "Water": None,
-        "Carrots": 0.10,
+        "Carrots": None,
         "Onions": None,
         "Oil": None,
         "Salt": None,
         "Pepper": None,
-        "Garlic": 0.02,
-        "Spices": None,
+        "Garlic": 0.016,
     }
 
     calculated_ingredients_dict = RecipeGenerator.generate_recipe(input_ingredients)
 
     if calculated_ingredients_dict:
         for name, data in calculated_ingredients_dict.items():
-            print(f"- {name}: {data['value']}% ± {data['variation']}%")
+            print(f"- {name}: {data['mean']}% ± {data['variation']}%")
 
 
 if __name__ == "__main__":
