@@ -12,82 +12,106 @@ from Backend.computation import MCMC
 
 class RecipeGenerator:
     """
-    Generates a complete recipe suggestion from a partially defined ingredient dictionary.
+    Class for generating a complete recipe from partially defined ingredient percentages.
 
-    The process includes:
-    - Validating input values
-    - Preparing equality and inequality constraints
-    - Running MCMC sampling under those constraints
-    - Returning computed ingredient percentages and their estimated variation
+    It checks the input, handles simple cases directly,
+    and uses MCMC when more than one value is missing.
     """
 
     @staticmethod
     def generate_recipe(
-        ingredient_dict: dict[str, float | None],
+        ingredient_input: dict[str, float | None],
     ) -> dict[str, dict[str, float]] | None:
         """
-        Orchestrates the recipe generation process.
-
-        Args:
-            ingredient_dict (dict[str, float | None]):
-                Dictionary of ingredient names with fixed percentages or None.
-
-        Returns:
-            dict[str, dict[str, float]]: Keys are ingredient names. Each value is a dict with:
-                - "value": the computed percentage
-                - "variation": the estimated variation (std deviation)
-            None: If validation fails or computation errors occur.
+        Main function that decides how to process the ingredient data:
+        - If only one ingredient: assign 100%
+        - If one ingredient is missing: compute it directly
+        - Otherwise: run MCMC to generate valid percentage combinations
         """
-        if not RecipeGenerator._validate_input(ingredient_dict):
+        if not RecipeGenerator.validate_input(ingredient_input):
             return None
 
-        # Special case: only one ingredient → assign 100%
-        if len(ingredient_dict) == 1:
-            ingredient_name = next(iter(ingredient_dict))
-            return {ingredient_name: {"value": 100.0, "variation": 0.0}}
+        if RecipeGenerator.has_only_one_ingredient(ingredient_input):
+            return RecipeGenerator.solve_single_ingredient_case(ingredient_input)
 
-        try:
-            samples = RecipeGenerator._compute_feasible_samples(ingredient_dict)
-        except Exception as e:
-            print(f"❌ MCMC computation failed: {e}")
-            return None
+        if RecipeGenerator.has_exactly_one_missing(ingredient_input):
+            return RecipeGenerator.solve_one_missing_directly(ingredient_input)
 
-        if samples is None:
-            return None
-
-        return RecipeGenerator._build_output_dict(ingredient_dict, samples)
-
-    # ------------------ Helper Functions ------------------
+        return RecipeGenerator.solve_with_mcmc(ingredient_input)
 
     @staticmethod
-    def _validate_input(ingredient_dict: dict[str, float | None]) -> bool:
+    def validate_input(ingredient_input: dict[str, float | None]) -> bool:
         """
-        Checks if input values are valid:
+        Validates the input by checking:
         - All fixed values must be > 0
-        - Total sum must not exceed 100
-
-        Returns:
-            bool: True if valid, else False.
+        - Total of all fixed values must not exceed 100%
         """
-        if not validate(ingredient_dict):
-            print(
-                "❌ Invalid input: All fixed values must be > 0 and total must not exceed 100%."
-            )
+        if not validate(ingredient_input):
+            print("❌ Invalid input: fixed values must be > 0 and total ≤ 100%.")
             return False
         return True
 
     @staticmethod
-    def _compute_feasible_samples(
-        ingredient_dict: dict[str, float | None],
-    ) -> np.ndarray | None:
+    def has_only_one_ingredient(ingredient_input: dict[str, float | None]) -> bool:
         """
-        Prepares constraints and runs the MCMC algorithm.
+        Returns True if the input contains only one ingredient.
+        """
+        return len(ingredient_input) == 1
 
-        Returns:
-            np.ndarray | None: Array of sampled ingredient combinations, or None if infeasible.
+    @staticmethod
+    def solve_single_ingredient_case(
+        ingredient_input: dict[str, float | None],
+    ) -> dict[str, dict[str, float]]:
         """
-        num_ingredients = len(ingredient_dict)
-        fixed_values = prepare_constraints_dict(ingredient_dict)
+        If there's just one ingredient, its percentage is 100% with no variation.
+        """
+        name = next(iter(ingredient_input))
+        return {name: {"value": 100.0, "variation": 0.0}}
+
+    @staticmethod
+    def has_exactly_one_missing(ingredient_input: dict[str, float | None]) -> bool:
+        """
+        Returns True if exactly one ingredient is missing (value is None).
+        """
+        return sum(1 for v in ingredient_input.values() if v is None) == 1
+
+    @staticmethod
+    def solve_one_missing_directly(
+        ingredient_input: dict[str, float | None],
+    ) -> dict[str, dict[str, float]] | None:
+        """
+        Calculates the missing value by subtracting the known total from 1.
+        Useful when only one ingredient is unknown.
+        """
+        known = {k: v for k, v in ingredient_input.items() if v is not None}
+        unknown = [k for k in ingredient_input if ingredient_input[k] is None]
+
+        known_total = sum(known.values())
+        missing_value = 1.0 - known_total
+
+        if missing_value < 0:
+            print("❌ Error: known percentages exceed 100%.")
+            return None
+
+        result = {
+            name: {"value": round(val * 100, 4), "variation": 0.0}
+            for name, val in known.items()
+        }
+        result[unknown[0]] = {"value": round(missing_value * 100, 4), "variation": 0.0}
+
+        print("ℹ️ Only one missing value. Calculated directly.")
+        return result
+
+    @staticmethod
+    def solve_with_mcmc(
+        ingredient_input: dict[str, float | None],
+    ) -> dict[str, dict[str, float]] | None:
+        """
+        Builds the constraint system and runs the MCMC algorithm
+        to sample valid combinations when multiple values are unknown.
+        """
+        num_ingredients = len(ingredient_input)
+        fixed_values = prepare_constraints_dict(ingredient_input)
 
         A, a = build_inequality_constraints(num_ingredients)
         B, b = build_equality_constraints(fixed_values, num_ingredients)
@@ -95,28 +119,24 @@ class RecipeGenerator:
         samples = MCMC(A, a, B, b, num_iter=int(1e5), thinning=int(1e4))
 
         if samples is None:
-            print("⚠️ Recipe generation skipped due to infeasible constraint setup.")
+            print("⚠️ MCMC failed or returned no valid samples.")
             return None
 
-        return samples
+        return RecipeGenerator.build_output_dict(ingredient_input, samples)
 
     @staticmethod
-    def _build_output_dict(
-        ingredient_dict: dict[str, float | None], samples: np.ndarray
+    def build_output_dict(
+        ingredient_input: dict[str, float | None], samples: np.ndarray
     ) -> dict[str, dict[str, float]]:
         """
-        Builds the final result dictionary from MCMC samples.
-
-        Returns:
-            dict: Ingredient name → { "value": %, "variation": ±% }
+        Formats the output by taking the last sample and calculating the variation
+        (standard deviation) for each ingredient.
         """
         final_sample = samples[-1]
         std_deviation = samples.std(axis=0)
-        ingredient_names = list(ingredient_dict.keys())
+        ingredient_names = list(ingredient_input.keys())
 
-        result_dict = {
-            name: {"value": round(percent * 100, 4), "variation": round(std * 100, 4)}
-            for name, percent, std in zip(ingredient_names, final_sample, std_deviation)
+        return {
+            name: {"value": round(val * 100, 4), "variation": round(std * 100, 4)}
+            for name, val, std in zip(ingredient_names, final_sample, std_deviation)
         }
-
-        return result_dict
