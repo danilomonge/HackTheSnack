@@ -1,3 +1,8 @@
+import sys
+
+sys.dont_write_bytecode = True
+
+
 def prepare_constraints_dict(input_dict):
     """
     Filters the user input (ingredient dict) to include only entries where the value is not None.
@@ -6,12 +11,12 @@ def prepare_constraints_dict(input_dict):
     Args:
         dict[str, float] - Input dictionary with string keys and float values
 
-    Return: 
+    Return:
         dict[int, float] - Filtered dictionary with indices as keys and positive floats as values
     """
     fixed_value_dict = {
         index: value
         for index, (key, value) in enumerate(input_dict.items())
-        if value > 0
+        if value is not None and value > 0
     }
     return fixed_value_dict
