@@ -184,7 +184,7 @@ class ProductTableUI:
                 [
                     ft.ElevatedButton(
                         "Add Ingredient",
-                        icon=ft.icons.ADD,
+                        icon=ft.Icons.ADD,
                         on_click=lambda e: self.on_add_click(),
                         bgcolor="#1A3E3E",
                         color="white",
@@ -192,7 +192,7 @@ class ProductTableUI:
                     ),
                     ft.ElevatedButton(
                         "Submit Product",
-                        icon=ft.icons.ANALYTICS,
+                        icon=ft.Icons.ANALYTICS,
                         on_click=lambda e: self.on_submit_click(),
                         bgcolor="#1A3E3E",
                         color="white",
@@ -233,7 +233,7 @@ class ProductTableUI:
             shadow=ft.BoxShadow(
                 spread_radius=1,
                 blur_radius=15,
-                color=ft.colors.BLACK12,
+                color=ft.Colors.BLACK12,
                 offset=ft.Offset(0, 0),
             ),
         )
