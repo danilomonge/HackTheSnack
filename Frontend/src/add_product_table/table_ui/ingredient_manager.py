@@ -87,7 +87,7 @@ class IngredientManager:
         return ft.Row(
             controls=[
                 ft.IconButton(
-                    ft.icons.REMOVE,
+                    ft.Icons.REMOVE,
                     on_click=lambda e: PercentageAdjuster.increase_or_decrease_percentage(
                         percent_input, -1.0
                     ),
@@ -95,7 +95,7 @@ class IngredientManager:
                 ),
                 percent_input,
                 ft.IconButton(
-                    ft.icons.ADD,
+                    ft.Icons.ADD,
                     on_click=lambda e: PercentageAdjuster.increase_or_decrease_percentage(
                         percent_input, 1.0
                     ),
@@ -124,7 +124,7 @@ class IngredientManager:
                     ft.Container(content=name_input, padding=5),
                     ft.Container(content=percent_section, padding=5),
                     ft.IconButton(
-                        ft.icons.DELETE,
+                        ft.Icons.DELETE,
                         on_click=lambda e: on_delete(),
                         icon_color="red",
                         icon_size=20,
