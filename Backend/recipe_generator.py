@@ -37,6 +37,12 @@ class RecipeGenerator:
         if RecipeGenerator.has_exactly_one_missing(ingredient_input):
             return RecipeGenerator.solve_one_missing_directly(ingredient_input)
 
+        if RecipeGenerator.is_fully_filled_and_total_is_100_percent(ingredient_input):
+            print("ℹ️ All values are filled and total is 100%.")
+            return RecipeGenerator.solve_total_is_100_percent_ingredient_case(
+                ingredient_input
+            )
+
         return RecipeGenerator.solve_with_mcmc(ingredient_input)
 
     @staticmethod
@@ -66,7 +72,7 @@ class RecipeGenerator:
         If there's just one ingredient, its percentage is 100% with no variation.
         """
         name = next(iter(ingredient_input))
-        return {name: {"value": 100.0, "variation": 0.0}}
+        return {name: {"mean": 100.0, "variation": 0.0}}
 
     @staticmethod
     def has_exactly_one_missing(ingredient_input: dict[str, float | None]) -> bool:
@@ -94,13 +100,38 @@ class RecipeGenerator:
             return None
 
         result = {
-            name: {"value": round(val * 100, 4), "variation": 0.0}
+            name: {"mean": round(val * 100, 4), "variation": 0.0}
             for name, val in known.items()
         }
-        result[unknown[0]] = {"value": round(missing_value * 100, 4), "variation": 0.0}
+        result[unknown[0]] = {"mean": round(missing_value * 100, 4), "variation": 0.0}
 
         print("ℹ️ Only one missing value. Calculated directly.")
         return result
+
+    @staticmethod
+    def is_fully_filled_and_total_is_100_percent(
+        ingredient_input: dict[str, float | None],
+    ) -> bool:
+        """
+        Returns True if all values are set and sum to 100%.
+        """
+        values = ingredient_input.values()
+        if any(v is None for v in values):
+            return False
+        total = sum(values)
+        return abs(total - 1.0) < 1e-6
+
+    @staticmethod
+    def solve_total_is_100_percent_ingredient_case(
+        ingredient_input: dict[str, float],
+    ) -> dict[str, dict[str, float]]:
+        """
+        Converts fully defined input (sum = 100%) to result format.
+        """
+        return {
+            name: {"mean": round(value * 100, 4), "variation": 0.0}
+            for name, value in ingredient_input.items()
+        }
 
     @staticmethod
     def solve_with_mcmc(
@@ -116,28 +147,32 @@ class RecipeGenerator:
         A, a = build_inequality_constraints(num_ingredients)
         B, b = build_equality_constraints(fixed_values, num_ingredients)
 
-        mean_result, std_dev_result = compute_result(A, a, B, b, num_iter=int(1e5), thinning=int(1e4))
+        mean_result, std_dev_result = compute_result(
+            A, a, B, b, num_iter=int(1e5), thinning=int(1e4)
+        )
 
         if mean_result is None or std_dev_result is None:
             print("⚠️ MCMC failed or returned no valid samples.")
             return None
 
-        return RecipeGenerator.build_output_dict(ingredient_input, mean_result, std_dev_result)
+        return RecipeGenerator.build_output_dict(
+            ingredient_input, mean_result, std_dev_result
+        )
 
     @staticmethod
     def build_output_dict(
         ingredient_input: dict[str, float | None], means: np.ndarray, stds: np.ndarray
     ) -> dict[str, dict[str, float]]:
         """
-        Formats the output by taking the last sample and calculating the variation
+        Formats the output by taking the mean of the samples and calculating the variation
         (standard deviation) for each ingredient.
         """
         ingredient_names = list(ingredient_input.keys())
 
-        #result = dict[means, stds]
-        #output = dict[ingredient_names, result]
+        # result = dict[means, stds]
+        # output = dict[ingredient_names, result]
 
         return {
-            name: {"mean": val , "variation": std }
+            name: {"mean": val, "variation": std}
             for name, val, std in zip(ingredient_names, means, stds)
         }
