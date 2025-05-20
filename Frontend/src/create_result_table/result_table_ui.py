@@ -48,9 +48,9 @@ class RecipeResultUI:
         rows = [
             ft.Row(
                 [
-                    ft.Text("Ingredient", weight="bold", width=200, color="#4d4d4d"),
-                    ft.Text("% Amount", weight="bold", width=100, color="#4d4d4d"),
-                    ft.Text("± Variation", weight="bold", width=120, color="#4d4d4d"),
+                    ft.Text("Ingredient", weight=ft.FontWeight.BOLD, width=200, color="#4d4d4d"),
+                    ft.Text("% Amount", weight=ft.FontWeight.BOLD, width=100, color="#4d4d4d"),
+                    ft.Text("± Variation", weight=ft.FontWeight.BOLD, width=120, color="#4d4d4d"),
                 ],
                 alignment=ft.MainAxisAlignment.START,
             )
@@ -83,7 +83,7 @@ class RecipeResultUI:
             content=ft.Column(
                 [
                     ft.Text(
-                        "Generated Recipe", size=26, weight="bold", color="#1A3E3E"
+                        "Generated Recipe", size=26, weight=ft.FontWeight.BOLD, color="#1A3E3E"
                     ),
                     self.message,
                     self.table,
