@@ -1,41 +1,140 @@
 from math import isnan, isfinite
 import flet as ft
+from typing import Optional
+
 
 class IngredientDataBuilder:
+    """
+    Reads ingredient rows from the UI and turns them into a dictionary
+    with cleaned ingredient names and percentages.
+    """
+
     @staticmethod
     def build_data_from_rows(
         ingredient_rows: list[ft.Container],
     ) -> dict[str, float | None]:
+        """
+        Goes through each row of the ingredient table and extracts cleaned values.
+
+        Args:
+            ingredient_rows (list[ft.Container]): UI rows with inputs.
+
+        Returns:
+            dict[str, float | None]: Dictionary with names and valid percentages.
+        """
         ingredient_dict = {}
 
         for row in ingredient_rows:
-            name_field = row.content.controls[0].content
-            percentage_field = row.content.controls[1].content.controls[1]
+            name_and_percentage = IngredientDataBuilder.get_values_from_row(row)
+            if name_and_percentage:
+                name, percentage = name_and_percentage
+                ingredient_dict[name] = percentage
 
-            ingredient_name = name_field.value.strip()
-            raw_input = percentage_field.value.strip().replace(",", ".")
-
-            percentage_value = None
-            try:
-                # Protege contra valores como "NaN", "nan", etc.
-                if raw_input.lower() == "nan" or raw_input == "":
-                    raise ValueError("Input is invalid")
-
-                raw_float = float(raw_input)
-
-                if isfinite(raw_float) and raw_float > 0.0:
-                    percentage_value = raw_float / 100
-
-            except Exception as e:
-                print(f"⚠️ Invalid input for '{ingredient_name}': '{raw_input}' → {e}")
-                percentage_value = None
-
-            if ingredient_name:
-                if percentage_value is not None and isnan(percentage_value):
-                    print(f"❌ NaN detected in '{ingredient_name}' → forcing to None")
-                    percentage_value = None
-
-                ingredient_dict[ingredient_name] = percentage_value
-
-        print("✅ Clean dictionary:", ingredient_dict)
         return ingredient_dict
+
+    @staticmethod
+    def get_values_from_row(row: ft.Container) -> Optional[tuple[str, float | None]]:
+        """
+        Tries to get the name and percentage from one row.
+
+        Returns:
+            tuple or None: (name, percentage) if valid, else None.
+        """
+        name_field = IngredientDataBuilder.get_name_input(row)
+        percent_field = IngredientDataBuilder.get_percent_input(row)
+
+        if not name_field or not percent_field:
+            return None
+
+        name_raw = name_field.value or ""
+        percent_raw = percent_field.value or ""
+
+        name_clean = name_raw.strip()
+        percent_clean = percent_raw.strip().replace(",", ".")
+
+        percent_value = IngredientDataBuilder.convert_to_float(percent_clean)
+
+        return (name_clean, percent_value) if name_clean else None
+
+    @staticmethod
+    def get_name_input(row: ft.Container) -> Optional[ft.TextField]:
+        """
+        Gets the TextField where the user wrote the ingredient name.
+
+        Returns:
+            ft.TextField or None
+        """
+        content = getattr(row, "content", None)
+        controls = getattr(content, "controls", None)
+        if not isinstance(controls, list) or len(controls) < 2:
+            return None
+
+        name_container = controls[0]
+        if not name_container or not hasattr(name_container, "content"):
+            return None
+        content = getattr(name_container, "content", None)
+        return content if isinstance(content, ft.TextField) else None
+
+    @staticmethod
+    def get_percent_input(row: ft.Container) -> Optional[ft.TextField]:
+        """
+        Gets the TextField where the user entered the percentage.
+
+        Returns:
+            ft.TextField or None
+        """
+
+        # -----------------------------------------------
+        # UI structure of one ingredient row (ft.Container):
+        #
+        # Container (row)
+        # └── content: Row
+        #     ├── controls[0]: Container
+        #     │     └── content: TextField (ingredient name)
+        #     ├── controls[1]: Container
+        #     │     └── content: Row
+        #     │           ├── controls[0]: IconButton (minus)
+        #     │           ├── controls[1]: TextField (percentage input)
+        #     │           └── controls[2]: IconButton (plus)
+        #     └── controls[2]: IconButton (delete row)
+        # -----------------------------------------------
+
+        content = getattr(row, "content", None)
+        controls = getattr(content, "controls", None)
+        if not isinstance(controls, list) or len(controls) < 2:
+            return None
+
+        percent_container = controls[1]
+        percent_section = getattr(percent_container, "content", None)
+        percent_controls = getattr(percent_section, "controls", None)
+
+        if not isinstance(percent_controls, list) or len(percent_controls) < 2:
+            return None
+
+        percent_field = percent_controls[1]
+        return percent_field if isinstance(percent_field, ft.TextField) else None
+
+    @staticmethod
+    def convert_to_float(raw: str) -> Optional[float]:
+        """
+        Tries to turn a string like "25.0" into a float in decimal format (0.25).
+
+        Args:
+            raw (str): Raw input from the user.
+
+        Returns:
+            float or None: If it's a valid number, returns it as a fraction. Else, None.
+        """
+        try:
+            if raw.lower() == "nan" or raw == "":
+                return None
+
+            number = float(raw)
+
+            if isfinite(number) and number > 0.0:
+                return number / 100
+
+        except Exception:
+            return None
+
+        return None
