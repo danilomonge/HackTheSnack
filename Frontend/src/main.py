@@ -22,7 +22,7 @@ def main(page: ft.Page):
     """
     page.title = "Hack The Snack"
     page.scroll = ft.ScrollMode.AUTO
-    page.horizontal_alignment = ft.MainAxisAlignment.CENTER
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.expand = True
 
     ui = ProductTableUI(page)

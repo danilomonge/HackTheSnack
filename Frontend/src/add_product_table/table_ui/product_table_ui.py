@@ -37,7 +37,7 @@ class ProductTableUI:
             color="black",
         )
 
-        self.feedback = ft.Text(value="", color="red", size=12, weight="bold")
+        self.feedback = ft.Text(value="", color="red", size=12, weight=ft.FontWeight.BOLD)
 
     def on_add_click(self):
         """
@@ -71,9 +71,9 @@ class ProductTableUI:
             ft.Text(
                 "Analyze a product",
                 size=34,
-                weight="bold",
+                weight=ft.FontWeight.BOLD,
                 color="#1A3E3E",
-                text_align="center",
+                text_align=ft.TextAlign.CENTER,
             ),
             alignment=ft.alignment.center,
             padding=10,
@@ -92,10 +92,10 @@ class ProductTableUI:
                     ft.Container(
                         ft.Text(
                             "Enter product name",
-                            weight="bold",
+                            weight=ft.FontWeight.BOLD,
                             size=23,
                             color="#1A3E3E",
-                            text_align="center",
+                            text_align=ft.TextAlign.CENTER,
                         ),
                         alignment=ft.alignment.center,
                     ),
@@ -123,13 +123,13 @@ class ProductTableUI:
                         size=17,
                         color="#1A3E3E",
                         weight=ft.FontWeight.BOLD,
-                        text_align="center",
+                        text_align=ft.TextAlign.CENTER,
                     ),
                     ft.Text(
                         "Only include a percentage if known; otherwise, leave it blank or use 0%.",
                         size=15,
                         color="#666666",
-                        text_align="center",
+                        text_align=ft.TextAlign.CENTER,
                     ),
                 ],
                 spacing=5,
@@ -152,12 +152,12 @@ class ProductTableUI:
             content=ft.Row(
                 [
                     ft.Container(
-                        ft.Text("Ingredient", weight="bold", size=18, color="white"),
+                        ft.Text("Ingredient", weight=ft.FontWeight.BOLD, size=18, color="white"),
                         width=200,
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
-                        ft.Text("Percentage", weight="bold", size=18, color="white"),
+                        ft.Text("Percentage", weight=ft.FontWeight.BOLD, size=18, color="white"),
                         width=120,
                         alignment=ft.alignment.center,
                     ),
