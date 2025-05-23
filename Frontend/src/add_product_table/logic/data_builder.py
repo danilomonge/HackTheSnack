@@ -9,11 +9,6 @@ class IngredientDataBuilder:
         ingredient_dict = {}
 
         for row in ingredient_rows:
-            #name_field = row.content.controls[0].content
-            #percentage_field = row.content.controls[1].content.controls[1]
-
-            #ingredient_name = name_field.value.strip()
-            #raw_input = percentage_field.value.strip().replace(",", ".")
 
             name_field = row.content.controls[0].content #type: ignore
             percentage_field = row.content.controls[1].content.controls[1] #type: ignore
