@@ -3,17 +3,17 @@ channels:
   - defaults 
   - conda-forge
 dependencies:
-  - ipykernel
-  - jupyterlab
+  - ipykernel=6.29.5
+  - jupyterlab=4.3.4
   - numpy=1.26.4
   - matplotlib
   - pandas=2.1.4
   - pip=25.0
   - python=3.11.11
   - scipy=1.15.2
-  - tqdm
+  - tqdm=4.67.1
   - pytest=8.3.4
   - pip:
-    - tueplots
-    - flet
+    - tueplots==0.2.0
+    - flet==0.28.3
   
