@@ -1,4 +1,4 @@
-from math import isnan, isfinite
+from math import isfinite
 import flet as ft
 from typing import Optional
 
