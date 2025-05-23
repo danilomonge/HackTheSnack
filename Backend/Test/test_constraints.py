@@ -1,11 +1,13 @@
-from Backend.constraints import build_inequality_constraints, build_equality_constraints
 import numpy as np
 import sys
-
-sys.dont_write_bytecode = True
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+sys.dont_write_bytecode = True
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
+from Backend.constraints import build_inequality_constraints, build_equality_constraints    
 
 
 def test_inequality_constraints_shape_one():
