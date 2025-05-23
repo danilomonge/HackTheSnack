@@ -4,10 +4,9 @@ sys.dont_write_bytecode = True
 
 import numpy as np
 
-from Backend.Input.validation import validate
 from Backend.Input.constraints_preparation import prepare_constraints_dict
-from Backend.constraints import build_inequality_constraints, build_equality_constraints
-from Backend.computation import compute_result
+from Backend.constraints import Constraints
+from Backend.computation import Computation
 
 
 class RecipeGenerator:
@@ -28,8 +27,6 @@ class RecipeGenerator:
         - If one ingredient is missing: compute it directly
         - Otherwise: run MCMC to generate valid percentage combinations
         """
-        if not RecipeGenerator.validate_input(ingredient_input):
-            return None
 
         if RecipeGenerator.has_only_one_ingredient(ingredient_input):
             return RecipeGenerator.solve_single_ingredient_case(ingredient_input)
@@ -40,22 +37,11 @@ class RecipeGenerator:
         if RecipeGenerator.is_fully_filled_and_total_is_100_percent(ingredient_input):
             print("ℹ️ All values are filled and total is 100%.")
             return RecipeGenerator.solve_total_is_100_percent_ingredient_case(
-                ingredient_input
+                ingredient_input # type: ignore
             )
 
         return RecipeGenerator.solve_with_mcmc(ingredient_input)
 
-    @staticmethod
-    def validate_input(ingredient_input: dict[str, float | None]) -> bool:
-        """
-        Validates the input by checking:
-        - All fixed values must be > 0
-        - Total of all fixed values must not exceed 100%
-        """
-        if not validate(ingredient_input):
-            print("❌ Invalid input: fixed values must be > 0 and total ≤ 100%.")
-            return False
-        return True
 
     @staticmethod
     def has_only_one_ingredient(ingredient_input: dict[str, float | None]) -> bool:
@@ -118,7 +104,7 @@ class RecipeGenerator:
         values = ingredient_input.values()
         if any(v is None for v in values):
             return False
-        total = sum(values)
+        total = sum(v for v in values if v is not None)
         return abs(total - 1.0) < 1e-6
 
     @staticmethod
@@ -144,10 +130,10 @@ class RecipeGenerator:
         num_ingredients = len(ingredient_input)
         fixed_values = prepare_constraints_dict(ingredient_input)
 
-        A, a = build_inequality_constraints(num_ingredients)
-        B, b = build_equality_constraints(fixed_values, num_ingredients)
+        A, a = Constraints.build_inequality_constraints(num_ingredients)
+        B, b = Constraints.build_equality_constraints(fixed_values, num_ingredients)
 
-        mean_result, std_dev_result = compute_result(
+        mean_result, std_dev_result = Computation.compute_result(
             A, a, B, b, num_iter=int(1e5), thinning=int(1e4)
         )
 
