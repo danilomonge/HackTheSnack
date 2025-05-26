@@ -24,13 +24,13 @@ class PercentageAdjuster:
             step (float): The value to add or subtract (e.g. +1.0 or -1.0).
         """
         try:
-            current_value = float(input_field.value)
+            current_value = float(input_field.value) #type: ignore (caught below)
             updated_value = max(0.0, min(99.99, current_value + step))
         except:
             updated_value = 0.0
 
         new_value_str = f"{updated_value:.2f}"
         input_field.value = new_value_str
-        input_field.data["last_valid"][0] = new_value_str
+        input_field.data["last_valid"][0] = new_value_str #type: ignore
         input_field.update()
 

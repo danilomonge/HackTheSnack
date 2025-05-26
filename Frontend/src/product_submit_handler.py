@@ -49,7 +49,7 @@ class ProductSubmitHandler:
         page.update()
 
         # Extract product name and ingredient dictionary
-        product_name = product_name_field.value.strip()
+        product_name = (product_name_field.value or "").strip()
         ingredient_dict = IngredientDataBuilder.build_data_from_rows(ingredient_rows)
 
         # Generate and display the recipe result
