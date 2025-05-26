@@ -203,7 +203,6 @@ class InputValidator:
         subtotal = 0.0
 
         for row in rows:
-            name_field = row.content.controls[0].content  # type: ignore
             perc_field = row.content.controls[1].content.controls[1]  # type: ignore
 
             raw_value = (perc_field.value or "").strip()
