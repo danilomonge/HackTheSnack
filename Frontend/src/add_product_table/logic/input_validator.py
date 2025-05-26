@@ -103,7 +103,7 @@ class InputValidator:
         """
         Checks that the product name is not empty.
         """
-        name = name_input.value.strip()
+        name = (name_input.value or "").strip()
         if not name:
             message_text.value = "⚠️ Please enter a product name."
             message_text.color = "red"
@@ -126,10 +126,10 @@ class InputValidator:
         percentages = []
 
         for row in rows:
-            name_field = row.content.controls[0].content
-            perc_field = row.content.controls[1].content.controls[1]
+            name_field = row.content.controls[0].content #type: ignore
+            perc_field = row.content.controls[1].content.controls[1] #type: ignore
 
-            name = name_field.value.strip()
+            name = (name_field.value or "").strip()
             if not name:
                 message_text.value = "⚠️ One or more ingredients are missing a name."
                 message_text.color = "red"
@@ -203,8 +203,8 @@ class InputValidator:
         subtotal = 0.0
 
         for row in rows:
-            name_field = row.content.controls[0].content
-            perc_field = row.content.controls[1].content.controls[1]
+            name_field = row.content.controls[0].content #type: ignore
+            perc_field = row.content.controls[1].content.controls[1] #type: ignore
 
             try:
                 value = float(perc_field.value)
@@ -240,7 +240,7 @@ class InputValidator:
 
         # First, sum all defined values
         for row in rows:
-            perc_field = row.content.controls[1].content.controls[1]
+            perc_field = row.content.controls[1].content.controls[1]    #type: ignore
             try:
                 value = float(perc_field.value)
             except:
@@ -250,14 +250,14 @@ class InputValidator:
 
         # Then, for each empty, take the next defined value (even if repeated)
         for i in range(len(rows)):
-            perc_field = rows[i].content.controls[1].content.controls[1]
+            perc_field = rows[i].content.controls[1].content.controls[1] #type: ignore
 
             if perc_field.value.strip():
                 continue  # skip if not empty
 
             # Look ahead for the next defined value
             for j in range(i + 1, len(rows)):
-                next_field = rows[j].content.controls[1].content.controls[1]
+                next_field = rows[j].content.controls[1].content.controls[1] #type: ignore
                 try:
                     next_value = float(next_field.value)
                 except:
@@ -289,7 +289,7 @@ class InputValidator:
         has_empty = False
 
         for row in rows:
-            perc_field = row.content.controls[1].content.controls[1]
+            perc_field = row.content.controls[1].content.controls[1] #type: ignore
             value_str = perc_field.value.strip()
 
             if not value_str:
@@ -323,7 +323,7 @@ class InputValidator:
         seen = set()
 
         for row in rows:
-            name_field = row.content.controls[0].content
+            name_field = row.content.controls[0].content #type: ignore
             name = name_field.value.strip().lower()
 
             if not name:
