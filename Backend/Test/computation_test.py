@@ -1,20 +1,12 @@
 import sys
 import os
 sys.dont_write_bytecode = True
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-import pytest
 import numpy as np
-from computation import (
-    find_initial_point,
-    constraint_reduction,
-    project_and_sample,
-    MCMC,
-    compute_result,
-)
 
 sys.dont_write_bytecode = True
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+from Backend.computation import Computation
 
 #Definition of standard constraints for 3 ingredients 
 D = 3
@@ -36,7 +28,7 @@ def test_find_initial_point():
 
     """
 
-    x0 = find_initial_point(A, a, B, b)
+    x0 = Computation._find_initial_point(A, a, B, b)
 
     assert np.allclose(np.sum(x0), 1)  # Sum = 1
     assert np.all(x0 > 0)              # Ingredients > 0
@@ -53,7 +45,7 @@ def test_constraint_reduction_bounds():
     s = np.array([1, -1])
     A = np.array([[1, 0], [0, 1], [-1, 0], [0, -1]])
     a = np.array([1, 1, 0, 0])
-    point, upper, lower, d = constraint_reduction(xi, s, A, a)
+    point, upper, lower, d = Computation._constrain_reduction(xi, s, A, a)
 
     assert np.isfinite(lower) and np.isfinite(
         upper
@@ -69,7 +61,7 @@ def test_project_and_sample():
     xi = np.array([0.3, 0.3, 0.4])
     s = np.array([1, 0, -1])
 
-    new_point = project_and_sample(xi, s, A, a)
+    new_point = Computation._project_and_sample(xi, s, A, a)
 
     assert new_point.shape == xi.shape               # dimension congruency 
     assert np.all(new_point >= 0)                    # positive coordinates
@@ -81,7 +73,7 @@ def test_MCMC():
     Test that the MCMC returns a sample with correct dimensions and form
 
     """
-    samples = MCMC(A, a, B, b, num_iter=num_iter, thinning=thinning)
+    samples = Computation._MCMC(A, a, B, b, num_iter=num_iter, thinning=thinning)
 
     assert samples.shape[0] == num_iter // thinning         # correct thinning                   
     assert samples.shape[1] == A.shape[1]                   # dimensions for one sample
@@ -97,7 +89,7 @@ def test_compute_result():
 
     """
 
-    mean, std = compute_result(A, a, B, b)
+    mean, std = Computation.compute_result(A, a, B, b)
 
     assert np.all(np.isfinite(mean, std))        # values exist
     assert not np.all(np.isnan(mean, std))       # values are not NAN
@@ -111,7 +103,7 @@ def test_compute_result_empty():
     """
     empty = np.array([])
 
-    assert np.size(compute_result(empty, empty, empty, empty)) == 0
+    assert np.size(Computation.compute_result(empty, empty, empty, empty)) == 0
 
 
 def test_compute_result_for_one_ingredient():
@@ -124,7 +116,7 @@ def test_compute_result_for_one_ingredient():
     B = np.array([[1]])
     b = np.array([1])
 
-    mean, std = compute_result(A, a, B, b)
+    mean, std = Computation.compute_result(A, a, B, b)
 
 
     assert mean == np.array([1])
