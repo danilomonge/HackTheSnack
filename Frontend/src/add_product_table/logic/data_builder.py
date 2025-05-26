@@ -9,15 +9,16 @@ class IngredientDataBuilder:
         ingredient_dict = {}
 
         for row in ingredient_rows:
-            name_field = row.content.controls[0].content
-            percentage_field = row.content.controls[1].content.controls[1]
+
+            name_field = row.content.controls[0].content #type: ignore
+            percentage_field = row.content.controls[1].content.controls[1] #type: ignore
 
             ingredient_name = name_field.value.strip()
-            raw_input = percentage_field.value.strip().replace(",", ".")
+            raw_input = (percentage_field.value or "").strip().replace(",", ".") #type: ignore
 
             percentage_value = None
             try:
-                # Protege contra valores como "NaN", "nan", etc.
+                # Protects against values like 'NaN', 'nan', etc.
                 if raw_input.lower() == "nan" or raw_input == "":
                     raise ValueError("Input is invalid")
 
