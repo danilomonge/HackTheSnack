@@ -231,14 +231,13 @@ class InputValidator:
         rows: list[ft.Container], message_text: ft.Text, page: ft.Page
     ) -> bool:
         """
-        Checks that the total of values directly below empty fields
-        does not exceed the remaining available percentage.
-        Allows reuse of the same value for multiple empties.
+        Checks if there is enough space to support empty fields by simulating
+        their values with the next valid number below each one.
         """
         defined_total = 0.0
-        next_values_after_empty = []
+        total_needed_space = 0.0
 
-        # First, sum all defined values
+        # Sum all valid defined values
         for row in rows:
             perc_field = row.content.controls[1].content.controls[1]  # type: ignore
             try:
@@ -248,14 +247,13 @@ class InputValidator:
             if value > 0.0:
                 defined_total += value
 
-        # Then, for each empty, take the next defined value (even if repeated)
+        # For each empty field, add the next valid value (can be reused)
         for i in range(len(rows)):
             perc_field = rows[i].content.controls[1].content.controls[1]  # type: ignore
 
             if perc_field.value.strip():
-                continue  # skip if not empty
+                continue
 
-            # Look ahead for the next defined value
             for j in range(i + 1, len(rows)):
                 next_field = rows[j].content.controls[1].content.controls[1]  # type: ignore
                 try:
@@ -264,10 +262,9 @@ class InputValidator:
                     next_value = 0.0
 
                 if next_field.value.strip():
-                    next_values_after_empty.append(next_value)
-                    break  # only take the first defined value below each empty
+                    total_needed_space += next_value
+                    break
 
-        total_needed_space = sum(next_values_after_empty)
         remaining = 100.0 - defined_total
 
         if total_needed_space > remaining:
@@ -277,6 +274,7 @@ class InputValidator:
             return False
 
         return True
+
 
     @staticmethod
     def _check_no_empty_if_total_is_100(
@@ -404,3 +402,5 @@ class InputValidator:
         message_text.value = ""
         page.update()
         return True
+
+
