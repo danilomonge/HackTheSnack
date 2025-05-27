@@ -239,9 +239,12 @@ class Computation:
             - std_sample (np.ndarray): Standard deviation the sample.
         """
         SAMPLES = Computation._MCMC(A, a, B, b, num_iter, thinning = int(int(1e5)/100))
-        if SAMPLES is None:
+        if SAMPLES is None: # adress None values
             print("⚠️ MCMC aborted: No valid samples.")
             return None, None
+        if np.size(A) == 1: #only one ingredient
+            return np.array([100]), np.array([0])
+        
         mean_sample = np.mean(SAMPLES, axis=0)*100
         std_sample = np.std(SAMPLES, axis=0)* 2 * 100
 
