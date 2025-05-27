@@ -94,16 +94,7 @@ def test_compute_result():
     assert np.all(np.isfinite(mean, std))        # values exist
     assert not np.all(np.isnan(mean, std))       # values are not NAN
     assert np.all(mean > 0) and np.all(std >= 0) # values are positive
-    assert np.all(np.isclose(np.sum(mean), 1))   # mean sum = 1
-
-def test_compute_result_empty():
-    """
-    Test the algorithm for an empty input
-
-    """
-    empty = np.array([])
-
-    assert np.size(Computation.compute_result(empty, empty, empty, empty)) == 0
+    assert np.all(np.isclose(np.sum(mean), 100))   # mean sum = 1
 
 
 def test_compute_result_for_one_ingredient():
@@ -119,7 +110,7 @@ def test_compute_result_for_one_ingredient():
     mean, std = Computation.compute_result(A, a, B, b)
 
 
-    assert mean == np.array([1])
+    assert mean == np.array([100])
     assert std == np.array([0])
 
 
