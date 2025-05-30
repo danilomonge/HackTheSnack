@@ -3,13 +3,14 @@ from numpy.random import rand, randn
 from tqdm.auto import tqdm
 from scipy.optimize import linprog
 
+
 class Computation:
     """
     Class for performing MCMC sampling to estimate values for unknown components under linear constraints.
     """
 
     @staticmethod
-    def _find_initial_point(A, a, B, b, eps=1e-6):
+    def _find_initial_point(A, a, B, b, eps):
         """
         Finds a point inside the polytope defined by equality- and inequality
         constrains through linear programming.
@@ -26,9 +27,9 @@ class Computation:
         """
 
         D = A.shape[1]
-        eps = 1e-6  # adding some slack to ensure we are _within_ the feasible region, not just on the boundary
-        # not doing this will cause trouble down the line for the MCMC method, which will get stuck in a corner
-        out = linprog(np.ones(D), A_ub=A, b_ub=a - eps, A_eq=B, b_eq=b, method="highs-ipm")
+        out = linprog(
+            np.ones(D), A_ub=A, b_ub=a - eps, A_eq=B, b_eq=b, method="highs-ipm"
+        )
         if not out.success:
             print("⚠️ No feasible solution found for the constraint system.")
             return None
@@ -70,7 +71,6 @@ class Computation:
 
         return R, S
 
-
     @staticmethod
     def _construct_directions(B):
         """
@@ -110,7 +110,6 @@ class Computation:
 
         return sample
 
-
     @staticmethod
     def _constrain_reduction(xi, s, A, a):
         """
@@ -147,7 +146,6 @@ class Computation:
 
         return xi, upper, lower, s
 
-
     @staticmethod
     def _point_construction(xi, upper, lower, s):
         """
@@ -168,7 +166,6 @@ class Computation:
 
         return xi + a * s
 
-
     @staticmethod
     def _project_and_sample(xi, s, A, a):
         """
@@ -186,9 +183,48 @@ class Computation:
         xi, s, A, a = Computation._constrain_reduction(xi, s, A, a)
         return Computation._point_construction(xi, s, A, a)
 
+    @staticmethod
+    def _handle_only_one_possible_initial_point(A, a, B, b, num_iter, thinning):
+        """
+        Attempts to find a feasible point without adding any slack (eps = 0).
+        If this point exists and no movement is possible in any direction,
+        then there is only one valid solution, and two identical copies of it
+        are returned as the sample matrix.
+
+        This avoids problems when sampling would fail due to lack of degrees of freedom,
+        even though a solution exists.
+        """
+
+        # Try to find a solution exactly on the boundary
+        x0 = Computation._find_initial_point(A, a, B, b, eps=0.0)
+
+        if x0 is None:
+            return None
+
+        # Make a direction that follows the equality rules
+        generate_direction = Computation._construct_directions(B)
+        test_direction = generate_direction()
+
+        # Check how far the point can move in that direction without violating the constraints
+        _, step_limit_forward, step_limit_backward, _ = (
+            Computation._constrain_reduction(x0, test_direction, A, a)
+        )
+
+        # If movement isn't possible in that direction there is only one valid point
+        if np.isclose(step_limit_forward, step_limit_backward):
+            print("ℹ️ Only one valid solution found, returning it.")
+            return np.tile(
+                x0, (2, 1)
+            )  # Two identical points are created so that mean and standard deviation can still be calculated
+
+        # If movement is allowed, the point is on the boundary but not unique
+        print(
+            "⚠️ Found a possible solution in the boundary but movement is possible —> it is unsafe to sample."
+        )
+        return None
 
     @staticmethod
-    def _MCMC(A, a, B, b, num_iter=int(1e7), thinning=int(int(1e5)/100)):
+    def _MCMC(A, a, B, b, num_iter=int(1e7), thinning=int(int(1e5) / 100)):
         """
         Runs the MCMC sampling algorithm under linear constraints.
 
@@ -204,8 +240,19 @@ class Computation:
             np.ndarray: Sampled feasible points after thinning.
         """
 
-        x0 = Computation._find_initial_point(A, a, B, b)
+        x0 = Computation._find_initial_point(
+            A, a, B, b, eps=1e-6
+        )  # adding some slack to ensure we are _within_ the feasible region, not just on the boundary
+        # not doing this will cause trouble down the line for the MCMC method, which will get stuck in a corner
+
+        # If that fails, check if there’s one valid solution on the boundary
+        # In that case, check if it is the only valid solution (no direction to move in)
         if x0 is None:
+            boundary_solution = Computation._handle_only_one_possible_initial_point(
+                A, a, B, b, num_iter, thinning
+            )
+            if boundary_solution is not None:
+                return boundary_solution
             print("⚠️ MCMC aborted: No feasible starting point.")
             return None
 
@@ -222,7 +269,6 @@ class Computation:
 
         return samples[0::thinning, :]
 
-
     @staticmethod
     def compute_result(A, a, B, b, num_iter=int(1e5), thinning=int(1e4)):
         """
@@ -238,17 +284,17 @@ class Computation:
             - mean_sample (np.ndarray): Mean of the sample.
             - std_sample (np.ndarray): Standard deviation the sample.
         """
-        SAMPLES = Computation._MCMC(A, a, B, b, num_iter, thinning = int(int(1e5)/100))
-        if SAMPLES is None: # adress None values
+        SAMPLES = Computation._MCMC(A, a, B, b, num_iter, thinning=int(int(1e5) / 100))
+        if SAMPLES is None:  # adress None values
             print("⚠️ MCMC aborted: No valid samples.")
             return None, None
-        if np.size(A) == 1: #only one ingredient
+        if np.size(A) == 1:  # only one ingredient
             return np.array([100]), np.array([0])
-        
-        mean_sample = np.mean(SAMPLES, axis=0)*100
-        std_sample = np.std(SAMPLES, axis=0)* 2 * 100
+
+        mean_sample = np.mean(SAMPLES, axis=0) * 100
+        std_sample = np.std(SAMPLES, axis=0) * 2 * 100
 
         mean_sample_r = np.round(mean_sample, 2)
         std_sample_r = np.round(std_sample, 2)
 
-        return mean_sample_r, std_sample_r 
+        return mean_sample_r, std_sample_r
