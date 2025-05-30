@@ -126,8 +126,8 @@ class InputValidator:
         percentages = []
 
         for row in rows:
-            name_field = row.content.controls[0].content #type: ignore
-            perc_field = row.content.controls[1].content.controls[1] #type: ignore
+            name_field = row.content.controls[0].content  # type: ignore
+            perc_field = row.content.controls[1].content.controls[1]  # type: ignore
 
             name = (name_field.value or "").strip()
             if not name:
@@ -197,29 +197,29 @@ class InputValidator:
         rows: list[ft.Container], message_text: ft.Text, page: ft.Page
     ) -> bool:
         """
-        Ensures subtotal below an empty field does not exceed 50%.
+        Ensures subtotal below a row with empty or invalid percentage does not exceed 50%.
         """
+
         found_empty = False
         subtotal = 0.0
 
         for row in rows:
-            name_field = row.content.controls[0].content #type: ignore
-            perc_field = row.content.controls[1].content.controls[1] #type: ignore
+            perc_field = row.content.controls[1].content.controls[1]  # type: ignore
+
+            raw_value = (perc_field.value or "").strip()
 
             try:
-                value = float(perc_field.value)
-            except:
-                value = 0.0
+                value = float(raw_value)
+            except ValueError:
+                value = None
 
-            if not name_field.value.strip():
+            if value is None or raw_value == "":
                 found_empty = True
                 subtotal = 0.0
             elif found_empty:
                 subtotal += value
                 if subtotal > 50.0:
-                    message_text.value = (
-                        "⚠️ Subtotal below an empty ingredient cannot exceed 50%."
-                    )
+                    message_text.value = "⚠️ Subtotal below an ingredient with empty quantity cannot exceed 50%."
                     message_text.color = "red"
                     page.update()
                     return False
@@ -231,16 +231,15 @@ class InputValidator:
         rows: list[ft.Container], message_text: ft.Text, page: ft.Page
     ) -> bool:
         """
-        Checks that the total of values directly below empty fields
-        does not exceed the remaining available percentage.
-        Allows reuse of the same value for multiple empties.
+        Checks if there is enough space to support empty fields by simulating
+        their values with the next valid number below each one.
         """
         defined_total = 0.0
-        next_values_after_empty = []
+        total_needed_space = 0.0
 
-        # First, sum all defined values
+        # Sum all valid defined values
         for row in rows:
-            perc_field = row.content.controls[1].content.controls[1]    #type: ignore
+            perc_field = row.content.controls[1].content.controls[1]  # type: ignore
             try:
                 value = float(perc_field.value)
             except:
@@ -248,26 +247,24 @@ class InputValidator:
             if value > 0.0:
                 defined_total += value
 
-        # Then, for each empty, take the next defined value (even if repeated)
+        # For each empty field, add the next valid value (can be reused)
         for i in range(len(rows)):
-            perc_field = rows[i].content.controls[1].content.controls[1] #type: ignore
+            perc_field = rows[i].content.controls[1].content.controls[1]  # type: ignore
 
             if perc_field.value.strip():
-                continue  # skip if not empty
+                continue
 
-            # Look ahead for the next defined value
             for j in range(i + 1, len(rows)):
-                next_field = rows[j].content.controls[1].content.controls[1] #type: ignore
+                next_field = rows[j].content.controls[1].content.controls[1]  # type: ignore
                 try:
                     next_value = float(next_field.value)
                 except:
                     next_value = 0.0
 
                 if next_field.value.strip():
-                    next_values_after_empty.append(next_value)
-                    break  # only take the first defined value below each empty
+                    total_needed_space += next_value
+                    break
 
-        total_needed_space = sum(next_values_after_empty)
         remaining = 100.0 - defined_total
 
         if total_needed_space > remaining:
@@ -277,6 +274,7 @@ class InputValidator:
             return False
 
         return True
+
 
     @staticmethod
     def _check_no_empty_if_total_is_100(
@@ -289,7 +287,7 @@ class InputValidator:
         has_empty = False
 
         for row in rows:
-            perc_field = row.content.controls[1].content.controls[1] #type: ignore
+            perc_field = row.content.controls[1].content.controls[1]  # type: ignore
             value_str = perc_field.value.strip()
 
             if not value_str:
@@ -323,7 +321,7 @@ class InputValidator:
         seen = set()
 
         for row in rows:
-            name_field = row.content.controls[0].content #type: ignore
+            name_field = row.content.controls[0].content  # type: ignore
             name = name_field.value.strip().lower()
 
             if not name:
@@ -388,19 +386,21 @@ class InputValidator:
             ingredient_rows, message_text, page
         ):
             return False
-        
+
         if not InputValidator._check_no_empty_if_total_is_100(
             ingredient_rows, message_text, page
         ):
             return False
-        
+
         if not InputValidator._check_duplicate_ingredient_names(
             ingredient_rows, message_text, page
         ):
             return False
-        
+
         # Clear the message text if all validations pass
 
         message_text.value = ""
         page.update()
         return True
+
+
