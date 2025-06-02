@@ -49,7 +49,8 @@ class ProductSubmitHandler:
 
         # If valid, update UI feedback
         feedback_text.value = "✅ Product is valid. Recipe generated!"
-        feedback_text.color = "green"
+        feedback_text.color = "#67CD6B"  
+        feedback_text.size = 14
         page.update()
 
         # Extract product name and ingredient dictionary
