@@ -26,7 +26,8 @@ class RecipeResultUI:
             result (dict): Final recipe data.
         """
         self.message.value = "✅ Recipe created successfully!"
-        self.message.color = "green"
+        self.message.color = "#67CD6B" 
+        self.message.weight = ft.FontWeight.BOLD
         self.page.update()
         self.build_result_table(result)
 
@@ -37,6 +38,32 @@ class RecipeResultUI:
         self.message.value = "❌ Could not generate recipe. Please check your inputs."
         self.message.color = "red"
         self.page.update()
+    
+    def build_result_text(self) -> ft.Container:
+        """
+        Creates a short note explaining the mean and std.
+
+        Returns:
+            ft.Container: Instructional text in a styled container.
+        """
+        return ft.Container(
+            content = ft.Column(
+                [
+                    ft.Text(
+                        "The mean shows the ... and the std the ... .",
+                        size=15,
+                        color="#1A3E3E",
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                ],
+                spacing=5,
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            alignment=ft.alignment.center,
+            padding=ft.padding.symmetric(vertical=6, horizontal=10),
+            bgcolor="#F5F5F5",
+            )
 
     def build_result_table(self, result: dict[str, dict[str, float]]):
         """
@@ -52,7 +79,7 @@ class RecipeResultUI:
                     ft.Text("% Amount", weight=ft.FontWeight.BOLD, width=100, color="#4d4d4d"),
                     ft.Text("± Variation", weight=ft.FontWeight.BOLD, width=120, color="#4d4d4d"),
                 ],
-                alignment=ft.MainAxisAlignment.START,
+                alignment=ft.MainAxisAlignment.CENTER,
             )
         ]
 
@@ -64,7 +91,7 @@ class RecipeResultUI:
                         ft.Text(f"{data['mean']}%", width=100, color="#666666"),
                         ft.Text(f"±{data['variation']}%", width=120, color="#666666"),
                     ],
-                    alignment=ft.MainAxisAlignment.START,
+                    alignment=ft.MainAxisAlignment.CENTER,
                 )
             )
 
@@ -86,12 +113,14 @@ class RecipeResultUI:
                         "Generated Recipe", size=26, weight=ft.FontWeight.BOLD, color="#1A3E3E"
                     ),
                     self.message,
+                    self.build_result_text(),
                     self.table,
                 ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
             ),
             padding=20,
-            width=600,
+            width=1000,
             bgcolor="#FAFAFA",
             border_radius=10,
         )
