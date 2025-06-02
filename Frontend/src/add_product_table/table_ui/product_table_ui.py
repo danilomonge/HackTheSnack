@@ -25,7 +25,6 @@ class ProductTableUI:
         """
         self.page = page
         self.ingredient_rows = ft.Column()
-        self.ingredient_manager = IngredientManager(self.ingredient_rows)
 
         self.product_name = ft.TextField(
             label="Product Name",
@@ -37,6 +36,11 @@ class ProductTableUI:
             color="black",
         )
 
+        self.ingredient_manager = IngredientManager(
+        self.ingredient_rows,
+        self.product_name 
+        )
+
         self.feedback = ft.Text(value="", color="red", size=12, weight=ft.FontWeight.BOLD)
 
     def on_add_click(self):
@@ -46,6 +50,14 @@ class ProductTableUI:
         Adds a new ingredient row to the table.
         """
         self.ingredient_manager.add_ingredient_row(self.page)
+
+    def on_clearall_click(self):
+        """
+        Handles the Clear All button click.
+
+        Clears all ingredient rows from the table.
+        """
+        self.ingredient_manager.clear_all_rows()
 
     def on_submit_click(self):
         """
@@ -194,6 +206,14 @@ class ProductTableUI:
                         "Submit Product",
                         icon=ft.Icons.ANALYTICS,
                         on_click=lambda e: self.on_submit_click(),
+                        bgcolor="#1A3E3E",
+                        color="white",
+                        width=200,
+                    ),
+                    ft.ElevatedButton(
+                        "Clear All",
+                        icon=ft.Icons.CLEAR,
+                        on_click=lambda e: (self.on_clearall_click(), self.on_add_click()),
                         bgcolor="#1A3E3E",
                         color="white",
                         width=200,
