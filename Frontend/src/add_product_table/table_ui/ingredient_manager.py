@@ -14,15 +14,17 @@ class IngredientManager:
     - Stores all current rows in a list
    """
     
-    def __init__(self, quantity_table: ft.Column):
+    def __init__(self, quantity_table: ft.Column, product_name: ft.TextField):
         """
         Creates a manager to control the ingredient rows in the table.
 
         Args:
             quantity_table (ft.Column): The UI column that holds all ingredient rows.
+            product_name (ft.TextField): The field for the product name.
         """
         self.ingredients = []
         self.quantity_table = quantity_table
+        self.product_name = product_name
 
     def input_style(self):
         """
@@ -176,3 +178,13 @@ class IngredientManager:
         self.ingredients.remove(row)
         self.quantity_table.controls.remove(row)
         self.quantity_table.update()
+
+    def clear_all_rows(self):
+        """
+        Clears all ingredient rows from the table and resets the list.
+        """
+        self.ingredients.clear()
+        self.product_name.value = "" 
+        self.quantity_table.controls.clear()
+        self.quantity_table.update()
+        self.product_name.update()
