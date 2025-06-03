@@ -14,7 +14,7 @@ class IngredientManager:
     - Stores all current rows in a list
    """
     
-    def __init__(self, quantity_table: ft.Column, product_name: ft.TextField):
+    def __init__(self, quantity_table: ft.Column, product_name: ft.TextField, page: ft.Page):
         """
         Creates a manager to control the ingredient rows in the table.
 
@@ -25,6 +25,7 @@ class IngredientManager:
         self.ingredients = []
         self.quantity_table = quantity_table
         self.product_name = product_name
+        self.page =page
 
     def input_style(self):
         """
@@ -179,12 +180,27 @@ class IngredientManager:
         self.quantity_table.controls.remove(row)
         self.quantity_table.update()
 
-    def clear_all_rows(self):
+    def clear_all(self):
         """
-        Clears all ingredient rows from the table and resets the list.
+        Clears all ingredient rows and the product name from the table and resets the list.
         """
         self.ingredients.clear()
         self.product_name.value = "" 
         self.quantity_table.controls.clear()
+
+        recipe_to_remove = []
+
+        if hasattr(self.page, 'controls'):
+            recipe_to_remove = [
+                control for control in self.page.controls #type: ignore
+                if isinstance(control, ft.Container) and 
+                any(isinstance(text, ft.Text) and text.value == "Generated Recipe" 
+                    for text in getattr(control.content, 'controls', []))
+            ]
+        for recipe in recipe_to_remove:
+            self.page.controls.remove(recipe) # type: ignore
+
+
         self.quantity_table.update()
         self.product_name.update()
+        self.page.update()
