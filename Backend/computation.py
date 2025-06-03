@@ -214,8 +214,8 @@ class Computation:
         if np.isclose(step_limit_forward, step_limit_backward):
             print("ℹ️ Only one valid solution found, returning it.")
             return np.tile(
-                x0, (2, 1)
-            )  # Two identical points are created so that mean and standard deviation can still be calculated
+                x0, (2, 1) # Two identical points are created so that mean and standard deviation can still be calculated
+            )  
 
         # If movement is allowed, the point is on the boundary but not unique
         print(
@@ -255,6 +255,14 @@ class Computation:
                 return boundary_solution
             print("⚠️ MCMC aborted: No feasible starting point.")
             return None
+
+        # Check if there are any valid directions to move (degrees of freedom) if the initial point with eps=1e-6 is feasible
+        null_space_basis, _ = Computation._svd_projection(B)
+        if null_space_basis.shape[1] == 0:
+            print("ℹ️ No valid directions to move in, returning initial point.")
+            return np.tile(
+                x0, (2, 1) # Needed to calculate mean and standard deviation
+            )  
 
         sample = Computation._construct_directions(B)
 
