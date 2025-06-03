@@ -15,6 +15,9 @@ class RecipeResultUI:
     Builds the UI to show the recipe result using the provided data.
     """
 
+    # Static variable to keep track of the current result container
+    _current_result_container = None
+
     def __init__(self, page: ft.Page):
         """
         Sets up the result UI.
@@ -182,20 +185,34 @@ class RecipeResultUI:
             ingredient_input (dict): A dictionary with ingredient names as keys and
                                     either fixed percentages or None as values.
         """
-        # Step 1: Set up the calculator and UI
+        # Step 1: Remove any existing result container
+        # This ensures we don't have multiple result sections on the page
+        if RecipeResultUI._current_result_container:
+            try:
+                page.controls.remove(RecipeResultUI._current_result_container) # type: ignore
+            except ValueError:
+                pass  # Container was not in page.controls
+
+        # Step 2: Set up the calculator and UI
         recipe_calculator = RecipeResultCalculator()
         result_ui = RecipeResultUI(page)
 
-        # Step 2: Try generating the recipe
+        # Step 3: Try generating the recipe
         success = recipe_calculator.calculate_recipe(ingredient_input)
 
-        # Step 3: Show result or error message
+        # Step 4: Show result or error message
         if success:
             recipe_data = recipe_calculator.get_recipe_result()
-            result_ui.show_recipe(recipe_data)
+            result_ui.show_recipe(recipe_data)  # type: ignore
         else:
             result_ui.show_error()
 
-        # Step 4: Add the result section to the page
-        page.controls.append(result_ui.build_result_section())
+        # Step 5: Create and add the result section to the page
+        result_container = result_ui.build_result_section()
+        page.controls.append(result_container) # type: ignore
+        
+        # Step 6: Speichere Referenz zum neuen Container
+        RecipeResultUI._current_result_container = result_container
+
         page.update()
+        
