@@ -1,12 +1,4 @@
 import flet as ft
-
-import sys
-import os
-
-sys.dont_write_bytecode = True
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
-
 from .calculate_recipe_result import RecipeResultCalculator
 
 
@@ -112,38 +104,6 @@ class RecipeResultUI:
         self.table.controls.extend(rows)
         self.page.update()
 
-    def build_pie_chart(self, result: dict[str, dict[str, float]]) -> ft.Container:
-     """
-     Creates a pie chart based on mean percentages of the ingredients from the results.
- 
-     Args:
-        result (dict): Recipe output.
-
-     Returns:
-        ft.Container: A container with the pie chart.
-     """
-     chart_sections = []
-
-     for ingredient, data in result.items():
-      mean = data.get("mean", 0.0)
-      chart_sections.append(
-        ft.PieChartSection(
-            value = mean,
-            title = f"{ingredient} ({mean:.1f}%)",
-            title_style = ft.TextStyle(size=12, color="white"),
-        )
-    )
-
-     return ft.Container(
-        content=ft.PieChart(
-            sections = chart_sections,
-            sections_space = 2,
-            center_space_radius = 30,
-        ),
-        padding = 10,
-        alignment = ft.alignment.center,
-     )
-        
 
     def build_result_section(self) -> ft.Container:
         """
@@ -161,7 +121,6 @@ class RecipeResultUI:
                     self.message,
                     self.build_result_text(),
                     self.table,
-                    self.build_pie_chart(result),
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
