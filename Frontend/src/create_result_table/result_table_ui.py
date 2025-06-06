@@ -54,8 +54,8 @@ class RecipeResultUI:
                 [
                     ft.Text(
                         "Explanation of your results: \n"
-                        "The mean shows the average percentage that each ingredient in your recipe has. \n "
-                        "The standard deviation shows you how much the percentage might vary.\n",
+                        "The amount shows the average percentage that each ingredient in your recipe has. \n "
+                        "The variation shows you how much the percentage might vary.\n",
                         size=13,
                         color="#1A3E3E",
                         text_align=ft.TextAlign.CENTER,
