@@ -28,7 +28,7 @@ def test_find_initial_point():
 
     """
 
-    x0 = Computation._find_initial_point(A, a, B, b)
+    x0 = Computation._find_initial_point(A, a, B, b, eps=1e-6)
 
     assert np.allclose(np.sum(x0), 1)  # Sum = 1                        # type: ignore[arg-type]
     assert np.all(x0 > 0)              # Ingredients > 0                # type: ignore[arg-type]
