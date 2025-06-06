@@ -1,8 +1,4 @@
 import flet as ft
-import sys
-import os
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 from Frontend.src.add_product_table.logic.input_validator import InputValidator
 from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 from Frontend.src.create_result_table.result_table_ui import RecipeResultUI
@@ -49,7 +45,8 @@ class ProductSubmitHandler:
 
         # If valid, update UI feedback
         feedback_text.value = "✅ Product is valid. Recipe generated!"
-        feedback_text.color = "green"
+        feedback_text.color = "#67CD6B"  
+        feedback_text.size = 14
         page.update()
 
         # Extract product name and ingredient dictionary
