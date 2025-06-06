@@ -1,7 +1,7 @@
 import flet as ft
-from add_product_table.logic.input_validator import InputValidator
-from add_product_table.logic.data_builder import IngredientDataBuilder
-from create_result_table.result_table_ui import RecipeResultUI
+from Frontend.src.add_product_table.logic.input_validator import InputValidator
+from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
+from Frontend.src.create_result_table.result_table_ui import RecipeResultUI
 
 
 class ProductSubmitHandler:
