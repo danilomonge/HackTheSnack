@@ -230,7 +230,7 @@ class Computation:
             )
 
         # Only minimal movement possible → treat it as a unique solution
-        if step_limit_forward - step_limit_backward < 1e-6:
+        if step_limit_forward - step_limit_backward < 1e-2:
             print("ℹ️ Movement directions are very small, returning the initial point.")
             return np.tile(
                 x0, (2, 1)  # Return the same point twice to avoid sampling issues
