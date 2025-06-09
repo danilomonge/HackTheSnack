@@ -3,7 +3,7 @@ from add_product_table.table_ui.ingredient_manager import IngredientManager
 from add_product_table.logic.input_validator import InputValidator
 from add_product_table.logic.data_builder import IngredientDataBuilder
 from product_submit_handler import ProductSubmitHandler
-
+from DataBase.product_manager import ProductManager
 
 class ProductTableUI:
     """
@@ -26,7 +26,9 @@ class ProductTableUI:
         self.page = page
         self.ingredient_rows = ft.Column()
         self.ingredient_manager = IngredientManager(self.ingredient_rows)
-
+        self.result_text = ft.Text(value="", color="green", size=12, weight=ft.FontWeight.BOLD)
+        self.product_creator = ProductManager(self.page)
+        
         self.product_name = ft.TextField(
             label="Product Name",
             hint_text="e.g. Fruit Yogurt",
@@ -38,6 +40,12 @@ class ProductTableUI:
         )
 
         self.feedback = ft.Text(value="", color="red", size=12, weight=ft.FontWeight.BOLD)
+
+    def on_find_product_click(self, e):
+        """
+        Handles the find Product button click by calling ProductCreator.
+        """
+        self.product_creator.find_product(self.product_name, self.result_text)
 
     def on_add_click(self):
         """
@@ -81,10 +89,10 @@ class ProductTableUI:
 
     def build_name_input(self):
         """
-        Creates the product name input section.
+        Creates the product name input section with a Find button.
 
         Returns:
-            ft.Container: A container with label and input field.
+            ft.Container: A container with label, input field, and find button.
         """
         return ft.Container(
             content=ft.Column(
@@ -100,8 +108,27 @@ class ProductTableUI:
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
-                        content=self.product_name, alignment=ft.alignment.center
+                        content=ft.Row(
+                            [
+                                self.product_name,
+                                ft.ElevatedButton(
+                                    text="Search",
+                                    on_click=self.on_find_product_click,
+                                    bgcolor="#1A3E3E",
+                                    color="white",
+                                    height=40,
+                                ),
+                            ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            spacing=10,
+                        ),
+                        alignment=ft.alignment.center,
                     ),
+                    ft.Container(
+                        content=self.result_text,
+                        alignment=ft.alignment.center,
+                        padding=5,
+                    )
                 ],
                 spacing=5,
             ),

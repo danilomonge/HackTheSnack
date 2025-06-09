@@ -2,7 +2,8 @@ import flet as ft
 from add_product_table.logic.input_validator import InputValidator
 from add_product_table.logic.data_builder import IngredientDataBuilder
 from create_result_table.result_table_ui import RecipeResultUI
-
+import httpx
+import json
 
 class ProductSubmitHandler:
     """
