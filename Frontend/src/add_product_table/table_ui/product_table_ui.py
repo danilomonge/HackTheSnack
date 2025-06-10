@@ -2,7 +2,8 @@ import flet as ft
 from add_product_table.table_ui.ingredient_manager import IngredientManager
 from add_product_table.logic.input_validator import InputValidator
 from add_product_table.logic.data_builder import IngredientDataBuilder
-from product_submit_handler import ProductSubmitHandler
+from Frontend.src.product_submit_handler import ProductSubmitHandler
+from Frontend.src.product_action_handler import ProductActionHandler
 from DataBase.product_manager import ProductManager
 
 class ProductTableUI:
@@ -27,7 +28,7 @@ class ProductTableUI:
         self.ingredient_rows = ft.Column()
         self.ingredient_manager = IngredientManager(self.ingredient_rows)
         self.result_text = ft.Text(value="", color="green", size=12, weight=ft.FontWeight.BOLD)
-        self.product_creator = ProductManager(self.page)
+        #self.product_creator = ProductManager(self.page)
         
         self.product_name = ft.TextField(
             label="Product Name",
@@ -45,7 +46,21 @@ class ProductTableUI:
         """
         Handles the find Product button click by calling ProductCreator.
         """
-        self.product_creator.find_product(self.product_name, self.result_text)
+        return ProductActionHandler.handle_product_search(
+            self.product_name,
+            self.feedback,
+            self.page,
+        )
+    
+    def on_create_product_click(self, e):
+        """
+        Handles the find Product button click by calling ProductCreator.
+        """
+        return ProductActionHandler.handle_create_product(
+            self.product_name,
+            self.feedback,
+            self.page,
+        )
 
     def on_add_click(self):
         """
@@ -114,6 +129,13 @@ class ProductTableUI:
                                 ft.ElevatedButton(
                                     text="Search",
                                     on_click=self.on_find_product_click,
+                                    bgcolor="#1A3E3E",
+                                    color="white",
+                                    height=40,
+                                ),
+                                ft.ElevatedButton(
+                                    text="Create",
+                                    on_click=self.on_create_product_click,
                                     bgcolor="#1A3E3E",
                                     color="white",
                                     height=40,

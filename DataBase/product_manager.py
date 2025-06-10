@@ -1,5 +1,3 @@
-# product_creator.py
-
 import httpx
 import json
 import flet as ft
@@ -11,77 +9,52 @@ class ProductManager:
 
     Attributes:
         page (ft.Page): The Flet page object for UI updates.
+        
     """
-
-    def __init__(self, page: ft.Page):
-        """
-        Initializes the ProductCreator with a reference to the Flet page.
-
-        Args:
-            page (ft.Page): The active Flet page instance.
-        """
-        self.page = page
-
-    def create_product(self, product_name: ft.TextField, result_text: ft.Text):
+    @staticmethod
+    def create_product(product_name):
         """
         Sends a POST request to create a product in the database.
 
         Args:
-            product_name (ft.TextField): The input field containing the product name.
-            result_text (ft.Text): A text element to display the result status.
+        product_name (str): The name of the product to search for.
+
+        Returns:
+        httpx.Response: The HTTP response object returned by the API request.
+                        Use response.status_code to check for success,
+                        and response.json() to access the response data if
         """
-        try:
-            data = {
-                "name": product_name.value,
+        
+        data = {
+                "name": product_name,
                 "descripcion": "delicious",      # Default description; can be extended later
-                "idBrand": 1,           # Default brand ID
-                "idCategory": 1,        # Default category ID
-                "idSubCategory": 1      # Default subcategory ID
+                "idBrand": 1,                    # Default brand ID
+                "idCategory": 1,                 # Default category ID
+                "idSubCategory": 1               # Default subcategory ID
             }
-            response = httpx.post(
+        
+        response = httpx.post(
                 "http://localhost:8087/user-management/product",
                 headers={"Content-Type": "application/json"},
                 content=json.dumps(data)
             )
+        
+        return response
 
-            if response.status_code == 201:
-                result_text.value = "✅ Product created successfully!"
-                product_name.value = ""
-            else:
-                result_text.value = f"❌ Error {response.status_code}: {response.text}"
-        except Exception as ex:
-            result_text.value = f"⚠️ Exception: {ex}"
-
-        self.page.update()
-
-    def find_product(self, product_name: ft.TextField, result_text: ft.Text):
+    @staticmethod
+    def find_product(product_name):
         """
-        Searches for a product by name and autofills the description if found.
+        Searches for a product by name in the product data base.
 
         Args:
-        product_name (ft.TextField): The input field with the product name.
-        descripcion_field (ft.TextField): The field to fill with the product's description.
-        result_text (ft.Text): A text field to show status messages.
+        product_name (str): The name of the product to search for.
+
+        Returns:
+        httpx.Response: The HTTP response object returned by the API request.
+                        Use response.status_code to check for success,
+                        and response.json() to access the response data.
         """
-        try:
-            name = product_name.value
-            if not name:
-                result_text.value = "⚠️ Please enter a product name to search."
-                self.page.update()
-                return
+        response = httpx.get(f"http://localhost:8087/user-management/product/detail?name={product_name}")
 
-            response = httpx.get(f"http://localhost:8087/user-management/product/detail?name={name}")
-
-            if response.status_code == 200:
-                product_data = response.json()
-                id_product = product_data['data']['id']
-                result_text.value = "✅ Product found."
-            elif response.status_code == 404:
-                result_text.value = "❌ Product not found."
-            else:
-                result_text.value = f"❌ Error {response.status_code}: {response.text}"
-        except Exception as ex:
-            result_text.value = f"⚠️ Exception: {ex}"
-
-        self.page.update()
+        return response
 
