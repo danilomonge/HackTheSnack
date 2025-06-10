@@ -1,9 +1,13 @@
 import flet as ft
-from add_product_table.logic.input_validator import InputValidator
-from add_product_table.logic.data_builder import IngredientDataBuilder
-from create_result_table.result_table_ui import RecipeResultUI
 import httpx
 import json
+from Frontend.src.add_product_table.logic.input_validator import InputValidator
+from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
+from Frontend.src.create_result_table.result_table_ui import RecipeResultUI
+
+
+
+
 
 class ProductSubmitHandler:
     """
@@ -46,7 +50,8 @@ class ProductSubmitHandler:
 
         # If valid, update UI feedback
         feedback_text.value = "✅ Product is valid. Recipe generated!"
-        feedback_text.color = "green"
+        feedback_text.color = "#67CD6B"  
+        feedback_text.size = 14
         page.update()
 
         # Extract product name and ingredient dictionary
