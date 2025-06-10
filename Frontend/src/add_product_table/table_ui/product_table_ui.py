@@ -4,7 +4,7 @@ from Frontend.src.add_product_table.logic.input_validator import InputValidator
 from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 from Frontend.src.product_submit_handler import ProductSubmitHandler
 from Frontend.src.product_action_handler import ProductActionHandler
-from DataBase.product_manager import ProductManager
+from Backend.data_base_manager.product_manager import ProductManager
 
 
 class ProductTableUI:
@@ -27,7 +27,6 @@ class ProductTableUI:
         """
         self.page = page
         self.ingredient_rows = ft.Column()
-        self.ingredient_manager = IngredientManager(self.ingredient_rows)
         self.result_text = ft.Text(value="", color="green", size=12, weight=ft.FontWeight.BOLD)
 
         self.product_name = ft.TextField(
