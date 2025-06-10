@@ -28,11 +28,11 @@ def test_find_initial_point():
 
     """
 
-    x0 = Computation._find_initial_point(A, a, B, b)
+    x0 = Computation._find_initial_point(A, a, B, b, eps=1e-6)
 
-    assert np.allclose(np.sum(x0), 1)  # Sum = 1
-    assert np.all(x0 > 0)              # Ingredients > 0
-    assert np.all(A @ x0 - a < 0)      # Test for inequalities
+    assert np.allclose(np.sum(x0), 1)  # Sum = 1                        # type: ignore[arg-type]
+    assert np.all(x0 > 0)              # Ingredients > 0                # type: ignore[arg-type]
+    assert np.all(A @ x0 - a < 0)      # Test for inequalities          # type: ignore[arg-type]
     assert np.allclose(B @ x0 - b, 0)  # Test for equalities
 
 
@@ -75,9 +75,9 @@ def test_MCMC():
     """
     samples = Computation._MCMC(A, a, B, b, num_iter=num_iter, thinning=thinning)
 
-    assert samples.shape[0] == num_iter // thinning         # correct thinning                   
-    assert samples.shape[1] == A.shape[1]                   # dimensions for one sample
-    assert np.all(np.isclose(np.sum(samples, axis=1), 1))   # sum = 1
+    assert samples.shape[0] == num_iter // thinning         # correct thinning                   # type: ignore[arg-type]                   
+    assert samples.shape[1] == A.shape[1]                   # dimensions for one sample          # type: ignore[arg-type]
+    assert np.all(np.isclose(np.sum(samples, axis=1), 1))   # sum = 1                            # type: ignore[arg-type]
 
 
 S = int(1e5)
@@ -91,10 +91,10 @@ def test_compute_result():
 
     mean, std = Computation.compute_result(A, a, B, b)
 
-    assert np.all(np.isfinite(mean, std))        # values exist
-    assert not np.all(np.isnan(mean, std))       # values are not NAN
-    assert np.all(mean > 0) and np.all(std >= 0) # values are positive
-    assert np.all(np.isclose(np.sum(mean), 100))   # mean sum = 1
+    assert np.all(np.isfinite(mean, std))        # values exist                   # type: ignore[arg-type]
+    assert not np.all(np.isnan(mean, std))       # values are not NAN             # type: ignore[arg-type]
+    assert np.all(mean > 0) and np.all(std >= 0) # values are positive            # type: ignore[arg-type]
+    assert np.all(np.isclose(np.sum(mean), 100))   # mean sum = 1                 # type: ignore[arg-type]
 
 
 def test_compute_result_for_one_ingredient():
