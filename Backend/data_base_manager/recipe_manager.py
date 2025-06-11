@@ -39,30 +39,20 @@ class RecipeManager:
         return response
 
     @staticmethod
-    def delete_product_ingredient(idProduct, idIngredient):
+    def delete_product_ingredient(idProduct):
         """
-        Deletes the association between a product and an ingredient.
+        Deletes the association between a product and their ingredients.
 
         Args:
         idProduct (int):     The number of the product beeing associated.
-        idIngredient (int):  The number of the ingredient beeing associated.
 
         Returns:
         httpx.Response: The HTTP response object returned by the API request.
                         Use response.status_code to check for success,
                         and response.json() to access the response data.
         """
-        data = {
-                "idPorduct": idProduct,
-                "idIngredient": idIngredient,    
-                "fechaRegistro": "2025-06-05",                 #Needs to be updated to take into account the creation date
-            }
         
-        response = httpx.post(
-                "http://localhost:8087/user-management/recipe/:id",
-                headers={"Content-Type": "application/json"},
-                content=json.dumps(data)
-            )
+        response = httpx.get(f"http://localhost:8087/user-management/product/detail?name={idProduct}")
         
         return response
     
