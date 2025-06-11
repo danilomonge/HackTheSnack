@@ -379,7 +379,7 @@ def test_check_total_not_exceed_100():
     page = TestPage()
     result = InputValidator._check_total_not_exceed_100(100.01, message, page) # type: ignore[arg-type]
     assert result is False
-    assert message.value == "⚠️ Total percentage is 100.01%. It must not exceed 100%."
+    assert message.value == "⚠️ Total percentage is 100.01%. It must not exceed 100%. Please reduce one ore more ingredients."
     assert message.color == "red"
     assert page.updated
 
@@ -425,7 +425,7 @@ def test_check_percentage_order():
     message = TestText()
     result = InputValidator._check_percentage_order([20.0, 50.0], message, page) # type: ignore[arg-type]
     assert result is False
-    assert message.value.startswith("⚠️ An ingredient has a higher percentage than the one above it")
+    assert "descending order" in message.value
     assert message.color == "red"
     assert page.updated
 
@@ -480,7 +480,7 @@ def test_check_total_if_filled():
     page = TestPage()
     result = InputValidator._check_total_if_filled([50.0, 30.0, 20.0], 99.9, message, page) # type: ignore[arg-type]
     assert result is False
-    assert message.value.startswith("⚠️ All percentages are filled")
+    assert "must be 100%" in message.value
     assert message.color == "red"
     assert page.updated
 
@@ -558,7 +558,7 @@ def test_check_below_empty_not_over_50():
     rows = [TestRow("W", ""), TestRow("X", "30"), TestRow("Y", "25"), TestRow("Z", "10")]
     result = InputValidator._check_below_empty_not_over_50(rows, message, page) # type: ignore[arg-type]
     assert result is False
-    assert message.value.startswith("⚠️ Subtotal below an ingredient")
+    assert "must not total more than 50%" in message.value
     assert message.color == "red"
     assert page.updated
 
