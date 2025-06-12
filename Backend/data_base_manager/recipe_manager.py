@@ -63,7 +63,6 @@ class RecipeManager:
 
         Args:
         idProduct (int):     The number of the product beeing associated.
-        idIngredient (int):  The number of the ingredient beeing associated.
 
         Returns:
         httpx.Response: The HTTP response object returned by the API request.

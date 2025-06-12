@@ -1,23 +1,27 @@
-import json
 
 class Translation:
     """
-    Translates data for backend and frontend usage
+    Filters data to be procesed in Backend and Frontend
     """ 
 
     @staticmethod
-    
-    def json_to_dict(json_string: str) -> dict:
+    def product_table_filter(api_response: dict) -> dict[str, float]:
         """
-        Converts a JSON-formatted string into a Python dictionary.
+        Transforms an API-recipe response into a dictionary mapping ingredient names to their IDs.
 
         Args:
-            json_string (str): A string in valid JSON format.
+            api_response (dict): Dictionary containing 'data' key with ingredient info.
 
         Returns:
-            dict: The corresponding Python dictionary.
+            dict[str, float]: Dictionary with {ingredient_name: ingredient_id}
         """
-        try:
-            return json.loads(json_string)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON: {e}")
+        ingredients = {}
+
+        data = api_response.get("data", [])
+        for item in data:
+            name = item.get("nameIngredient")
+            id_ = item.get("idIngredient")
+            if name is not None and id_ is not None:
+                ingredients[name] = id_
+
+        return ingredients
