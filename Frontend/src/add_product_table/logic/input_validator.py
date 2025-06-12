@@ -389,7 +389,7 @@ class InputValidator:
                 and simulated[i - 1] is not None
                 and fill_value > round(simulated[i - 1], 5)
             ):
-                message_text.value = "⚠️ Invalid position for empty or zero ingredients. Try changing their order."
+                message_text.value = "⚠️ Invalid position for empty or zero ingredients. Try changing their order or erasing them."
                 message_text.color = "red"
                 page.update()
                 return False
