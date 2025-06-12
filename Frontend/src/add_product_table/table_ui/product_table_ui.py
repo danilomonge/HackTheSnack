@@ -51,10 +51,11 @@ class ProductTableUI:
         """
         Handles the find Product button click by calling ProductCreator.
         """
-        return ProductActionHandler.handle_product_search(
+        return ProductActionHandler.handle_search_and_fill(
             self.product_name,
             self.feedback,
             self.page,
+            self.ingredient_manager
         )
     
     def on_create_product_click(self, e):
