@@ -370,9 +370,10 @@ class InputValidator:
             for j in range(len(simulated)):
                 if j == i or simulated[j] is not None:
                     continue
-                simulated[j] = next(
-                    (x for x in simulated[j + 1 :] if x is not None), None
-                )
+                next_valid = next((x for x in simulated[j + 1:] if x is not None), None)
+                # If no valid value is found, use a small default value
+                simulated[j] = next_valid if next_valid is not None else 0.01
+
 
             # Calculates the fill value for the current empty field by substracting 100 - the sum of all others
             others_sum = sum(
@@ -380,12 +381,13 @@ class InputValidator:
             )
             fill_value = round(100 - others_sum, 5)
             original[i] = fill_value
+            simulated[i] = fill_value
 
             # Compares the fill value with the previous field to ensure it does not exceed it
             if (
                 i > 0
                 and simulated[i - 1] is not None
-                and fill_value >= round(simulated[i - 1], 5)
+                and fill_value > round(simulated[i - 1], 5)
             ):
                 message_text.value = "⚠️ Invalid position for empty or zero ingredients. Try changing their order."
                 message_text.color = "red"
