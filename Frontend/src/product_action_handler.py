@@ -1,9 +1,6 @@
 import flet as ft
-import httpx
-import json
 from Backend.data_base_manager.product_manager import ProductManager
-from add_product_table.logic.input_validator import InputValidator
-from add_product_table.logic.data_builder import IngredientDataBuilder
+
 
 
 class ProductActionHandler:

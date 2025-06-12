@@ -5,8 +5,8 @@ sys.dont_write_bytecode = True
 import numpy as np
 
 from Backend.Input.constraints_preparation import prepare_constraints_dict
-from Backend.constraints import Constraints
-from Backend.computation import Computation
+from Backend.algorithm.constraints import Constraints
+from Backend.algorithm.computation import Computation
 
 
 class RecipeGenerator:
