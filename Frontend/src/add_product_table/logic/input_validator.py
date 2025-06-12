@@ -425,30 +425,19 @@ class InputValidator:
             return False
 
         checks = [
-            InputValidator._check_total_not_exceed_100(total, message_text, page),
-            InputValidator._check_percentage_order(percentages, message_text, page),
-            InputValidator._check_total_if_filled(
-                percentages, total, message_text, page
-            ),
-            InputValidator._check_below_empty_not_over_50(
-                ingredient_rows, message_text, page
-            ),
-            InputValidator._check_remaining_space_is_enough(
-                ingredient_rows, message_text, page
-            ),
-            InputValidator._check_no_empty_if_total_is_100(
-                ingredient_rows, message_text, page
-            ),
-            InputValidator._check_duplicate_ingredient_names(
-                ingredient_rows, message_text, page
-            ),
-            InputValidator._check_empty_position_valid(
-                ingredient_rows, message_text, page
-            ),
+            lambda: InputValidator._check_total_not_exceed_100(total, message_text, page),
+            lambda: InputValidator._check_percentage_order(percentages, message_text, page),
+            lambda: InputValidator._check_total_if_filled(percentages, total, message_text, page),
+            lambda: InputValidator._check_below_empty_not_over_50(ingredient_rows, message_text, page),
+            lambda: InputValidator._check_remaining_space_is_enough(ingredient_rows, message_text, page),
+            lambda: InputValidator._check_no_empty_if_total_is_100(ingredient_rows, message_text, page),
+            lambda: InputValidator._check_duplicate_ingredient_names(ingredient_rows, message_text, page),
+            lambda: InputValidator._check_empty_position_valid(ingredient_rows, message_text, page),
         ]
 
-        if not all(checks):
-            return False
+        for check in checks:
+            if not check():
+                return False
 
         message_text.value = ""
         page.update()
