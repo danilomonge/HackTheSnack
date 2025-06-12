@@ -86,7 +86,7 @@ def test_handle_submit():
     result = ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page)  # type: ignore[arg-type]
     assert result == ("Pasta Box", {"Pasta": 0.6, "Tomato Sauce": 0.4})
     assert msg.value == "✅ Product is valid. Recipe generated!"
-    assert msg.color == "green"
+    assert msg.color == "#67CD6B"
     assert page.updated  # type: ignore[arg-type]
 
     # Case 2: empty product name → should return None
