@@ -4,6 +4,7 @@ import json
 from Frontend.src.add_product_table.logic.input_validator import InputValidator
 from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 from Frontend.src.create_result_table.result_table_ui import RecipeResultUI
+from Backend.recipe_generator import RecipeGenerator
 
 
 
@@ -57,8 +58,10 @@ class ProductSubmitHandler:
         # Extract product name and ingredient dictionary
         product_name = (product_name_field.value or "").strip()
         ingredient_dict = IngredientDataBuilder.build_data_from_rows(ingredient_rows)
+        
+        # Generate the recipe using the RecipeGenerator from the backend
+        result_dict = RecipeGenerator.generate_recipe(ingredient_dict)
 
-        # Generate and display the recipe result
-        RecipeResultUI.generate_and_display_recipe(page, ingredient_dict)
+        # Display the recipe result
+        RecipeResultUI.display_recipe_result(page, result_dict)
 
-        return product_name, ingredient_dict
