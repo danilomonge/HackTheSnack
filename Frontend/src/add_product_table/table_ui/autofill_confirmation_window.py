@@ -1,7 +1,4 @@
 import flet as ft
-from typing import Callable
-from Frontend.src.product_action_handler import ProductActionHandler
-
 
 class AutofillConfirmationWindow:
     def __init__(self, page: ft.Page, on_confirm, on_cancel=None):
