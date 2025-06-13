@@ -53,6 +53,44 @@ class ProductActionHandler:
 
         page.update()
 
+    @staticmethod
+    def check_if_product_exists(
+        product_name_field: ft.TextField,
+        feedback_text: ft.Text,
+        page: ft.Page,):
+        """
+        Searches for a product by name in the database and returns a boolean statement
+
+        Args:
+        product_name (str): The name of the product to search for.
+
+        Returns:
+        boolean: True if the product exists and false if it does not 
+        """
+        try:
+            product_name = product_name_field.value
+            if not product_name:
+                feedback_text.value = "⚠️ Please enter a product name to search."
+                page.update()
+                return
+        
+            response = ProductManager.find_product(product_name)
+
+            if response.status_code == 200:
+                #feedback_text.value = "✅ Product found."
+                page.update()
+                return True
+            else:
+                feedback_text.value = "❌ Product not found."
+                page.update()
+                return False
+        except Exception as ex:
+            feedback_text.value = f"⚠️ Exception: {ex}"
+
+        page.update()
+
+    
+
 
     @staticmethod
     def handle_create_product(product_name_field: ft.TextField, 
@@ -110,9 +148,6 @@ class ProductActionHandler:
                 recipe_json = data.json()
                 recipe_dict = Translation.product_table_filter(recipe_json)
                 DataFiller.fill_rows_from_data(recipe_dict, ingredient_manager)
-                
-            else:
-                feedback_text.value = f"❌ This product does not exist"
             
         except Exception as ex:
             feedback_text.value = f"⚠️ Exception: {ex}"

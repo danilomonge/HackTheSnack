@@ -3,7 +3,11 @@ from Frontend.src.add_product_table.table_ui.ingredient_manager  import Ingredie
 
 class DataFiller:
     """
-    
+    Class for populating the ingredient input UI with data.
+
+    Provides static methods to fill ingredient rows
+    in the UI using a given dictionary of ingredient names and their corresponding
+    percentages.
     """
 
     @staticmethod
@@ -12,11 +16,11 @@ class DataFiller:
         ingredient_manager: "IngredientManager"
     ) -> None:
         """
-        Recibe un diccionario con ingredientes y porcentajes, y llena los renglones en la UI.
+        Receive a dictionary with ingredients and percentages, and fill in the lines in the UI.
 
         Args:
-            ingredient_data (dict[str, float]): Diccionario con nombre y porcentaje de ingredientes.
-            ingredient_manager (IngredientManager): Instancia del administrador de ingredientes.
+            ingredient_data (dict[str, float]): Dictionary with name and percentage of ingredients.
+            ingredient_manager (IngredientManager): Instance of the ingredient manager.
         """
         style = ingredient_manager.input_style()
 
