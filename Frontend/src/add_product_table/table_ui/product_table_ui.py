@@ -4,7 +4,7 @@ from Frontend.src.add_product_table.logic.input_validator import InputValidator
 from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 from Frontend.src.product_submit_handler import ProductSubmitHandler
 from Frontend.src.product_action_handler import ProductActionHandler
-from Frontend.src.add_product_table.logic.autofill_confirmation_window import AutofillConfirmationWindow
+from FakeTheSnack.Frontend.src.add_product_table.table_ui.autofill_confirmation_window import AutofillConfirmationWindow
 from Backend.data_base_manager.product_manager import ProductManager
 
 
