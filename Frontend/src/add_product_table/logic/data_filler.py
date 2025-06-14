@@ -24,6 +24,8 @@ class DataFiller:
         """
         style = ingredient_manager.input_style()
 
+        ingredient_manager.clear_all()
+
         for name, percentage in ingredient_data.items():
             last_valid = [f"{percentage:.2f}"]
 
