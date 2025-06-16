@@ -1,7 +1,7 @@
 import flet as ft
 from ..logic.input_validator import InputValidator
 from ..logic.percentage_adjuster import PercentageAdjuster
-
+from styles import Styles
 
 class IngredientManager:
     """
@@ -25,21 +25,8 @@ class IngredientManager:
         self.ingredients = []
         self.quantity_table = quantity_table
         self.product_name = product_name
-        self.page =page
+        self.page = page
 
-    def input_style(self):
-        """
-        Returns a standard style dictionary for input fields.
-
-        Returns:
-            dict: Styling options for Flet TextField inputs.
-        """
-        return {
-            "filled": True,
-            "bgcolor": "#E8F5E9",
-            "border_color": "#1A3E3E",
-            "color": "black",
-        }
 
     def name_input(self, style):
         """
@@ -70,7 +57,7 @@ class IngredientManager:
             hint_text="00.00",
             width=120,
             suffix_text="%",
-            suffix_style=ft.TextStyle(color="black"),
+            suffix_style=ft.TextStyle(color=Styles.TEXT_COLOR),
             keyboard_type=ft.KeyboardType.NUMBER,
             on_change=InputValidator.fix_input_while_typing(last_valid, page),
             data={"last_valid": last_valid},
@@ -89,21 +76,19 @@ class IngredientManager:
         """
         return ft.Row(
             controls=[
-                ft.IconButton(
+                Styles.icon_button(
                     ft.Icons.REMOVE,
-                    on_click=lambda e: PercentageAdjuster.increase_or_decrease_percentage(
+                    lambda e: PercentageAdjuster.increase_or_decrease_percentage(
                         percent_input, -1.0
                     ),
-                    icon_size=20,
-                ),
+                    Styles.TEXT_COLOR),
                 percent_input,
-                ft.IconButton(
+                Styles.icon_button(
                     ft.Icons.ADD,
-                    on_click=lambda e: PercentageAdjuster.increase_or_decrease_percentage(
+                    lambda e: PercentageAdjuster.increase_or_decrease_percentage(
                         percent_input, 1.0
                     ),
-                    icon_size=20,
-                ),
+                    Styles.TEXT_COLOR),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=5,
@@ -126,20 +111,14 @@ class IngredientManager:
                 controls=[
                     ft.Container(content=name_input, padding=5),
                     ft.Container(content=percent_section, padding=5),
-                    ft.IconButton(
-                        ft.Icons.DELETE,
-                        on_click=lambda e: on_delete(),
-                        icon_color="red",
-                        icon_size=20,
-                        tooltip="Remove ingredient",
-                    ),
+                    Styles.icon_button(ft.Icons.DELETE,lambda e: on_delete(), Styles.RED_COLOR, "Remove ingredient"),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=20,
             ),
-            bgcolor="#F5F5F5",
-            border_radius=10,
+            bgcolor=Styles.TABLE_ROW_COLOR,
+            border_radius=Styles.BORDER_RADIUS,
             padding=10,
             margin=5,
         )
@@ -155,7 +134,7 @@ class IngredientManager:
             page (ft.Page): The page to trigger UI updates.
         """
         last_valid = ["0.00"]
-        style = self.input_style()
+        style = Styles.input_style()
 
         name_input = self.name_input(style)
         percent_input = self.percent_input(style, last_valid, page)

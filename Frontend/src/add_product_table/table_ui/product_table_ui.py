@@ -3,6 +3,7 @@ from Frontend.src.add_product_table.table_ui.ingredient_manager import Ingredien
 from Frontend.src.add_product_table.logic.input_validator import InputValidator
 from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 from Frontend.src.product_submit_handler import ProductSubmitHandler
+from styles import Styles
 
 
 class ProductTableUI:
@@ -26,14 +27,13 @@ class ProductTableUI:
         self.page = page
         self.ingredient_rows = ft.Column()
 
+        style = Styles.input_style()
+
         self.product_name = ft.TextField(
             label="Product Name",
             hint_text="e.g. Fruit Yogurt",
             width=400,
-            filled=True,
-            bgcolor="#E8F5E9",
-            border_color="#1A3E3E",
-            color="black",
+            **style
         )
 
         self.ingredient_manager = IngredientManager(
@@ -42,7 +42,7 @@ class ProductTableUI:
         self.page 
         )
 
-        self.feedback = ft.Text(value="", color="red", size=12, weight=ft.FontWeight.BOLD)
+        self.feedback = ft.Text(value="", color=Styles.RED_COLOR, size=Styles.FEEDBACK_FONT_SIZE, weight=ft.FontWeight.BOLD)
 
     def on_add_click(self):
         """
@@ -73,24 +73,6 @@ class ProductTableUI:
             self.page,
         )
 
-    def build_title(self):
-        """
-        Creates the main title of the page.
-
-        Returns:
-            ft.Container: A container with the title text.
-        """
-        return ft.Container(
-            ft.Text(
-                "Analyze a product",
-                size=34,
-                weight=ft.FontWeight.BOLD,
-                color="#1A3E3E",
-                text_align=ft.TextAlign.CENTER,
-            ),
-            alignment=ft.alignment.center,
-            padding=10,
-        )
 
     def build_name_input(self):
         """
@@ -103,13 +85,7 @@ class ProductTableUI:
             content=ft.Column(
                 [
                     ft.Container(
-                        ft.Text(
-                            "Enter product name",
-                            weight=ft.FontWeight.BOLD,
-                            size=23,
-                            color="#1A3E3E",
-                            text_align=ft.TextAlign.CENTER,
-                        ),
+                        Styles.build_subtitle("Enter product name"),
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
@@ -133,15 +109,15 @@ class ProductTableUI:
                 [
                     ft.Text(
                         "List the ingredients from most to least used.",
-                        size=17,
-                        color="#1A3E3E",
+                        size=Styles.EXPLANATION_FONT_SIZE,
+                        color= Styles.EXPLANATION_FONT_COLOR,
                         weight=ft.FontWeight.BOLD,
                         text_align=ft.TextAlign.CENTER,
                     ),
                     ft.Text(
                         "Only include a percentage if known; otherwise, leave it blank or use 0%.",
-                        size=15,
-                        color="#666666",
+                        size= Styles.EXPLANATION_FONT_SIZE,
+                        color= Styles.EXPLANATION_FONT_COLOR,
                         text_align=ft.TextAlign.CENTER,
                     ),
                 ],
@@ -151,7 +127,7 @@ class ProductTableUI:
             ),
             alignment=ft.alignment.center,
             padding=ft.padding.symmetric(vertical=6, horizontal=10),
-            bgcolor="#F5F5F5",
+            bgcolor=Styles.BOX_COLOR,
         )
 
     def build_table_header(self):
@@ -165,12 +141,12 @@ class ProductTableUI:
             content=ft.Row(
                 [
                     ft.Container(
-                        ft.Text("Ingredient", weight=ft.FontWeight.BOLD, size=18, color="white"),
+                        ft.Text("Ingredient", weight=ft.FontWeight.BOLD, size=18, color=Styles.TABLE_HEADER_FONT_COLOR),
                         width=200,
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
-                        ft.Text("Percentage", weight=ft.FontWeight.BOLD, size=18, color="white"),
+                        ft.Text("Percentage", weight=ft.FontWeight.BOLD, size=18, color=Styles.TABLE_HEADER_FONT_COLOR),
                         width=120,
                         alignment=ft.alignment.center,
                     ),
@@ -179,7 +155,7 @@ class ProductTableUI:
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=20,
             ),
-            bgcolor="#1A3E3E",
+            bgcolor=Styles.TABLE_HEADER_COLOR,
             padding=10,
             border_radius=10,
             margin=5,
@@ -195,29 +171,21 @@ class ProductTableUI:
         return ft.Container(
             content=ft.Row(
                 [
-                    ft.ElevatedButton(
+                    Styles.primary_button(
                         "Add Ingredient",
                         icon=ft.Icons.ADD,
                         on_click=lambda e: self.on_add_click(),
-                        bgcolor="#1A3E3E",
-                        color="white",
-                        width=200,
                     ),
-                    ft.ElevatedButton(
+
+                    Styles.primary_button(
                         "Submit Product",
                         icon=ft.Icons.ANALYTICS,
                         on_click=lambda e: self.on_submit_click(),
-                        bgcolor="#1A3E3E",
-                        color="white",
-                        width=200,
                     ),
-                    ft.ElevatedButton(
+                    Styles.primary_button(
                         "Clear All",
                         icon=ft.Icons.CLEAR,
                         on_click=lambda e: (self.on_clearall_click(), self.on_add_click()),
-                        bgcolor="#1A3E3E",
-                        color="white",
-                        width=200,
                     ),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
@@ -236,7 +204,7 @@ class ProductTableUI:
         return ft.Container(
             content=ft.Column(
                 [
-                    self.build_title(),
+                    Styles.build_title(),
                     self.build_name_input(),
                     self.build_table_header(),
                     self.build_instruction_text(),
@@ -247,14 +215,8 @@ class ProductTableUI:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
             ),
-            width=1000,
+            expand=True,
+            alignment=ft.alignment.center,
             padding=20,
-            bgcolor="#FFFFFF",
-            border_radius=15,
-            shadow=ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=15,
-                color=ft.Colors.BLACK12,
-                offset=ft.Offset(0, 0),
-            ),
+            bgcolor=Styles.BACKGROUND_COLOR,
         )

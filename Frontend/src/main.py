@@ -37,6 +37,12 @@ def main(page: ft.Page):
     recipes_view = RecipesView(page)
 
     def route_change(e: ft.RouteChangeEvent):
+        """
+        Handles route changes to update the page views based on the current route.
+        Clears existing views and adds the appropriate view based on the route.
+        Args:
+            e (ft.RouteChangeEvent): The event triggered by a route change.
+        """
         page.views.clear()
         
         if page.route == "/about":
@@ -56,7 +62,12 @@ def main(page: ft.Page):
                     "/generator",
                     [
                         navbar.build(),
-                        generator_view.build_table_ui(),
+                        ft.Column([
+                            generator_view.build_table_ui(),
+                        ],
+                        scroll=ft.ScrollMode.AUTO,
+                        expand=True,
+                        )
                     ],
                 )
             )
