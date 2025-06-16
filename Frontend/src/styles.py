@@ -34,7 +34,7 @@ class Styles:
     FEEDBACK_FONT_SIZE = 16
     # Red -> error and delete button
     RED_COLOR = "#BB2020"
-    # Green -> success and confirm button
+    # Green -> success feedback message
     GREEN_COLOR = "#67CD6B"
 
     TITLE_SIZE = 40
