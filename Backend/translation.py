@@ -1,7 +1,7 @@
 
 class Translation:
     """
-    Filters data to be procesed in Backend and Frontend
+    Filters data to be processed in Backend and Frontend
     """ 
 
     @staticmethod

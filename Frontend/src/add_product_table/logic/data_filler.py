@@ -32,8 +32,8 @@ class DataFiller:
             name_input = ingredient_manager.name_input(style)
             name_input.value = name
 
-            percent_input = ingredient_manager.percent_input(style, last_valid, ingredient_manager.page)
-            percent_input.value = f"{percentage:.2f}"
+            percent_input = ingredient_manager.percent_input(style, last_valid=[], page=ingredient_manager.page)
+            percent_input.value = ""    #f"{percentage:.2f}"
 
             percent_section = ingredient_manager.percent_section(percent_input)
 
