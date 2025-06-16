@@ -14,13 +14,16 @@ class RecipeManager:
     """
 
     @staticmethod
-    def submit_recipe(product_name, ingredient_dict):
+    def submit_recipe(product_name, ingredient_dict) -> list[int]:
         """
         creates and associates a product with a series of ingredients
 
         Args:
         product_name (str):     The name of the product.
         ingredient_dict (dict):  The ingredient dictionary with percentage values
+
+        Returns:
+        recipe_ids (list[int]): List of recipe (product-ingredient associaton) IDs
 
         """
         #submit ingredient list
@@ -35,7 +38,9 @@ class RecipeManager:
         else:
             id_product = ProductManager.find_product_id(product_name)
 
-        RecipeManager.associate_ingredients_to_product(id_product, id_ingredients)
+        recipe_ids = RecipeManager.associate_ingredients_to_product(id_product, id_ingredients)
+
+        return recipe_ids 
         
 
     @staticmethod
@@ -68,16 +73,23 @@ class RecipeManager:
         return response
     
     @staticmethod
-    def associate_ingredients_to_product(idProduct: int, ingredient_ids: list[int]) -> None:
+    def associate_ingredients_to_product(idProduct: int, ingredient_ids: list[int]) -> list[int]:
         """
         Associates all ingredient IDs to a given product ID via the API.
 
         Args:
             idProduct (int): The product ID to associate with.
             ingredient_ids (list[int]): List of ingredient IDs to associate.
+
+        Return:
+            recipe_ids (list[int]): List of recipe (product-ingredient associaton) IDs
         """
+        recipe_ids = []
+
         for id_ingredient in ingredient_ids:
             response = RecipeManager.associate_product_ingredient(idProduct, id_ingredient)
+            recipe_data = response.json()
+            recipe_ids.append(recipe_data['data'])
 
             if response.status_code == 201:
                     print(f"Associated ingredient {id_ingredient} with product {idProduct}")
@@ -87,6 +99,8 @@ class RecipeManager:
 
             else:    
                 print(f"Error: {response.status_code} while associating ingredient {id_ingredient}")
+
+        return recipe_ids 
 
     @staticmethod
     def delete_product_ingredient(idProduct):
