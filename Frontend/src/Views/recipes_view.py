@@ -1,5 +1,5 @@
 import flet as ft
-from styles import Styles
+from styles import Styles 
 
 
 class RecipesView:
