@@ -1,4 +1,5 @@
 import flet as ft
+from styles import Styles
 
 
 class RecipesView:
@@ -8,7 +9,7 @@ class RecipesView:
     def build(self):
         return ft.Column(
             controls=[
-                ft.Text("Your Recipes", size=32, weight=ft.FontWeight.BOLD),
+                ft.Text("Your Recipes", size=Styles.TITLE_SIZE, weight=ft.FontWeight.BOLD),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,

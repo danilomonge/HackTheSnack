@@ -1,4 +1,5 @@
 import flet as ft
+from styles import Styles
 
 
 class InputValidator:
@@ -106,7 +107,7 @@ class InputValidator:
         name = (name_input.value or "").strip()
         if not name:
             message_text.value = "⚠️ Please enter a product name."
-            message_text.color = "red"
+            message_text.color = Styles.RED_COLOR
             page.update()
             return False
         return True
@@ -132,7 +133,7 @@ class InputValidator:
             name = (name_field.value or "").strip()
             if not name:
                 message_text.value = "⚠️ One or more ingredients are missing a name. Please check and fill in all ingredient names."
-                message_text.color = "red"
+                message_text.color = Styles.RED_COLOR
                 page.update()
                 return 0.0, None
 
@@ -157,7 +158,7 @@ class InputValidator:
             message_text.value = (
                 f"⚠️ Total percentage is {total:.2f}%. It must not exceed 100%. Please reduce one ore more ingredients."
             )
-            message_text.color = "red"
+            message_text.color = Styles.RED_COLOR
             page.update()
             return False
         return True
@@ -173,7 +174,7 @@ class InputValidator:
         for i in range(len(percentages) - 1):
             if percentages[i] != 0.0 and percentages[i] < percentages[i + 1]:
                 message_text.value = "⚠️ Ingredient percentages must be in descending order. Please make sure that the first ingredient that you enter has the highest percentage, and each one below must be equal or smaller."
-                message_text.color = "red"
+                message_text.color = Styles.RED_COLOR
                 page.update()
                 return False
         return True
@@ -187,7 +188,7 @@ class InputValidator:
         """
         if all(p > 0.0 for p in percentages) and round(total, 2) != 100.00:
             message_text.value = f"⚠️ Total is {total:.2f}%, but it must be 100% when all ingredients are filled. Please adjust the values."
-            message_text.color = "red"
+            message_text.color = Styles.RED_COLOR
             page.update()
             return False
         return True
@@ -220,7 +221,7 @@ class InputValidator:
                 subtotal += value
                 if subtotal > 50.0:
                     message_text.value = "⚠️ Ingredients below an empty row must not total more than 50%. Please reduce the values below the empty ingredient."
-                    message_text.color = "red"
+                    message_text.color = Styles.RED_COLOR
                     page.update()
                     return False
 
@@ -269,7 +270,7 @@ class InputValidator:
 
         if total_needed_space > remaining:
             message_text.value = "⚠️ Not enough space left for the empty fields based on the values that follow them. Please lower the values that come after empty fields."
-            message_text.color = "red"
+            message_text.color = Styles.RED_COLOR
             page.update()
             return False
 
@@ -305,7 +306,7 @@ class InputValidator:
             message_text.value = (
                 "⚠️ Total is already 100%, but there are still empty ingredient values. Please reduce one or more percentages."
             )
-            message_text.color = "red"
+            message_text.color = Styles.RED_COLOR
             page.update()
             return False
 
@@ -329,7 +330,7 @@ class InputValidator:
 
             if name in seen:
                 message_text.value = "⚠️ Ingredient names cannot be repeated."
-                message_text.color = "red"
+                message_text.color = Styles.RED_COLOR
                 page.update()
                 return False
 

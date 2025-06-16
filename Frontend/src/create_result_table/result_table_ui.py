@@ -1,5 +1,6 @@
 import flet as ft
 from .calculate_recipe_result import RecipeResultCalculator
+from styles import Styles
 
 
 class RecipeResultUI:
@@ -19,7 +20,7 @@ class RecipeResultUI:
         """
         self.page = page
         self.table = ft.Column()
-        self.message = ft.Text(value="", size=14, color="red")
+        self.message = ft.Text(value="", size=Styles.FEEDBACK_FONT_SIZE, color=Styles.RED_COLOR)
 
     def show_recipe(self, result: dict[str, dict[str, float]]):
         """
@@ -29,7 +30,7 @@ class RecipeResultUI:
             result (dict): Final recipe data.
         """
         self.message.value = "✅ Recipe created successfully!"
-        self.message.color = "#67CD6B" 
+        self.message.color = Styles.GREEN_COLOR
         self.message.weight = ft.FontWeight.BOLD
         self.page.update()
         self.build_result_table(result)
@@ -39,7 +40,7 @@ class RecipeResultUI:
         Displays an error message if generation failed.
         """
         self.message.value = "❌ Could not generate recipe. Please check your inputs."
-        self.message.color = "red"
+        self.message.color = Styles.RED_COLOR
         self.page.update()
     
     def build_result_text(self) -> ft.Container:
@@ -56,8 +57,8 @@ class RecipeResultUI:
                         "Explanation of your results: \n"
                         "The amount shows the average percentage that each ingredient in your recipe has. \n "
                         "The variation shows you how much the percentage might vary.\n",
-                        size=13,
-                        color="#1A3E3E",
+                        size= Styles.EXPLANATION_FONT_SIZE,
+                        color=Styles.EXPLANATION_FONT_COLOR,
                         text_align=ft.TextAlign.CENTER,
                     ),
                 ],
@@ -67,7 +68,7 @@ class RecipeResultUI:
             ),
             alignment=ft.alignment.center,
             padding=ft.padding.symmetric(vertical=6, horizontal=10),
-            bgcolor="#F5F5F5",
+            bgcolor=Styles.BOX_COLOR,
             )
 
     def build_result_table(self, result: dict[str, dict[str, float]]):
@@ -80,9 +81,9 @@ class RecipeResultUI:
         rows = [
             ft.Row(
                 [
-                    ft.Text("Ingredient", weight=ft.FontWeight.BOLD, width=200, color="#4d4d4d"),
-                    ft.Text("% Amount", weight=ft.FontWeight.BOLD, width=100, color="#4d4d4d"),
-                    ft.Text("± Variation", weight=ft.FontWeight.BOLD, width=120, color="#4d4d4d"),
+                    ft.Text("Ingredient", weight=ft.FontWeight.BOLD, width=200, color=Styles.TEXT_COLOR),
+                    ft.Text("% Amount", weight=ft.FontWeight.BOLD, width=100, color=Styles.TEXT_COLOR),
+                    ft.Text("± Variation", weight=ft.FontWeight.BOLD, width=120, color=Styles.TEXT_COLOR),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
             )
@@ -92,9 +93,9 @@ class RecipeResultUI:
             rows.append(
                 ft.Row(
                     [
-                        ft.Text(name, width=200, color="#666666"),
-                        ft.Text(f"{data['mean']}%", width=100, color="#666666"),
-                        ft.Text(f"±{data['variation']}%", width=120, color="#666666"),
+                        ft.Text(name, width=200, color=Styles.TEXT_COLOR),
+                        ft.Text(f"{data['mean']}%", width=100, color=Styles.TEXT_COLOR),
+                        ft.Text(f"±{data['variation']}%", width=120, color=Styles.TEXT_COLOR),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                 )
@@ -116,7 +117,7 @@ class RecipeResultUI:
             content=ft.Column(
                 [
                     ft.Text(
-                        "Generated Recipe", size=26, weight=ft.FontWeight.BOLD, color="#1A3E3E"
+                        "Generated Recipe", size=Styles.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=Styles.TEXT_COLOR
                     ),
                     self.message,
                     self.build_result_text(),
@@ -127,51 +128,51 @@ class RecipeResultUI:
             ),
             padding=20,
             width=1000,
-            bgcolor="#FAFAFA",
-            border_radius=10,
+            bgcolor=Styles.TABLE_ROW_COLOR,
+            border_radius=Styles.BORDER_RADIUS,
         )
-        
-
+    
     @staticmethod
     def generate_and_display_recipe(
         page: ft.Page, ingredient_input: dict[str, float | None]
     ):
         """
-        Handles the full process: generates a recipe and displays the results on the page.
+        Generates a recipe and displays it in the current view.
 
         Args:
             page (ft.Page): The current Flet page instance.
-            ingredient_input (dict): A dictionary with ingredient names as keys and
-                                    either fixed percentages or None as values.
+            ingredient_input (dict): Ingredient names and their percentages.
         """
-        # Step 1: Remove any existing result container
-        # This ensures we don't have multiple result sections on the page
-        if RecipeResultUI._current_result_container:
-            try:
-                page.controls.remove(RecipeResultUI._current_result_container) # type: ignore
-            except ValueError:
-                pass  # Container was not in page.controls
-
-        # Step 2: Set up the calculator and UI
-        recipe_calculator = RecipeResultCalculator()
-        result_ui = RecipeResultUI(page)
-
-        # Step 3: Try generating the recipe
-        success = recipe_calculator.calculate_recipe(ingredient_input)
-
-        # Step 4: Show result or error message
-        if success:
-            recipe_data = recipe_calculator.get_recipe_result()
-            result_ui.show_recipe(recipe_data)  # type: ignore
-        else:
-            result_ui.show_error()
-
-        # Step 5: Create and add the result section to the page
-        result_container = result_ui.build_result_section()
-        page.controls.append(result_container) # type: ignore
+        # Get the generator view column that contains the UI
+        generator_view = next(
+            (view for view in page.views if view.route == "/generator"),
+            None
+        )
         
-        # Step 6: Speichere Referenz zum neuen Container
-        RecipeResultUI._current_result_container = result_container
+        if generator_view and len(generator_view.controls) > 1:
+        # Safely access the column that contains our content
+            column = generator_view.controls[1]
+            if isinstance(column, ft.Column) and hasattr(column, 'controls'):
+                # Remove old result if exists
+                if RecipeResultUI._current_result_container:
+                    try:
+                        column.controls.remove(RecipeResultUI._current_result_container)
+                    except ValueError:
+                        pass
 
-        page.update()
-        
+                # Generate new result
+                recipe_calculator = RecipeResultCalculator()
+                result_ui = RecipeResultUI(page)
+                
+                if recipe_calculator.calculate_recipe(ingredient_input):
+                    recipe_data = recipe_calculator.get_recipe_result()
+                    result_ui.show_recipe(recipe_data) # type: ignore
+                else:
+                    result_ui.show_error()
+
+                # Add new result to view
+                result_container = result_ui.build_result_section()
+                column.controls.append(result_container)
+
+                RecipeResultUI._current_result_container = result_container
+                page.update()
