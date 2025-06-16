@@ -1,5 +1,4 @@
 import flet as ft
-from styles import PRIMARY_COLOR, BACKGROUND_COLOR, TEXT_COLOR, TITLE_SIZE, BODY_SIZE
 
 class HomeView:
 
