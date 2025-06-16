@@ -50,7 +50,7 @@ def main(page: ft.Page):
                 )
             )
 
-        if page.route == "/generator":
+        elif page.route == "/generator":
             page.views.append(
                 ft.View(
                     "/generator",
@@ -61,9 +61,10 @@ def main(page: ft.Page):
                 )
             )
             generator_view.ingredient_manager.add_ingredient_row(page)
+            
 
         
-        if page.route == "/recipes":
+        elif page.route == "/recipes":
             page.views.append(
                 ft.View(
                     "/recipes",
@@ -90,4 +91,4 @@ def main(page: ft.Page):
     page.on_route_change = route_change
     page.go("/")  
 
-ft.app(target=main)
+ft.app(target=main, assets_dir="assets")

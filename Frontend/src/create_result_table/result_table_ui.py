@@ -8,7 +8,7 @@ class RecipeResultUI:
     """
 
     # Static variable to keep track of the current result container
-    _current_result_container = None
+    _current_result_container = None 
 
     def __init__(self, page: ft.Page):
         """
