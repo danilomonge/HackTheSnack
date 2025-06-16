@@ -16,7 +16,7 @@ class HomeView:
                         "Recreate your favorite food products at home with the help of our food hacker \n - \n Crack it · Cook it · Love it",
                         size=Styles.BOX_SIZE,
                         text_align=ft.TextAlign.CENTER,
-                        color="white",
+                        color=Styles.TEXT_COLOR,
                     ),
                     padding=30,
                     width=650,
