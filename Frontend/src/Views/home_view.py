@@ -1,11 +1,5 @@
 import flet as ft
-#from styles import PRIMARY_COLOR, BACKGROUND_COLOR, TEXT_COLOR, TITLE_SIZE, BODY_SIZE
-PRIMARY_COLOR = "green"
-BACKGROUND_COLOR = "black"
-TEXT_COLOR = "white"
-
-TITLE_SIZE = 40
-BODY_SIZE = 18
+from styles import Styles
 
 
 class HomeView:
@@ -20,13 +14,13 @@ class HomeView:
                 ft.Container(
                     content=ft.Text(
                         "Recreate your favorite food products at home with the help of our food hacker \n - \n Crack it · Cook it · Love it",
-                        size=BODY_SIZE,
+                        size=Styles.BOX_SIZE,
                         text_align=ft.TextAlign.CENTER,
                         color="white",
                     ),
                     padding=30,
                     width=650,
-                    bgcolor="#90C976",
+                    bgcolor=Styles.BOX_COLOR,
                     border=ft.border.all(1, "white"),
                     border_radius=40,
                     shadow=ft.BoxShadow(
@@ -42,15 +36,12 @@ class HomeView:
                             color="white",
                             on_click=lambda e: self.page.go("/generator"),
                             ),
-                        ft.OutlinedButton(
+                        ft.ElevatedButton(
                             "More about us",
-                            style=ft.ButtonStyle(
                             color="white",
-                            overlay_color=PRIMARY_COLOR,
-                            side=ft.BorderSide(1, "white")
-                            ),
                             on_click=lambda e: self.page.go("/about"),
-                        )
+                            ),
+                        
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                 ),
