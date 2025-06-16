@@ -201,7 +201,8 @@ class ProductTableUI:
         Returns:
             ft.Container: The complete UI layout ready to be added to the page.
         """
-        return ft.Container(
+        # Input section stays the same, just wrapped in a container
+        input_section = ft.Container(
             content=ft.Column(
                 [
                     Styles.build_title(),
@@ -214,6 +215,19 @@ class ProductTableUI:
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
+            ),
+            width=500,  # Fixed width for input section
+        )
+
+        # Container for results that will be filled later
+        self.results_section = ft.Container(width=500)
+
+        # Return a Row containing both sections
+        return ft.Container(
+            content=ft.Row(
+                [input_section, self.results_section],
+                alignment=ft.MainAxisAlignment.CENTER,
+                spacing=20,
             ),
             expand=True,
             alignment=ft.alignment.center,
