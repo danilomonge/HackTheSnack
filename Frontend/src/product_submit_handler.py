@@ -15,6 +15,7 @@ from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuil
 from Frontend.src.create_result_table.result_table_ui import RecipeResultUI
 from Backend.recipe_generator import RecipeGenerator
 from Backend.data_base_manager.recipe_manager import RecipeManager
+from Backend.data_base_manager.evaluation_manager import EvaluationManager
 
 
 
@@ -69,11 +70,14 @@ class ProductSubmitHandler:
         product_name = (product_name_field.value or "").strip()
         ingredient_dict = IngredientDataBuilder.build_data_from_rows(ingredient_rows)
 
-        # Store recipe in data base
-        RecipeManager.submit_recipe(product_name, ingredient_dict)
+        # Store recipe in data base and get ids
+        recipe_ids = RecipeManager.submit_recipe(product_name, ingredient_dict)
         
         # Generate the recipe using the RecipeGenerator from the backend
         result_dict = RecipeGenerator.generate_recipe(ingredient_dict)
+
+        #
+        EvaluationManager.build_results_payload(recipe_ids, result_dict)
 
         # Display the recipe result
         RecipeResultUI.display_recipe_result(page, result_dict)
