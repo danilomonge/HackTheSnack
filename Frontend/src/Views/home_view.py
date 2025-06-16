@@ -1,5 +1,12 @@
 import flet as ft
-from styles import PRIMARY_COLOR, BACKGROUND_COLOR, TEXT_COLOR, TITLE_SIZE, BODY_SIZE
+#from styles import PRIMARY_COLOR, BACKGROUND_COLOR, TEXT_COLOR, TITLE_SIZE, BODY_SIZE
+PRIMARY_COLOR = "green"
+BACKGROUND_COLOR = "black"
+TEXT_COLOR = "white"
+
+TITLE_SIZE = 40
+BODY_SIZE = 18
+
 
 class HomeView:
 
@@ -9,24 +16,41 @@ class HomeView:
     def build(self):
         content = ft.Column(
             controls=[
-                ft.Text("Hack The Snack", size=40, weight=ft.FontWeight.BOLD, color="white"),
+                ft.Text("Hack The Snack", size=65, weight=ft.FontWeight.BOLD, color="white"),
                 ft.Container(
                     content=ft.Text(
-                        "Project explanation here",
-                        size=20,
+                        "Recreate your favorite food products at home with the help of our food hacker \n - \n Crack it · Cook it · Love it",
+                        size=BODY_SIZE,
                         text_align=ft.TextAlign.CENTER,
                         color="white",
                     ),
-                    padding=20,
-                    width=600,
-                    bgcolor= "green",
-                    border_radius=10,
-                    margin=ft.margin.only(top=20, bottom=30),
+                    padding=30,
+                    width=650,
+                    bgcolor="#90C976",
+                    border=ft.border.all(1, "white"),
+                    border_radius=40,
+                    shadow=ft.BoxShadow(
+                        blur_radius=10,
+                        color="rgba(0,0,0,0.25)",
+                        offset=ft.Offset(0, 4)
+                              ),
                 ),
                 ft.Row(
                     controls=[
-                        ft.ElevatedButton("Try it out"),
-                        ft.OutlinedButton("More about us"),
+                        ft.ElevatedButton(
+                            "Try it out",
+                            color="white",
+                            on_click=lambda e: self.page.go("/generator"),
+                            ),
+                        ft.OutlinedButton(
+                            "More about us",
+                            style=ft.ButtonStyle(
+                            color="white",
+                            overlay_color=PRIMARY_COLOR,
+                            side=ft.BorderSide(1, "white")
+                            ),
+                            on_click=lambda e: self.page.go("/about"),
+                        )
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                 ),
@@ -43,7 +67,7 @@ class HomeView:
                 ft.Stack(
                     controls=[
                         ft.Image(
-                            src="https://cdn.pixabay.com/photo/2018/01/27/21/04/oil-3112195_1280.jpg",
+                            src="Picture_ingredients_mushrooms.png",
                             width=float("inf"),  # Full width
                             height=float("inf"),  # Full height
                             fit=ft.ImageFit.COVER,

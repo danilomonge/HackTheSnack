@@ -1,7 +1,7 @@
 import flet as ft
 
 PRIMARY_COLOR = "green"
-BACKGROUND_COLOR = "black"
+BACKGROUND_COLOR = "#358E5D"
 TEXT_COLOR = "white"
 
 TITLE_SIZE = 40
