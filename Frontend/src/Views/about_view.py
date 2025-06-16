@@ -12,7 +12,7 @@ class AboutView:
             controls=[
                 ft.Text("About Hack The Snack", size=Styles.TITLE_SIZE, weight=ft.FontWeight.BOLD),
                 ft.Text(
-                    "This app helps you analyze and generate recipes based on ingredient lists.",
+                    "This app helps you analyze and generate recipes based on ingredient lists. Is is designed to assist you in recreating your favorite food products at home.",
                     size=Styles.BOX_SIZE,
                 ),
                 ft.Text("The Team:", size=Styles.BOX_SIZE, weight=ft.FontWeight.BOLD),

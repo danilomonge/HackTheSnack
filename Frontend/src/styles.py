@@ -39,7 +39,7 @@ class Styles:
 
     TITLE_SIZE = 40
     SUBTITLE_SIZE = 23
-    BODY_SIZE = 18
+    BOX_SIZE = 18
     ICON_SIZE = 20
 
     BORDER_RADIUS = 10
