@@ -1,16 +1,5 @@
 import flet as ft
 
-<<<<<<< HEAD
-PRIMARY_COLOR = "green"
-BACKGROUND_COLOR = "#358E5D"
-TEXT_COLOR = "white"
-
-TITLE_SIZE = 40
-BODY_SIZE = 18
-
-PADDING = 20
-CORNER_RADIUS = 10
-=======
 class Styles:
     """
     Contains global styles and constants for the Flet application.
@@ -18,7 +7,6 @@ class Styles:
     - Defines colors, sizes, and padding used throughout the app
     - Provides utility functions for creating styled buttons and inputs
     """
->>>>>>> frontend-upgrade
 
 
     NAVBAR_COLOR = "#a3b188"
