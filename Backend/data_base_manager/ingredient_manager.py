@@ -26,7 +26,7 @@ class IngredientManager:
         
         data = {
                 "name": ingredient_name,
-                "descripcion": ingredient_name,      # Default description
+                "description": ingredient_name,      # Default description
             }
         
         response = httpx.post(
@@ -70,4 +70,40 @@ class IngredientManager:
         response = httpx.get(f"http://localhost:8087/user-management/ingredient/list?page=1&size=10&name={ingredient_name}")
 
         return response
+    
+    @staticmethod
+    def create_ingredient_list(ingredient_dict: dict) -> list[int]:
+        """
+        Takes a dictionary of ingredients and searches or creates them in the backend.
+
+        Args:
+            ingredient_dict (dict[str, int]): Dictionary mapping ingredient names to their IDs.
+
+        Returns:
+            list[int]: List of ingredient IDs.
+        """
+        ingredient_ids = []
+
+        for name in ingredient_dict.keys():
+            # Search for the ingredient
+            response = IngredientManager.find_ingredient(name)
+            
+            #if found, add id to the list
+            if response.status_code == 200 and response.json().get("success"):
+                data = response.json().get("data")
+                if data:
+                    ingredient_ids.append(data["id"])
+                    continue
+            
+            # If not found or failed, create the ingredient and add id to the list
+            create_response = IngredientManager.create_ingredient(name)
+            if create_response.status_code == 201 and create_response.json().get("success"):
+                id_ingredient = create_response.json().get("data")
+                ingredient_ids.append(id_ingredient)
+                continue
+
+            else:
+                raise Exception(f"Failed to create ingredient: {name}")
+
+        return ingredient_ids
 

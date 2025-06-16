@@ -14,6 +14,7 @@ from Frontend.src.add_product_table.logic.input_validator import InputValidator
 from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 from Frontend.src.create_result_table.result_table_ui import RecipeResultUI
 from Backend.recipe_generator import RecipeGenerator
+from Backend.data_base_manager.recipe_manager import RecipeManager
 
 
 
@@ -49,7 +50,7 @@ class ProductSubmitHandler:
         Returns:
             tuple | None: (product name, ingredient dict) if valid, else None
         """
-        # Validate all fields using InputValidator
+        #Validate all fields using InputValidator
         if not InputValidator.validate_all_inputs(
             product_name_field,
             ingredient_rows,
@@ -67,6 +68,9 @@ class ProductSubmitHandler:
         # Extract product name and ingredient dictionary
         product_name = (product_name_field.value or "").strip()
         ingredient_dict = IngredientDataBuilder.build_data_from_rows(ingredient_rows)
+
+        # Store recipe in data base
+        RecipeManager.submit_recipe(product_name, ingredient_dict)
         
         # Generate the recipe using the RecipeGenerator from the backend
         result_dict = RecipeGenerator.generate_recipe(ingredient_dict)
