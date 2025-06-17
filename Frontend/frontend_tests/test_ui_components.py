@@ -115,5 +115,7 @@ def test_submit_with_valid_data():
     name_field.value = "Test Ingredient"
     perc_field.value = "100"
     
-    result = ui.on_submit_click()
-    assert result is not None
+    ui.on_submit_click()
+    assert ui.feedback.value == "✅ Product is valid. Recipe generated!"
+
+    
