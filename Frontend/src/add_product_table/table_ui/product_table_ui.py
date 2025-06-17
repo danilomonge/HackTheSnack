@@ -27,6 +27,8 @@ class ProductTableUI:
         self.page = page
         self.ingredient_rows = ft.Column()
 
+        self.instruction_container = self.build_instruction_text()
+
         style = Styles.input_style()
 
         self.product_name = ft.TextField(
@@ -121,7 +123,20 @@ class ProductTableUI:
             alignment=ft.alignment.center,
             padding=ft.padding.symmetric(vertical=6, horizontal=10),
             bgcolor=Styles.BOX_COLOR,
+            visible=False,
         )
+    
+    def toggle_instruction(self, e: ft.ControlEvent):
+        """
+        Toggles the visibility of the instruction text.
+        Args:
+            e (ft.ControlEvent): The event triggered by the button click.
+        """
+        container = self.instruction_container  
+        container.visible = not container.visible
+        e.control.text = "Hide Instructions" if container.visible else "Show Instructions"
+        self.page.update()
+
 
     def build_table_header(self):
         """
@@ -197,10 +212,12 @@ class ProductTableUI:
         return ft.Container(
             content=ft.Column(
                 [
+                    
                     Styles.build_title("Analyze a product"),
                     self.build_name_input(),
+                    Styles.primary_button("Show Instructions", on_click=self.toggle_instruction),
                     self.build_table_header(),
-                    self.build_instruction_text(),
+                    self.instruction_container,
                     self.ingredient_rows,
                     self.feedback,
                     self.build_table_buttons(),
