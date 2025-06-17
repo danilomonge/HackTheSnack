@@ -226,11 +226,11 @@ class ProductTableUI:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
             ),
-            width=500,  # Fixed width for input section
+            width= 800,
         )
 
         # Container for results that will be filled later
-        self.results_section = ft.Container(width=500)
+        self.results_section = ft.Container(width=800)
 
         # Return a Row containing both sections
         return ft.Container(
