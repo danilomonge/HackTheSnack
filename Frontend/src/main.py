@@ -71,7 +71,7 @@ def main(page: ft.Page):
                     ],
                 )
             )
-            generator_view.ingredient_manager.add_ingredient_row(page)
+            generator_view.ingredient_manager.initialize_with_empty_row()
             
 
         
