@@ -99,25 +99,37 @@ class RecipeResultUI:
             result (dict): Recipe output.
         """
         rows = [
-            ft.Row(
-                [
-                    ft.Text("Ingredient", weight=ft.FontWeight.BOLD, width=200, color=Styles.TEXT_COLOR),
-                    ft.Text("% Amount", weight=ft.FontWeight.BOLD, width=100, color=Styles.TEXT_COLOR),
-                    ft.Text("± Variation", weight=ft.FontWeight.BOLD, width=120, color=Styles.TEXT_COLOR),
-                ],
-                alignment=ft.MainAxisAlignment.CENTER,
+            ft.Container(
+                content=ft.Row(
+                    [
+                        ft.Text("Ingredient", weight=ft.FontWeight.BOLD, width=200, color=Styles.TEXT_COLOR),
+                        ft.Text("% Amount", weight=ft.FontWeight.BOLD, width=100, color=Styles.TEXT_COLOR),
+                        ft.Text("± Variation", weight=ft.FontWeight.BOLD, width=120, color=Styles.TEXT_COLOR),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                ),
+                bgcolor=Styles.TABLE_HEADER_COLOR,
+                padding=10,
+                border_radius=Styles.BORDER_RADIUS,
+                margin=5,
             )
         ]
 
-        for name, data in result.items():
+        for i, (name, data) in enumerate(result.items()):
             rows.append(
-                ft.Row(
-                    [
-                        ft.Text(name, width=200, color=Styles.TEXT_COLOR),
-                        ft.Text(f"{data['mean']}%", width=100, color=Styles.TEXT_COLOR),
-                        ft.Text(f"±{data['variation']}%", width=120, color=Styles.TEXT_COLOR),
-                    ],
-                    alignment=ft.MainAxisAlignment.CENTER,
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Text(name, width=200, color=Styles.TEXT_COLOR),
+                            ft.Text(f"{data['mean']}%", width=100, color=Styles.TEXT_COLOR),
+                            ft.Text(f"±{data['variation']}%", width=120, color=Styles.TEXT_COLOR),
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    ),
+                    bgcolor=Styles.TABLE_ROW_COLOR,
+                    padding=10,
+                    border_radius=Styles.BORDER_RADIUS,
+                    margin=5,
                 )
             )
 
@@ -136,21 +148,21 @@ class RecipeResultUI:
         return ft.Container(
             content=ft.Column(
                 [
-                    ft.Text(
-                        "Generated Recipe", size=Styles.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=Styles.TEXT_COLOR
-                    ),
+                    Styles.build_title("Generated Recipe"),
                     self.message,
                     self.toggle_button,
                     self.result_text_container,
                     self.table,
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.START,
                 spacing=10,
             ),
-            padding=20,
-            width=480,
-            bgcolor=Styles.TABLE_ROW_COLOR,
+            padding=ft.padding.only(top=0, left=20, right=20, bottom=20),
+            width=400,
+            bgcolor=Styles.BACKGROUND_COLOR,
             border_radius=Styles.BORDER_RADIUS,
+            expand=True,
         )
     
     @staticmethod
@@ -171,28 +183,32 @@ class RecipeResultUI:
         )
         
         if generator_view and len(generator_view.controls) > 1:
-        # Safely access the column that contains our content
+            # Safely access the column that contains our content
             main_column = generator_view.controls[1]
             if isinstance(main_column, ft.Column):
-                # Get the row containing input and results
                 container = main_column.controls[0]
                 if isinstance(container, ft.Container):
-                    main_row = container.content
-                    if isinstance(main_row, ft.Row):
-                        results_section = main_row.controls[1]  # Get the results container
-                        
-                        # Generate new result
-                        recipe_calculator = RecipeResultCalculator()
-                        result_ui = RecipeResultUI(page)
-                        
-                        if recipe_calculator.calculate_recipe(ingredient_input):
-                            recipe_data = recipe_calculator.get_recipe_result()
-                            result_ui.show_recipe(recipe_data) #type: ignore
-                        else:
-                            result_ui.show_error()
+                    responsive_row = container.content
+                    if isinstance(responsive_row, ft.ResponsiveRow):
+                        # Get the second container (results section) from ResponsiveRow
+                        if len(responsive_row.controls) >= 2:
+                            results_container_wrapper = responsive_row.controls[1]
+                            if isinstance(results_container_wrapper, ft.Container):
+                                
+                                results_section = results_container_wrapper.content
+                                
+                                # Generate new result
+                                recipe_calculator = RecipeResultCalculator()
+                                result_ui = RecipeResultUI(page)
+                                
+                                if recipe_calculator.calculate_recipe(ingredient_input):
+                                    recipe_data = recipe_calculator.get_recipe_result()
+                                    result_ui.show_recipe(recipe_data) #type: ignore
+                                else:
+                                    result_ui.show_error()
 
-                        # Update results section
-                        result_container = result_ui.build_result_section()
-                        results_section.content = result_container
-                        RecipeResultUI._current_result_container = result_container
-                        page.update()
+                                # Update results section
+                                result_container = result_ui.build_result_section()
+                                results_container_wrapper.content = result_container
+                                RecipeResultUI._current_result_container = result_container
+                                page.update()

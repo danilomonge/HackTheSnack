@@ -71,7 +71,8 @@ class AboutView:
                 expand=True
             ),
             padding=20,
-        bgcolor=Styles.BACKGROUND_COLOR,
-        expand=True,
-        alignment=ft.alignment.center,
+            bgcolor=Styles.BACKGROUND_COLOR,
+            expand=True,
+            alignment=ft.alignment.center,
+        
     )

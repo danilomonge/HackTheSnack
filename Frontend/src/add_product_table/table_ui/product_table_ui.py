@@ -165,7 +165,7 @@ class ProductTableUI:
             ),
             bgcolor=Styles.TABLE_HEADER_COLOR,
             padding=10,
-            border_radius=10,
+            border_radius=Styles.BORDER_RADIUS,
             margin=5,
         )
 
@@ -216,9 +216,9 @@ class ProductTableUI:
                     
                     Styles.build_title("Analyze a product"),
                     self.build_name_input(),
-                    Styles.primary_button("Show Instructions", on_click=self.toggle_instruction),
-                    self.build_table_header(),
+                    Styles.primary_button("Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO), 
                     self.instruction_container,
+                    self.build_table_header(),
                     self.ingredient_rows,
                     self.feedback,
                     self.build_table_buttons(),
@@ -226,21 +226,43 @@ class ProductTableUI:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
             ),
-            width= 800,
+            width=700,  
         )
 
         # Container for results that will be filled later
-        self.results_section = ft.Container(width=800)
+        # In ProductTableUI.__init__, create a placeholder
+        self.results_section = ft.Container(
+            content=ft.Column(
+                [
+                    Styles.build_title("Generated Recipe"),
+                    ft.Text("Recipe will appear here after analysis...", 
+                        color=Styles.TEXT_COLOR, italic=True),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=10,
+            ),
+            width=700,
+            padding=ft.padding.only(top=0, left=20, right=20, bottom=20),
+        )
 
-        # Return a Row containing both sections
         return ft.Container(
-            content=ft.Row(
-                [input_section, self.results_section],
-                alignment=ft.MainAxisAlignment.CENTER,
-                spacing=20,
+            content=ft.ResponsiveRow(
+                [
+                    ft.Container(
+                        content=input_section,
+                        col={"sm": 12, "md": 6, "lg": 6},  # Full width on small, half on medium+
+                    ),
+                    ft.Container(
+                        content=self.results_section,
+                        col={"sm": 12, "md": 6, "lg": 6},  # Full width on small, half on medium+
+                    ),
+                ],
+                vertical_alignment=ft.CrossAxisAlignment.START,
             ),
             expand=True,
-            alignment=ft.alignment.center,
+            alignment=ft.alignment.top_left,
             padding=20,
             bgcolor=Styles.BACKGROUND_COLOR,
         )
+    
+    
