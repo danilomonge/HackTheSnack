@@ -183,3 +183,10 @@ class IngredientManager:
         self.quantity_table.update()
         self.product_name.update()
         self.page.update()
+
+    def initialize_with_empty_row(self):
+        """
+        Initializes the ingredient table with one empty row.
+        """
+        if len(self.quantity_table.controls) == 0:
+            self.add_ingredient_row(self.page)

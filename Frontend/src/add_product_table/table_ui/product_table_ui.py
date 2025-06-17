@@ -39,9 +39,9 @@ class ProductTableUI:
         )
 
         self.ingredient_manager = IngredientManager(
-        self.ingredient_rows,
-        self.product_name,
-        self.page 
+            self.ingredient_rows,
+            self.product_name,
+            self.page 
         )
 
         self.feedback = ft.Text(value="", color=Styles.RED_COLOR, size=Styles.FEEDBACK_FONT_SIZE, weight=ft.FontWeight.BOLD)
@@ -213,7 +213,6 @@ class ProductTableUI:
         input_section = ft.Container(
             content=ft.Column(
                 [
-                    
                     Styles.build_title("Analyze a product"),
                     self.build_name_input(),
                     Styles.primary_button("Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO), 
