@@ -39,11 +39,13 @@ def main(page: ft.Page):
     def route_change(e: ft.RouteChangeEvent):
         """
         Handles route changes to update the page views based on the current route.
-        Clears existing views and adds the appropriate view based on the route.
-        Args:
-            e (ft.RouteChangeEvent): The event triggered by a route change.
         """
+        # Clear views but ensure we don't process the same route twice
         page.views.clear()
+        
+        # Add a small delay to ensure proper cleanup
+        import time
+        time.sleep(0.01)  # 10ms delay
         
         if page.route == "/about":
             page.views.append(
@@ -55,7 +57,6 @@ def main(page: ft.Page):
                     ],
                 )
             )
-
         elif page.route == "/generator":
             page.views.append(
                 ft.View(
@@ -71,10 +72,6 @@ def main(page: ft.Page):
                     ],
                 )
             )
-            generator_view.ingredient_manager.initialize_with_empty_row()
-            
-
-        
         elif page.route == "/recipes":
             page.views.append(
                 ft.View(
@@ -85,7 +82,6 @@ def main(page: ft.Page):
                     ],
                 )
             )
-
         else:
             page.views.append(
                 ft.View(
