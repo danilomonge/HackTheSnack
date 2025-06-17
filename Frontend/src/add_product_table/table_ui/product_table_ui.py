@@ -107,18 +107,11 @@ class ProductTableUI:
         return ft.Container(
             content=ft.Column(
                 [
-                    ft.Text(
+                    Styles.build_explanation(
                         "List the ingredients from most to least used.",
-                        size=Styles.EXPLANATION_FONT_SIZE,
-                        color= Styles.EXPLANATION_FONT_COLOR,
-                        weight=ft.FontWeight.BOLD,
-                        text_align=ft.TextAlign.CENTER,
                     ),
-                    ft.Text(
-                        "Only include a percentage if known; otherwise, leave it blank or use 0%.",
-                        size= Styles.EXPLANATION_FONT_SIZE,
-                        color= Styles.EXPLANATION_FONT_COLOR,
-                        text_align=ft.TextAlign.CENTER,
+                    Styles.build_explanation(
+                        "Only include a percentage if known; otherwise, leave it blank or use 0%."
                     ),
                 ],
                 spacing=5,
@@ -204,7 +197,7 @@ class ProductTableUI:
         return ft.Container(
             content=ft.Column(
                 [
-                    Styles.build_title(),
+                    Styles.build_title("Analyze a product"),
                     self.build_name_input(),
                     self.build_table_header(),
                     self.build_instruction_text(),

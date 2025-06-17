@@ -7,151 +7,71 @@ class AboutView:
     def __init__(self, page: ft.Page):
         self.page = page
 
-    def build(self):
-        return ft.Column(
-            controls=[
-                ft.Text("About Hack The Snack", size=Styles.TITLE_SIZE, weight=ft.FontWeight.BOLD),
-                ft.Text(
-                    "This app helps you analyze and generate recipes based on ingredient lists. Is is designed to assist you in recreating your favorite food products at home.",
-                    size=Styles.BOX_SIZE,
-                ),
-                ft.Text("The Team:", size=Styles.BOX_SIZE, weight=ft.FontWeight.BOLD),
-                ft.Row(
-                    controls=[
-                        ft.Container(
-                            content=ft.Column(
-                                controls=[
-                                    ft.Text(
-                                        "Jana",
-                                        size=Styles.BOX_SIZE,
-                                        text_align=ft.TextAlign.CENTER,
-                                        color=Styles.TEXT_COLOR,
-                                    ),
-                                    ft.Image(
-                                        src="https://img.freepik.com/vektoren-premium/strichmaennchen-mann-doodle-zeichnung-isoliert_566661-1697.jpg",
-                                        width=100,
-                                        height=100,
-                                        border_radius=50,
-                                        fit=ft.ImageFit.COVER,
-                                    ),
-                                    ft.Text(
-                                        "media informatics",
-                                        size=Styles.BOX_SIZE,
-                                        text_align=ft.TextAlign.CENTER,
-                                        color=Styles.TEXT_COLOR,
-                                    ),
+    def team_member(self, name: str, field: str, image_url: str):
+        """
+        Creates a team member container with name, field of study, and image.
 
-                                ],
-                                alignment=ft.MainAxisAlignment.CENTER,
-                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                                spacing=10
-                            ),
-                            border=ft.border.all(1, "black"),
-                            expand=True,
-                            padding=10,
-                            alignment=ft.alignment.center
-                        ),
-                        ft.Container(
-                            content=ft.Column(
-                                controls=[
-                                    ft.Text(
-                                        "Emilio",
-                                        size=Styles.BOX_SIZE,
-                                        text_align=ft.TextAlign.CENTER,
-                                        color=Styles.TEXT_COLOR,
-                                    ),
-                                    ft.Image(
-                                        src="https://image.spreadshirtmedia.net/image-server/v1/products/T1459A839PA4459PT28D152850882W4782H10000/views/1,width=550,height=550,appearanceId=839,backgroundColor=F2F2F2/strichmaennchen-sticker.jpg",
-                                        width=100,
-                                        height=100,
-                                        border_radius=50,
-                                        fit=ft.ImageFit.COVER,
-                                    ),
-                                    ft.Text(
-                                        "cognitive science",
-                                        size=Styles.BOX_SIZE,
-                                        text_align=ft.TextAlign.CENTER,
-                                        color=Styles.TEXT_COLOR,
-                                    ),
-                                ],
-                                alignment=ft.MainAxisAlignment.CENTER,
-                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                                spacing=10
-                            ),
-                            border=ft.border.all(1, "black"),
-                            expand=True,
-                            padding=10,
-                            alignment=ft.alignment.center
-                        ),
-                        ft.Container(
-                            content=ft.Column(
-                                controls=[
-                                    ft.Text(
-                                        "Danilo",
-                                        size=Styles.BOX_SIZE,
-                                        text_align=ft.TextAlign.CENTER,
-                                        color=Styles.TEXT_COLOR,
-                                    ),
-                                    ft.Image(
-                                        src="https://i.pinimg.com/736x/70/9f/f9/709ff92ec7c90bcf617c8e83d0b7a80d.jpg",
-                                        width=100,
-                                        height=100,
-                                        border_radius=50,
-                                        fit=ft.ImageFit.COVER,
-                                    ),
-                                    ft.Text(
-                                        "medical informatics",
-                                        size=Styles.BOX_SIZE,
-                                        text_align=ft.TextAlign.CENTER,
-                                        color=Styles.TEXT_COLOR,
-                                    ),
-                                ],
-                                alignment=ft.MainAxisAlignment.CENTER,
-                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                                spacing=10
-                            ),
-                            border=ft.border.all(1, "black"),
-                            expand=True,
-                            padding=10,
-                            alignment=ft.alignment.center
-                        ),
-                        ft.Container(
-                            content=ft.Column(
-                                controls=[
-                                    ft.Text(
-                                        "Katja",
-                                        size=Styles.BOX_SIZE,
-                                        text_align=ft.TextAlign.CENTER,
-                                        color=Styles.TEXT_COLOR,
-                                    ),
-                                    ft.Image(
-                                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAdpg1zjwqCLvFvBQquT8u7Nmnp65-dcyPhg&s",
-                                        width=100,
-                                        height=100,
-                                        border_radius=50,
-                                        fit=ft.ImageFit.COVER,
-                                    ),
-                                    ft.Text(
-                                        "cognitive science",
-                                        size=Styles.BOX_SIZE,
-                                        text_align=ft.TextAlign.CENTER,
-                                        color=Styles.TEXT_COLOR,
-                                    ),
-                                ],
-                                alignment=ft.MainAxisAlignment.CENTER,
-                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                                spacing=10
-                            ),
-                            border=ft.border.all(1, "black"),
-                            expand=True,
-                            padding=10,
-                            alignment=ft.alignment.center
-                        )
-                    ],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                )
-            ],
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=20,
-            expand=True
+        Args:
+            name (str): Name of the team member.
+            field (str): Field of study.
+            image_url (str): URL of the team member's image.
+
+        Returns:
+            ft.Container: A styled container with team member information.
+        """
+        return ft.Container(
+            content=ft.Column(
+                controls=[
+                    ft.Text(name, size=Styles.EXPLANATION_FONT_SIZE, text_align=ft.TextAlign.CENTER, color=Styles.TEXT_COLOR),
+                    ft.Image(src=image_url, width=100, height=100, border_radius=50, fit=ft.ImageFit.COVER),
+                    ft.Text(field, size=Styles.EXPLANATION_FONT_SIZE, text_align=ft.TextAlign.CENTER, color=Styles.TEXT_COLOR),
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=10
+            ),
+            border_radius=Styles.BORDER_RADIUS,
+            expand=True,
+            padding=10,
+            alignment=ft.alignment.center,
+            bgcolor=Styles.BOX_COLOR
         )
+
+    def build(self):
+        return ft.Container(
+            content=ft.Column(
+                controls=[
+                    Styles.build_title("About Hack The Snack"),
+                    ft.Container(
+                        Styles.build_explanation(
+                            "This app helps you analyze and generate recipes based on ingredient lists. Is is designed to assist you in recreating your favorite food products at home."
+                        ),
+                        padding=20,
+                        width=650,
+                        bgcolor=Styles.BOX_COLOR,
+                        border_radius=Styles.BORDER_RADIUS,
+                    ),
+                    Styles.build_subtitle("The Team"),
+                    ft.Row(
+                        controls=[
+                            self.team_member("Emilio", "Cognitive Science",
+                                            "https://image.spreadshirtmedia.net/image-server/v1/products/T1459A839PA4459PT28D152850882W4782H10000/views/1,width=550,height=550,appearanceId=839,backgroundColor=F2F2F2/strichmaennchen-sticker.jpg"),
+                            self.team_member("Danilo", "Medical Informatics",
+                                            "https://i.pinimg.com/736x/70/9f/f9/709ff92ec7c90bcf617c8e83d0b7a80d.jpg"), 
+                            self.team_member("Jana", "Media Informatics",
+                                            "https://img.freepik.com/vektoren-premium/strichmaennchen-mann-doodle-zeichnung-isoliert_566661-1697.jpg"),
+                            self.team_member("Katja", "Cognitive Science",
+                                            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAdpg1zjwqCLvFvBQquT8u7Nmnp65-dcyPhg&s"),
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    )
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=20,
+                expand=True
+            ),
+            padding=20,
+        bgcolor=Styles.BACKGROUND_COLOR,
+        expand=True,
+        alignment=ft.alignment.center,
+    )
