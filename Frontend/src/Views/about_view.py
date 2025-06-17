@@ -55,9 +55,9 @@ class AboutView:
                     ft.Row(
                         controls=[
                             self.team_member("Emilio", "Cognitive Science",
-                                            "https://image.spreadshirtmedia.net/image-server/v1/products/T1459A839PA4459PT28D152850882W4782H10000/views/1,width=550,height=550,appearanceId=839,backgroundColor=F2F2F2/strichmaennchen-sticker.jpg"),
+                                            "https://image.spreadshirtmedia.net/image-server/v1/products/T1459A839PA4459PT28D152850882W4782H10000/views/1,width=550,height=550,appearanceId=839,backgroundColor=FFFFFF/strichmaennchen-sticker.jpg"),
                             self.team_member("Danilo", "Medical Informatics",
-                                            "https://i.pinimg.com/736x/70/9f/f9/709ff92ec7c90bcf617c8e83d0b7a80d.jpg"), 
+                                            "https://cdni.iconscout.com/illustration/premium/thumb/gluckliches-strichmannchen-3180113-2666423.png?f=webp"), 
                             self.team_member("Jana", "Media Informatics",
                                             "https://img.freepik.com/vektoren-premium/strichmaennchen-mann-doodle-zeichnung-isoliert_566661-1697.jpg"),
                             self.team_member("Katja", "Cognitive Science",
