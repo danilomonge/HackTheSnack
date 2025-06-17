@@ -9,7 +9,7 @@ class RecipeResultUI:
     """
 
     # Static variable to keep track of the current result container
-    _current_result_container = None
+    _current_result_container = None 
 
     def __init__(self, page: ft.Page):
         """
@@ -21,6 +21,17 @@ class RecipeResultUI:
         self.page = page
         self.table = ft.Column()
         self.message = ft.Text(value="", size=Styles.FEEDBACK_FONT_SIZE, color=Styles.RED_COLOR)
+        
+        self.explanation_visible = False
+
+        self.result_text_container = self.build_result_text()
+        self.result_text_container.visible = False  
+
+        self.toggle_button = Styles.primary_button(
+            "Show Explanation",
+            icon=ft.Icons.INFO,
+            on_click=self.toggle_explanation
+        )
 
     def show_recipe(self, result: dict[str, dict[str, float]]):
         """
@@ -53,13 +64,10 @@ class RecipeResultUI:
         return ft.Container(
             content = ft.Column(
                 [
-                    ft.Text(
+                    Styles.build_explanation(
                         "Explanation of your results: \n"
                         "The amount shows the average percentage that each ingredient in your recipe has. \n "
                         "The variation shows you how much the percentage might vary.\n",
-                        size= Styles.EXPLANATION_FONT_SIZE,
-                        color=Styles.EXPLANATION_FONT_COLOR,
-                        text_align=ft.TextAlign.CENTER,
                     ),
                 ],
                 spacing=5,
@@ -69,7 +77,19 @@ class RecipeResultUI:
             alignment=ft.alignment.center,
             padding=ft.padding.symmetric(vertical=6, horizontal=10),
             bgcolor=Styles.BOX_COLOR,
+            visible=False,
             )
+
+    def toggle_explanation(self, e):
+        """
+        Toggles the visibility of the explanation text.
+        Args:
+            e (ft.ControlEvent): The event triggered by the button click.
+        """
+        container = self.result_text_container 
+        container.visible = not container.visible
+        e.control.text = "Hide Explanation" if container.visible else "Show Explanation"
+        self.page.update()
 
     def build_result_table(self, result: dict[str, dict[str, float]]):
         """
@@ -120,7 +140,8 @@ class RecipeResultUI:
                         "Generated Recipe", size=Styles.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=Styles.TEXT_COLOR
                     ),
                     self.message,
-                    self.build_result_text(),
+                    self.toggle_button,
+                    self.result_text_container,
                     self.table,
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
