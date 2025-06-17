@@ -6,6 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 
 
 from Frontend.src.product_submit_handler import ProductSubmitHandler
+import Frontend.src.product_submit_handler as handler_module
 
 import flet as ft
 
@@ -27,6 +28,12 @@ class testText(ft.Text):
         self.value = ""
         self.color = ""
 
+class FakeRecipeManager:
+    @staticmethod
+    def submit_recipe(name, ingredients):
+        # Simulates saving a recipe to a fake database
+        print(f"(Fake DB) Saved: {name} with {ingredients}")
+
 
 class testPage:
     """
@@ -40,13 +47,14 @@ class testPage:
     def update(self):
         self.updated = True
 
-
 def test_handle_submit():
     """
     Tests the handle_submit function from ProductSubmitHandler.
     """
+    
+    handler_module.RecipeManager = FakeRecipeManager
 
-    # Case 1: valid input → should return (product_name, ingredient_dict)
+    # Case 1: valid input → should print success message
     name_input = testField("Pasta Box")
     row1 = ft.Container(
         content=ft.Row(
@@ -83,20 +91,18 @@ def test_handle_submit():
     msg = testText()
     page = testPage()
 
-    result = ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page)  # type: ignore[arg-type]
-    assert result == ("Pasta Box", {"Pasta": 0.6, "Tomato Sauce": 0.4})
+    handler_module.ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page)  # type: ignore[arg-type]
     assert msg.value == "✅ Product is valid. Recipe generated!"
     assert msg.color == "#67CD6B"
     assert page.updated  # type: ignore[arg-type]
 
-    # Case 2: empty product name → should return None
+    # Case 2: empty product name → should print error message
     name_input = testField("   ")
-    result = ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page)  # type: ignore[arg-type]
-    assert result is None
+    handler_module.ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page)  # type: ignore[arg-type]
     assert msg.value == "⚠️ Please enter a product name."
     assert msg.color == "red"
 
-    # Case 3: one ingredient missing name → should return None
+    # Case 3: one ingredient missing name → should print error message
     invalid_row = ft.Container(
         content=ft.Row(
             controls=[
@@ -114,10 +120,10 @@ def test_handle_submit():
         )
     )
     name_input = testField("Energy Bar")
-    result = ProductSubmitHandler.handle_submit(name_input, [invalid_row], msg, page)  # type: ignore[arg-type]
+    handler_module.ProductSubmitHandler.handle_submit(name_input, [invalid_row, row2], msg, page)  # type: ignore[arg-type]
     assert "missing a name" in msg.value
 
-    # Case 4: total percentage > 100 → should return None
+    # Case 4: total percentage > 100 → should print error message
     row1 = ft.Container(
         content=ft.Row(
             controls=[
@@ -151,6 +157,5 @@ def test_handle_submit():
         )
     )
     name_input = testField("Cheese Sandwich")
-    result = ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page)  # type: ignore[arg-type]
-    assert result is None
+    handler_module.ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page)  # type: ignore[arg-type]
     assert "must not exceed 100%" in msg.value
