@@ -48,7 +48,7 @@ class Styles:
 
     @staticmethod
     def primary_button(text, icon=None, on_click=None):
-        return ft.ElevatedButton(text, icon=icon, on_click=on_click, color=Styles.BUTTON_TEXT_COLOR,bgcolor=Styles.BUTTON_FILL_COLOR,)
+        return ft.ElevatedButton(text+" ", icon=icon, on_click=on_click, color=Styles.BUTTON_TEXT_COLOR,bgcolor=Styles.BUTTON_FILL_COLOR,)
 
     ICON_BUTTON_SIZE = 20
 
