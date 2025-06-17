@@ -10,7 +10,7 @@ class HomeView:
     def build(self):
         content = ft.Column(
             controls=[
-                ft.Text("Hack The Snack", size=65, weight=ft.FontWeight.BOLD, color="white"),
+                ft.Text("Hack The Snack", size=65, weight=ft.FontWeight.BOLD, color=Styles.TEXT_COLOR),
                 ft.Container(
                     content=Styles.build_explanation(
                         "Recreate your favorite food products at home with the help of our food hacker \n - \n Crack it · Cook it · Love it"
@@ -18,7 +18,6 @@ class HomeView:
                     padding=30,
                     width=650,
                     bgcolor=Styles.BOX_COLOR,
-                    border=ft.border.all(1, "white"),
                     border_radius=Styles.BORDER_RADIUS,
                     shadow=ft.BoxShadow(
                         blur_radius=10,
@@ -55,7 +54,7 @@ class HomeView:
                 ft.Stack(
                     controls=[
                         ft.Image(
-                            src="Picture_ingredients_mushrooms.png",
+                            src="bg_test.png",
                             width=float("inf"),  # Full width
                             height=float("inf"),  # Full height
                             fit=ft.ImageFit.COVER,
