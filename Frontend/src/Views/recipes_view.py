@@ -10,8 +10,31 @@ class RecipesView:
     def build(self):
         return ft.Column(
             controls=[
-                ft.Text("Your Recipes", size=Styles.TITLE_SIZE, weight=ft.FontWeight.BOLD),
+                ft.Container(
+                    content=ft.Column(
+                        controls=[
+                            Styles.build_title("Your Recipes"),
+                            ft.Container(
+                                content=Styles.build_explanation(
+                                    "Here you can find all your saved recipes. \n"
+                                    "Click on a recipe to view its details and ingredients."
+                                ),
+                                padding=10,
+                                bgcolor=Styles.BOX_COLOR,
+                                border_radius=Styles.BORDER_RADIUS,
+                                alignment=ft.alignment.center,
+                                width=650,
+                            )
+                        ],
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,  
+                        expand=True  
+                    ),
+                    alignment=ft.alignment.center,
+                    bgcolor=Styles.BACKGROUND_COLOR,
+                    expand=True,
+                    padding=20,
+                ),
             ],
-            alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            expand=True
         )

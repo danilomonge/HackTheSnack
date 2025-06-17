@@ -53,13 +53,10 @@ class RecipeResultUI:
         return ft.Container(
             content = ft.Column(
                 [
-                    ft.Text(
+                    Styles.build_explanation(
                         "Explanation of your results: \n"
                         "The amount shows the average percentage that each ingredient in your recipe has. \n "
                         "The variation shows you how much the percentage might vary.\n",
-                        size= Styles.EXPLANATION_FONT_SIZE,
-                        color=Styles.EXPLANATION_FONT_COLOR,
-                        text_align=ft.TextAlign.CENTER,
                     ),
                 ],
                 spacing=5,

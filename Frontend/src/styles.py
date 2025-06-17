@@ -23,7 +23,7 @@ class Styles:
     BACKGROUND_COLOR = "#FFFFFF"
     TEXT_COLOR = "#2b321f"
     EXPLANATION_FONT_COLOR = "#2b321f"
-    EXPLANATION_FONT_SIZE = 14
+    EXPLANATION_FONT_SIZE = 16
 
     BUTTON_FILL_COLOR = "#2b321f"
     BUTTON_TEXT_COLOR = "#FFFFFF"
@@ -80,7 +80,7 @@ class Styles:
 
 
     @staticmethod
-    def build_title():
+    def build_title(text: str):
             """
             Creates the main title of the page.
 
@@ -89,8 +89,8 @@ class Styles:
             """
             return ft.Container(
                 ft.Text(
-                    "Analyze a product",
-                    size=34,
+                    text,
+                    size=Styles.TITLE_SIZE,
                     weight=ft.FontWeight.BOLD,
                     color=Styles.TEXT_COLOR,
                     text_align=ft.TextAlign.CENTER,
@@ -115,5 +115,24 @@ class Styles:
             size=Styles.SUBTITLE_SIZE,
             weight=ft.FontWeight.BOLD,
             color=Styles.TEXT_COLOR,
+            text_align=ft.TextAlign.CENTER,
+        )
+    
+
+    @staticmethod
+    def build_explanation(text: str):
+        """
+        Creates an explanatory text with specific styling.
+
+        Args:
+            text (str): The explanation text to display.
+
+        Returns:
+            ft.Text: A styled text element.
+        """
+        return ft.Text(
+            text,
+            size=Styles.EXPLANATION_FONT_SIZE,
+            color=Styles.EXPLANATION_FONT_COLOR,
             text_align=ft.TextAlign.CENTER,
         )
