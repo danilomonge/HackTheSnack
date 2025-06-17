@@ -16,15 +16,48 @@ class NavigationBar:
         Returns:
             ft.TextButton: Configured text button for navigation.
         """
-        return ft.TextButton(
+        is_active = route == self.page.route
+
+        def on_hover(e: ft.ControlEvent):
+            '''Handles the hover event to change button style based on active state.
+            Args:
+                e (ft.ControlEvent): The event triggered by the button hover.
+            '''
+            if getattr(e, "data", None) == "true":
+                btn.style = ft.ButtonStyle(
+                    bgcolor=Styles.NAVBAR_HOVER_COLOR,
+                    color=Styles.NAVBAR_ACTIVE_COLOR if is_active else Styles.NAVBAR_TEXT_COLOR,
+                    text_style=ft.TextStyle(weight=ft.FontWeight.BOLD)
+                )
+            else:
+                btn.style = ft.ButtonStyle(
+                    bgcolor=Styles.NAVBAR_COLOR,
+                    color=Styles.NAVBAR_ACTIVE_COLOR if is_active else Styles.NAVBAR_TEXT_COLOR,
+                    text_style=ft.TextStyle(weight=ft.FontWeight.BOLD)
+                )
+            btn.update()
+
+        def on_click(e):
+            '''Handles the button click event to navigate to the specified route.
+            Args:
+                e (ft.ControlEvent): The event triggered by the button click.
+            '''
+            self.page.route = route 
+            self.page.go(route)
+            self.page.update()  
+
+        btn = ft.TextButton(
             text,
-            on_click=lambda _: self.page.go(route),
+            on_click=on_click,
+            on_hover=on_hover,
             style=ft.ButtonStyle(
-                color=Styles.NAVBAR_TEXT_COLOR,
+                bgcolor=Styles.NAVBAR_COLOR,
+                color=Styles.NAVBAR_ACTIVE_COLOR if is_active else Styles.NAVBAR_TEXT_COLOR,
                 text_style=ft.TextStyle(weight=ft.FontWeight.BOLD)
             )
         )
-        
+        return btn
+
     def build(self):
         return ft.Container(
             content=ft.Row(

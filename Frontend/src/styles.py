@@ -10,6 +10,8 @@ class Styles:
 
 
     NAVBAR_COLOR = "#a3b188"
+    NAVBAR_ACTIVE_COLOR = "#2b321f"
+    NAVBAR_HOVER_COLOR = "#9AA87E"
     NAVBAR_TEXT_COLOR = "#FFFFFF"
 
     INPUT_FILL_COLOR = "#f7f9f0" 
