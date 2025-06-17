@@ -148,7 +148,7 @@ class RecipeResultUI:
                 spacing=10,
             ),
             padding=20,
-            width=1000,
+            width=480,
             bgcolor=Styles.TABLE_ROW_COLOR,
             border_radius=Styles.BORDER_RADIUS,
         )
@@ -172,28 +172,27 @@ class RecipeResultUI:
         
         if generator_view and len(generator_view.controls) > 1:
         # Safely access the column that contains our content
-            column = generator_view.controls[1]
-            if isinstance(column, ft.Column) and hasattr(column, 'controls'):
-                # Remove old result if exists
-                if RecipeResultUI._current_result_container:
-                    try:
-                        column.controls.remove(RecipeResultUI._current_result_container)
-                    except ValueError:
-                        pass
+            main_column = generator_view.controls[1]
+            if isinstance(main_column, ft.Column):
+                # Get the row containing input and results
+                container = main_column.controls[0]
+                if isinstance(container, ft.Container):
+                    main_row = container.content
+                    if isinstance(main_row, ft.Row):
+                        results_section = main_row.controls[1]  # Get the results container
+                        
+                        # Generate new result
+                        recipe_calculator = RecipeResultCalculator()
+                        result_ui = RecipeResultUI(page)
+                        
+                        if recipe_calculator.calculate_recipe(ingredient_input):
+                            recipe_data = recipe_calculator.get_recipe_result()
+                            result_ui.show_recipe(recipe_data) #type: ignore
+                        else:
+                            result_ui.show_error()
 
-                # Generate new result
-                recipe_calculator = RecipeResultCalculator()
-                result_ui = RecipeResultUI(page)
-                
-                if recipe_calculator.calculate_recipe(ingredient_input):
-                    recipe_data = recipe_calculator.get_recipe_result()
-                    result_ui.show_recipe(recipe_data) # type: ignore
-                else:
-                    result_ui.show_error()
-
-                # Add new result to view
-                result_container = result_ui.build_result_section()
-                column.controls.append(result_container)
-
-                RecipeResultUI._current_result_container = result_container
-                page.update()
+                        # Update results section
+                        result_container = result_ui.build_result_section()
+                        results_section.content = result_container
+                        RecipeResultUI._current_result_container = result_container
+                        page.update()
