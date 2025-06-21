@@ -18,9 +18,6 @@ from Backend.data_base_manager.recipe_manager import RecipeManager
 from Backend.data_base_manager.evaluation_manager import EvaluationManager
 
 
-
-
-
 class ProductSubmitHandler:
     """
     Handles the submit action for the product ingredient table.
@@ -70,14 +67,13 @@ class ProductSubmitHandler:
         product_name = (product_name_field.value or "").strip()
         ingredient_dict = IngredientDataBuilder.build_data_from_rows(ingredient_rows)
 
-        # Store recipe in data base and get ids
-        recipe_ids = RecipeManager.submit_recipe(product_name, ingredient_dict)
+        # Store recipe in data base
+        product_id, ingredient_ids, recipe_ids = RecipeManager.submit_recipe(product_name, ingredient_dict)  # type: ignore (ingredient not None)
         
         # Generate the recipe using the RecipeGenerator from the backend
         result_dict = RecipeGenerator.generate_recipe(ingredient_dict)
 
-        #
-        EvaluationManager.build_results_payload(recipe_ids, result_dict)
+        EvaluationManager.create_evaluation(product_id, ingredient_ids, recipe_ids, result_dict) # type: ignore
 
         # Display the recipe result
         RecipeResultUI.display_recipe_result(page, result_dict)
