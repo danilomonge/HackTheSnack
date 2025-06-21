@@ -1,8 +1,19 @@
+import sys
+
+sys.dont_write_bytecode = True
+
+import os
+
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, BASE_DIR)
+
 import flet as ft
 from Backend.data_base_manager.product_manager import ProductManager
 from Backend.data_base_manager.recipe_manager  import RecipeManager
 from Frontend.src.add_product_table.logic.data_filler import DataFiller
 from Backend.translation import Translation
+from Frontend.src.add_product_table.logic.input_validator import InputValidator
+from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 
 
 

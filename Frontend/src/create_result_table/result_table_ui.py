@@ -1,5 +1,4 @@
 import flet as ft
-from .calculate_recipe_result import RecipeResultCalculator
 
 
 class RecipeResultUI:
@@ -133,45 +132,37 @@ class RecipeResultUI:
         
 
     @staticmethod
-    def generate_and_display_recipe(
-        page: ft.Page, ingredient_input: dict[str, float | None]
+    def display_recipe_result(
+        page: ft.Page, recipe_data: dict[str, dict[str, float]] | None
     ):
         """
-        Handles the full process: generates a recipe and displays the results on the page.
+        Displays the given recipe result on the page.
 
         Args:
             page (ft.Page): The current Flet page instance.
-            ingredient_input (dict): A dictionary with ingredient names as keys and
-                                    either fixed percentages or None as values.
+            recipe_data (dict or None): A dictionary with ingredient names as keys and
+                values as {"mean": float, "variation": float}. If None, an error is shown.
         """
         # Step 1: Remove any existing result container
-        # This ensures we don't have multiple result sections on the page
         if RecipeResultUI._current_result_container:
             try:
-                page.controls.remove(RecipeResultUI._current_result_container) # type: ignore
+                page.controls.remove(RecipeResultUI._current_result_container)  # type: ignore
             except ValueError:
-                pass  # Container was not in page.controls
+                pass
 
-        # Step 2: Set up the calculator and UI
-        recipe_calculator = RecipeResultCalculator()
+        # Step 2: Set up the UI
         result_ui = RecipeResultUI(page)
 
-        # Step 3: Try generating the recipe
-        success = recipe_calculator.calculate_recipe(ingredient_input)
-
-        # Step 4: Show result or error message
-        if success:
-            recipe_data = recipe_calculator.get_recipe_result()
+        # Step 3: Show result or error
+        if recipe_data:
             result_ui.show_recipe(recipe_data)  # type: ignore
         else:
             result_ui.show_error()
 
-        # Step 5: Create and add the result section to the page
+        # Step 4: Add to page and update
         result_container = result_ui.build_result_section()
-        page.controls.append(result_container) # type: ignore
-        
-        # Step 6: Speichere Referenz zum neuen Container
+        page.controls.append(result_container)  # type: ignore
         RecipeResultUI._current_result_container = result_container
-
         page.update()
+
         
