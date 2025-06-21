@@ -14,15 +14,17 @@ class RecipeManager:
     """
 
     @staticmethod
-    def submit_recipe(product_name, ingredient_dict) -> list[int]:
+    def submit_recipe(product_name: str, ingredient_dict: dict[str, float]) -> tuple[int, list[int], list[int]]:
         """
         creates and associates a product with a series of ingredients
 
         Args:
         product_name (str):     The name of the product.
-        ingredient_dict (dict):  The ingredient dictionary with percentage values
+        ingredient_dict (dict):  The ingredient dictionary with percentage values.
 
         Returns:
+        product_id (int): Product database ID
+        id_ingredients (list[int]): List of ingredient IDs
         recipe_ids (list[int]): List of recipe (product-ingredient associaton) IDs
 
         """
@@ -36,11 +38,12 @@ class RecipeManager:
             product_data = product_response.json()
             id_product = product_data['data']
         else:
-            id_product = ProductManager.find_product_id(product_name)
+            product_data = ProductManager.find_product_id(product_name)
+            id_product = product_data['id']
 
         recipe_ids = RecipeManager.associate_ingredients_to_product(id_product, id_ingredients)
 
-        return recipe_ids 
+        return id_product, id_ingredients, recipe_ids 
         
 
     @staticmethod
@@ -88,13 +91,14 @@ class RecipeManager:
 
         for id_ingredient in ingredient_ids:
             response = RecipeManager.associate_product_ingredient(idProduct, id_ingredient)
-            recipe_data = response.json()
-            recipe_ids.append(recipe_data['data'])
-
+            
             if response.status_code == 201:
-                    print(f"Associated ingredient {id_ingredient} with product {idProduct}")
+                recipe_data = response.json()
+                recipe_ids.append(recipe_data['data'])
+                print(f"Associated ingredient {id_ingredient} with product {idProduct}")
 
             elif response.status_code == 400:
+                recipe_ids.append(id_ingredient)
                 print(f"Allready associated {id_ingredient} with product {idProduct}")
 
             else:    

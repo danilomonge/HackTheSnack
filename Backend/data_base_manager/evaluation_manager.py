@@ -10,14 +10,17 @@ class EvaluationManager:
         
     """
     @staticmethod
-    def create_evaluation(recipe_ids ,result_dict):
+    def create_evaluation(product_id, 
+        ingredient_ids: list[int],
+        recipe_ids: list[int],
+        result_dict: dict[str, dict[str, float]]):
         """
         Sends a POST request to create an evaluation in the database.
 
         Args:
-        recipe_ids (list[int]): List of recipe IDs.
-        result_dict (dict[str, dict[str, float]]): Dictionary with ingredient names as keys,
-        each containing 'mean' and 'variation'.
+        result_dict (dict[str, dict[str, float]]): Dict with ingredient names as keys and their stats.
+        recipe_ids (list[int]): List of recipe IDs, one per ingredient.
+        ingredient_ids (list[int]): List of ingredient IDs matching the result_dict order.
 
         Returns:
         httpx.Response: The HTTP response object returned by the API request.
@@ -25,7 +28,7 @@ class EvaluationManager:
                         and response.json() to access the response data
         """
         
-        data = EvaluationManager.build_results_payload(recipe_ids ,result_dict)
+        data = EvaluationManager.build_results_payload(product_id, ingredient_ids, recipe_ids, result_dict)
         
         response = httpx.post(
                 "http://localhost:8087/user-management/evaluation",
@@ -33,33 +36,47 @@ class EvaluationManager:
                 content=json.dumps(data)
             )
         
+        print(json.dumps(data))
         return response
 
     @staticmethod
-    def build_results_payload(recipe_ids: list[int], result_dict) -> dict:
+    def build_results_payload( 
+        product_id, 
+        ingredient_ids: list[int],
+        recipe_ids: list[int],
+        result_dict: dict[str, dict[str, float]]  
+    ) -> dict:
         """
-        Builds a JSON-compatible payload that matches recipe IDs with ingredient stats.
+        Builds a full result payload with static top-level product info and dynamic result list.
 
         Args:
-            recipe_ids (list[int]): List of recipe IDs.
-            result_dict (dict[str, dict[str, float]]): Dictionary with ingredient names as keys,
-            each containing 'mean' and 'variation'.
+            result_dict (dict[str, dict[str, float]]): Dict with ingredient names as keys and their stats.
+            recipe_ids (list[int]): List of recipe IDs, one per ingredient.
+            ingredient_ids (list[int]): List of ingredient IDs matching the result_dict order.
 
         Returns:
-            dict: A dictionary with a key 'resultsList' containing the structured list of data.
+            dict: Payload with overall stats and a resultList of per-recipe stats.
         """
-        # Ensure keys and recipe_ids align
-        if len(recipe_ids) != len(result_dict):
-            raise ValueError("The number of recipe IDs must match the number of ingredients in result_dict.")
+        if not (len(recipe_ids) == len(ingredient_ids) == len(result_dict)):
+            raise ValueError("recipe_ids, ingredient_ids, and result_dict must all be the same length.")
 
-        results_list = []
-        for recipe_id, (ingredient, stats) in zip(recipe_ids, result_dict.items()):
+        result_list = []
+        for recipe_id, ingredient_id, (ingredient, stats) in zip(recipe_ids, ingredient_ids, result_dict.items()):
             result_entry = {
-                "idRecipe": recipe_id,
+                "recipeId": recipe_id,
+                "ingredientId": ingredient_id,
                 "ingredientMeanPercentage": stats.get("mean", 0.0),
-                "ingredientVarPercentage": stats.get("variation", 0.0),
+                "ingredientStdPercentage": stats.get("variation", 0.0),
             }
-            results_list.append(result_entry)
+            result_list.append(result_entry)
 
-
-        return {"resultsList": results_list}
+        # Static + example values for demonstration (you can parameterize these later)
+        return {
+            "idProduct": 1, #to be updated to specify product
+            "idIngredient": 1,
+            "idRecipe": 1,
+            "ingredientMeanPercentage": 5.55,
+            "ingredientStdPercentage": 3.03,
+            "evaluationDate": "2025-06-13",
+            "resultList": result_list
+        }
