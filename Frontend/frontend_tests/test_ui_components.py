@@ -7,6 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 from Frontend.src.add_product_table.table_ui.product_table_ui import ProductTableUI
 from Frontend.src.add_product_table.table_ui.ingredient_manager import IngredientManager
 
+
 import flet as ft
 
 class Page:
@@ -114,5 +115,7 @@ def test_submit_with_valid_data():
     name_field.value = "Test Ingredient"
     perc_field.value = "100"
     
-    result = ui.on_submit_click()
-    assert result is not None
+    ui.on_submit_click()
+    assert ui.feedback.value == "✅ Product is valid. Recipe generated!"
+
+    

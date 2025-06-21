@@ -12,7 +12,7 @@ class ProductManager:
         Sends a POST request to create a product in the database.
 
         Args:
-        product_name (str): The name of the product to search for.
+        product_name (str): The name of the product to create.
 
         Returns:
         httpx.Response: The HTTP response object returned by the API request.
@@ -52,6 +52,27 @@ class ProductManager:
         response = httpx.get(f"http://localhost:8087/user-management/product/detail?name={product_name}")
 
         return response
+    
+    @staticmethod
+    def find_product_id(product_name):
+        """
+        Searches for a product by name in the product data base and returns its id if found.
+
+        Args:
+            product_name (str): The name of the product beeing searched.
+
+        Returns:
+            id_product (int): id of the product
+
+        """
+        response = httpx.get(f"http://localhost:8087/user-management/product/detail?name={product_name}")
+        
+        if response.status_code == 200: 
+            product_data = response.json()
+            id_product = product_data['data']
+            return id_product
+        else:
+            raise Exception(f"Failed to find the product: {product_name}")
     
     @staticmethod
     def find_product_list(product_name):
