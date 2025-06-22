@@ -36,7 +36,6 @@ class EvaluationManager:
                 content=json.dumps(data)
             )
         
-        print(json.dumps(data))
         return response
 
     @staticmethod
@@ -47,7 +46,7 @@ class EvaluationManager:
         result_dict: dict[str, dict[str, float]]  
     ) -> dict:
         """
-        Builds a full result payload with static top-level product info and dynamic result list.
+        Builds an arrangement for the POST evaluation service with static top-level product info and dynamic result list.
 
         Args:
             result_dict (dict[str, dict[str, float]]): Dict with ingredient names as keys and their stats.
@@ -70,13 +69,68 @@ class EvaluationManager:
             }
             result_list.append(result_entry)
 
-        # Static + example values for demonstration (you can parameterize these later)
         return {
-            "idProduct": 1, #to be updated to specify product
-            "idIngredient": 1,
-            "idRecipe": 1,
+            "idProduct": product_id,
+            "idIngredient": ingredient_ids[0],
+            "idRecipe": recipe_ids[0],
             "ingredientMeanPercentage": 5.55,
             "ingredientStdPercentage": 3.03,
             "evaluationDate": "2025-06-13",
             "resultList": result_list
         }
+    
+    @staticmethod
+    def find_evaluation(product_id):
+        """
+        Searches for an evaluation by id in the data base and returns the information of every ingredient-value.
+
+        Args:
+            product_id (int)
+
+        Returns:
+            dict[int, dict[str, float]]: A dictionary with structure:
+                {
+                    ingredient_id: {
+                        'mean': float,
+                        'variation': float
+                    },
+                    ...
+                }
+        """
+        response = httpx.get(f"http://localhost:8087/user-management/evaluation/detail?id={product_id}")
+
+        return response
+
+
+    @staticmethod
+    def evaluation_translation(results_json: dict) -> dict[int, dict[str, float]]:
+        """
+        Parses a result JSON and returns a dictionary mapping ingredient IDs to their mean and std percentages.
+
+        Args:
+            results_json (dict): The JSON object containing resultList.
+
+        Returns:
+            dict[int, dict[str, float]]: A dictionary with structure:
+                {
+                    ingredient_id: {
+                        'mean': float,
+                        'variation': float
+                    },
+                    ...
+                }
+        """
+        ingredient_dict = {}
+
+        for result in results_json.get("resultList", []):
+            ingredient_id = result.get("ingredientId")
+            mean = result.get("ingredientMeanPercentage")
+            std = result.get("ingredientStdPercentage")
+
+            if ingredient_id is not None:
+                ingredient_dict[ingredient_id] = {
+                    "mean": mean,
+                    "variation": std,
+                }
+
+        return ingredient_dict
