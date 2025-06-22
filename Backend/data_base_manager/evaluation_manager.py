@@ -80,57 +80,51 @@ class EvaluationManager:
         }
     
     @staticmethod
-    def find_evaluation(product_id):
+    def find_evaluation_list(product_id):
         """
-        Searches for an evaluation by id in the data base and returns the information of every ingredient-value.
+        Searches for all evaluations related to one product ID. 
 
         Args:
             product_id (int)
 
-        Returns:
-            dict[int, dict[str, float]]: A dictionary with structure:
-                {
-                    ingredient_id: {
-                        'mean': float,
-                        'variation': float
-                    },
-                    ...
-                }
         """
-        response = httpx.get(f"http://localhost:8087/user-management/evaluation/detail?id={product_id}")
+        response = httpx.get(f"http://localhost:8087/user-management/evaluation/list?page=1&size=10&orderBy&orderType&idProduct={product_id}")
 
         return response
 
 
     @staticmethod
-    def evaluation_translation(results_json: dict) -> dict[int, dict[str, float]]:
+    def find_evaluation_detail(product_id):
         """
-        Parses a result JSON and returns a dictionary mapping ingredient IDs to their mean and std percentages.
+        Searches for the details of an evaluation by id and returns the information for every ingredient-value.
 
         Args:
-            results_json (dict): The JSON object containing resultList.
+            product_id (int)
 
-        Returns:
-            dict[int, dict[str, float]]: A dictionary with structure:
-                {
-                    ingredient_id: {
-                        'mean': float,
-                        'variation': float
-                    },
-                    ...
-                }
         """
-        ingredient_dict = {}
+        response = httpx.get(f"http://localhost:8087/user-management/evaluation/detail?id={product_id}")
 
-        for result in results_json.get("resultList", []):
-            ingredient_id = result.get("ingredientId")
-            mean = result.get("ingredientMeanPercentage")
-            std = result.get("ingredientStdPercentage")
+        return response
+    
+    @staticmethod
+    def find_evaluation_product_ingredient(product_id, ingredient_id):
+        """
+        Searches for a product or ingredient by ID and returns all related result-items
 
-            if ingredient_id is not None:
-                ingredient_dict[ingredient_id] = {
-                    "mean": mean,
-                    "variation": std,
-                }
+        Args:
+            product_id (int)
+            
+        """
+        #transformt product_id and ingredient_id if they wont be searched
+        if product_id == 0:
+            product_id = ""
+        
+        if ingredient_id == 0:
+            ingredient_id = ""
+        
+        response = httpx.get(f"http://localhost:8087/user-management/evaluation/listResult?page=1&size=50&orderBy&orderType&idProduct={product_id}&idIngredient={ingredient_id}")
 
-        return ingredient_dict
+        return response
+
+
+    
