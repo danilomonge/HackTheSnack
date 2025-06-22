@@ -204,3 +204,12 @@ class IngredientManager:
         self.quantity_table.update()
         self.product_name.update()
         self.page.update()
+
+    
+    def clear_ingredient_rows(self):
+        """
+        Clears only the ingredient rows from the table, without modifying the product name input.
+        """
+        self.ingredients.clear()
+        self.quantity_table.controls.clear()
+        self.quantity_table.update()
