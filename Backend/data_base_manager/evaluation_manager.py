@@ -18,10 +18,11 @@ class EvaluationManager:
         Sends a POST request to create an evaluation in the database.
 
         Args:
-        result_dict (dict[str, dict[str, float]]): Dict with ingredient names as keys and their stats.
-        recipe_ids (list[int]): List of recipe IDs, one per ingredient.
+        product_id (int): Product ID
         ingredient_ids (list[int]): List of ingredient IDs matching the result_dict order.
-
+        recipe_ids (list[int]): List of recipe IDs, one per ingredient.
+        result_dict (dict[str, dict[str, float]]): Dict with ingredient names as keys and their stats.
+        
         Returns:
         httpx.Response: The HTTP response object returned by the API request.
                         Use response.status_code to check for success,
@@ -46,12 +47,13 @@ class EvaluationManager:
         result_dict: dict[str, dict[str, float]]  
     ) -> dict:
         """
-        Builds an arrangement for the POST evaluation service with static top-level product info and dynamic result list.
+        Builds a JSON arrangement for the POST evaluation service.
 
         Args:
-            result_dict (dict[str, dict[str, float]]): Dict with ingredient names as keys and their stats.
-            recipe_ids (list[int]): List of recipe IDs, one per ingredient.
-            ingredient_ids (list[int]): List of ingredient IDs matching the result_dict order.
+            product_id (int): Product ID
+        ingredient_ids (list[int]): List of ingredient IDs matching the result_dict order.
+        recipe_ids (list[int]): List of recipe IDs, one per ingredient.
+        result_dict (dict[str, dict[str, float]]): Dict with ingredient names as keys and their stats.
 
         Returns:
             dict: Payload with overall stats and a resultList of per-recipe stats.
@@ -73,9 +75,8 @@ class EvaluationManager:
             "idProduct": product_id,
             "idIngredient": ingredient_ids[0],
             "idRecipe": recipe_ids[0],
-            "ingredientMeanPercentage": 5.55,
-            "ingredientStdPercentage": 3.03,
-            "evaluationDate": "2025-06-13",
+            "ingredientMeanPercentage": 0,
+            "ingredientStdPercentage": 0,
             "resultList": result_list
         }
     
@@ -115,7 +116,7 @@ class EvaluationManager:
             product_id (int)
             
         """
-        #transformt product_id and ingredient_id if they wont be searched
+        #transformt product_id and ingredient_id if they are not searched
         if product_id == 0:
             product_id = ""
         
