@@ -24,7 +24,7 @@ class DataFiller:
         """
         style = ingredient_manager.input_style()
 
-        ingredient_manager.clear_all()
+        ingredient_manager.clear_ingredient_rows()
 
         for name, percentage in ingredient_data.items():
             last_valid = [f"{percentage:.2f}"]
@@ -47,7 +47,6 @@ class DataFiller:
             ingredient_manager.quantity_table.controls.append(row)
 
         ingredient_manager.quantity_table.update()
-
 
 
 
