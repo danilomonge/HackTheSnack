@@ -1,6 +1,6 @@
 import flet as ft
-from ..logic.input_validator import InputValidator
-from ..logic.percentage_adjuster import PercentageAdjuster
+from hts_lib.Frontend.src.add_product_table.logic.input_validator import InputValidator
+from hts_lib.Frontend.src.add_product_table.logic.percentage_adjuster import PercentageAdjuster
 
 
 class IngredientManager:

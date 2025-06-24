@@ -1,13 +1,13 @@
 import numpy as np
-import sys
+"""import sys
 import os
 
 
 sys.dont_write_bytecode = True
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))) """
 
-from Backend.constraints import Constraints  
+from hts_lib.Backend.constraints import Constraints  
 
 
 def test_inequality_constraints_shape_one():

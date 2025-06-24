@@ -4,7 +4,7 @@ import os
 sys.dont_write_bytecode = True
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from Frontend.src.add_product_table.logic.input_validator import InputValidator
+from hts_lib.Frontend.src.add_product_table.logic.input_validator import InputValidator
 
 import flet as ft
 

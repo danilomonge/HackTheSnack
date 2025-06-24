@@ -1,4 +1,4 @@
-import sys
+"""import sys
 
 sys.dont_write_bytecode = True
 
@@ -11,9 +11,9 @@ while not os.path.isdir(os.path.join(current_path, "Backend")):
         break  # prevent infinite loop
     current_path = parent
 
-sys.path.insert(0, current_path)
+sys.path.insert(0, current_path) """
 
-from recipe_generator import RecipeGenerator
+from hts_lib.Backend.recipe_generator import RecipeGenerator
 
 def main():
 

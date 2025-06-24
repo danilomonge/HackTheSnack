@@ -4,10 +4,10 @@ sys.dont_write_bytecode = True
 
 import numpy as np
 
-from Backend.Input.constraints_preparation import prepare_constraints_dict
-from Backend.constraints import Constraints
-from Backend.computation import Computation
-from Backend.algorithm_skipper import AlgorithmSkipper
+from hts_lib.Backend.Input.constraints_preparation import prepare_constraints_dict
+from hts_lib.Backend.constraints import Constraints
+from hts_lib.Backend.computation import Computation
+from hts_lib.Backend.algorithm_skipper import AlgorithmSkipper
 
 
 class RecipeGenerator:
