@@ -3,7 +3,9 @@ channels:
   - defaults 
   - conda-forge
 dependencies:
+  - httpx=0.28.1
   - ipykernel=6.29.5
+  - json
   - jupyterlab=4.3.4
   - numpy=1.26.4
   - matplotlib

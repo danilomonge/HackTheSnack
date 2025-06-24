@@ -1,5 +1,4 @@
 import flet as ft
-from .calculate_recipe_result import RecipeResultCalculator
 from styles import Styles
 
 
@@ -164,51 +163,53 @@ class RecipeResultUI:
             border_radius=Styles.BORDER_RADIUS,
             expand=True,
         )
-    
+
     @staticmethod
-    def generate_and_display_recipe(
-        page: ft.Page, ingredient_input: dict[str, float | None]
-    ):
-        """
-        Generates a recipe and displays it in the current view.
+    def display_recipe_result(page: ft.Page, recipe_data: dict[str, dict[str, float]] | None
+        ):
+            """
+            Generates a recipe and displays it in the current view.
 
-        Args:
-            page (ft.Page): The current Flet page instance.
-            ingredient_input (dict): Ingredient names and their percentages.
-        """
-        # Get the generator view column that contains the UI
-        generator_view = next(
-            (view for view in page.views if view.route == "/generator"),
-            None
-        )
-        
-        if generator_view and len(generator_view.controls) > 1:
-            # Safely access the column that contains our content
-            main_column = generator_view.controls[1]
-            if isinstance(main_column, ft.Column):
-                container = main_column.controls[0]
-                if isinstance(container, ft.Container):
-                    responsive_row = container.content
-                    if isinstance(responsive_row, ft.ResponsiveRow):
-                        # Get the second container (results section) from ResponsiveRow
-                        if len(responsive_row.controls) >= 2:
-                            results_container_wrapper = responsive_row.controls[1]
-                            if isinstance(results_container_wrapper, ft.Container):
-                                
-                                results_section = results_container_wrapper.content
-                                
-                                # Generate new result
-                                recipe_calculator = RecipeResultCalculator()
-                                result_ui = RecipeResultUI(page)
-                                
-                                if recipe_calculator.calculate_recipe(ingredient_input):
-                                    recipe_data = recipe_calculator.get_recipe_result()
-                                    result_ui.show_recipe(recipe_data) #type: ignore
-                                else:
-                                    result_ui.show_error()
+            Args:
+                page (ft.Page): The current Flet page instance.
+                ingredient_input (dict): Ingredient names and their percentages.
+            """
+            # Get the generator view column that contains the UI
+            generator_view = next(
+                (view for view in page.views if view.route == "/generator"),
+                None
+            )
+            
+            if generator_view and len(generator_view.controls) > 1:
+                # Safely access the column that contains our content
+                main_column = generator_view.controls[1]
+                if isinstance(main_column, ft.Column):
+                    container = main_column.controls[0]
+                    if isinstance(container, ft.Container):
+                        responsive_row = container.content
+                        if isinstance(responsive_row, ft.ResponsiveRow):
+                            # Get the second container (results section) from ResponsiveRow
+                            if len(responsive_row.controls) >= 2:
+                                results_container_wrapper = responsive_row.controls[1]
+                                if isinstance(results_container_wrapper, ft.Container):
 
-                                # Update results section
-                                result_container = result_ui.build_result_section()
-                                results_container_wrapper.content = result_container
-                                RecipeResultUI._current_result_container = result_container
-                                page.update()
+                                    # Step 1: Remove any existing result container
+                                    if RecipeResultUI._current_result_container:
+                                        try:
+                                            page.controls.remove(RecipeResultUI._current_result_container)  # type: ignore
+                                        except ValueError:
+                                            pass
+                            
+                                    # Step 2: Set up the UI
+                                    result_ui = RecipeResultUI(page)
+
+                                    # Step 3: Show result or error
+                                    if recipe_data:
+                                        result_ui.show_recipe(recipe_data)  # type: ignore
+                                    else: result_ui.show_error()
+
+                                    # Step 4: Add to page and update
+                                    result_container = result_ui.build_result_section()
+                                    results_container_wrapper.content = result_container
+                                    RecipeResultUI._current_result_container = result_container #type: ignore
+                                    page.update()

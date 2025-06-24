@@ -7,6 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 from Frontend.src.add_product_table.table_ui.product_table_ui import ProductTableUI
 from Frontend.src.add_product_table.table_ui.ingredient_manager import IngredientManager
 
+
 import flet as ft
 
 class Page:
