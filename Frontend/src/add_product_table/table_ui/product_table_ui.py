@@ -3,6 +3,7 @@ from Frontend.src.add_product_table.table_ui.ingredient_manager import Ingredien
 from Frontend.src.add_product_table.logic.input_validator import InputValidator
 from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 from Frontend.src.product_submit_handler import ProductSubmitHandler
+from styles import Styles
 from Frontend.src.product_action_handler import ProductActionHandler
 from Backend.data_base_manager.product_manager import ProductManager
 
@@ -27,25 +28,26 @@ class ProductTableUI:
         """
         self.page = page
         self.ingredient_rows = ft.Column()
-        self.result_text = ft.Text(value="", color="green", size=12, weight=ft.FontWeight.BOLD)
+        self.result_text = ft.Text(value="", color=Styles.GREEN_COLOR, size=12, weight=ft.FontWeight.BOLD)
+
+        self.instruction_container = self.build_instruction_text()
+
+        style = Styles.input_style()
 
         self.product_name = ft.TextField(
             label="Product Name",
             hint_text="e.g. Fruit Yogurt",
             width=400,
-            filled=True,
-            bgcolor="#E8F5E9",
-            border_color="#1A3E3E",
-            color="black",
+            **style
         )
 
         self.ingredient_manager = IngredientManager(
-        self.ingredient_rows,
-        self.product_name,
-        self.page 
+            self.ingredient_rows,
+            self.product_name,
+            self.page 
         )
 
-        self.feedback = ft.Text(value="", color="red", size=12, weight=ft.FontWeight.BOLD)
+        self.feedback = ft.Text(value="", color=Styles.RED_COLOR, size=12, weight=ft.FontWeight.BOLD)
 
     def on_find_product_click(self, e):
         """
@@ -96,24 +98,6 @@ class ProductTableUI:
             self.page,
         )
 
-    def build_title(self):
-        """
-        Creates the main title of the page.
-
-        Returns:
-            ft.Container: A container with the title text.
-        """
-        return ft.Container(
-            ft.Text(
-                "Analyze a product",
-                size=34,
-                weight=ft.FontWeight.BOLD,
-                color="#1A3E3E",
-                text_align=ft.TextAlign.CENTER,
-            ),
-            alignment=ft.alignment.center,
-            padding=10,
-        )
 
     def build_name_input(self):
         """
@@ -126,12 +110,8 @@ class ProductTableUI:
             content=ft.Column(
                 [
                     ft.Container(
-                        ft.Text(
-                            "Enter product name",
-                            weight=ft.FontWeight.BOLD,
-                            size=23,
-                            color="#1A3E3E",
-                            text_align=ft.TextAlign.CENTER,
+                        Styles.build_subtitle(
+                            "Enter product name"
                         ),
                         alignment=ft.alignment.center,
                     ),
@@ -139,19 +119,15 @@ class ProductTableUI:
                         content=ft.Row(
                             [
                                 self.product_name,
-                                ft.ElevatedButton(
+                                Styles.primary_button(
                                     text="Search",
                                     on_click=self.on_find_product_click,
-                                    bgcolor="#1A3E3E",
-                                    color="white",
-                                    height=40,
+                                    icon=ft.Icons.SEARCH,
                                 ),
-                                ft.ElevatedButton(
+                                Styles.primary_button(
                                     text="Create",
                                     on_click=self.on_create_product_click,
-                                    bgcolor="#1A3E3E",
-                                    color="white",
-                                    height=40,
+                                    icon=ft.Icons.CREATE,
                                 ),
                             ],
                             alignment=ft.MainAxisAlignment.CENTER,
@@ -180,18 +156,11 @@ class ProductTableUI:
         return ft.Container(
             content=ft.Column(
                 [
-                    ft.Text(
+                    Styles.build_explanation(
                         "List the ingredients from most to least used.",
-                        size=17,
-                        color="#1A3E3E",
-                        weight=ft.FontWeight.BOLD,
-                        text_align=ft.TextAlign.CENTER,
                     ),
-                    ft.Text(
-                        "Only include a percentage if known; otherwise, leave it blank or use 0%.",
-                        size=15,
-                        color="#666666",
-                        text_align=ft.TextAlign.CENTER,
+                    Styles.build_explanation(
+                        "Only include a percentage if known; otherwise, leave it blank or use 0%."
                     ),
                 ],
                 spacing=5,
@@ -200,8 +169,21 @@ class ProductTableUI:
             ),
             alignment=ft.alignment.center,
             padding=ft.padding.symmetric(vertical=6, horizontal=10),
-            bgcolor="#F5F5F5",
+            bgcolor=Styles.BOX_COLOR,
+            visible=False,
         )
+    
+    def toggle_instruction(self, e: ft.ControlEvent):
+        """
+        Toggles the visibility of the instruction text.
+        Args:
+            e (ft.ControlEvent): The event triggered by the button click.
+        """
+        container = self.instruction_container  
+        container.visible = not container.visible
+        e.control.text = "Hide Instructions" if container.visible else "Show Instructions"
+        self.page.update()
+
 
     def build_table_header(self):
         """
@@ -214,12 +196,12 @@ class ProductTableUI:
             content=ft.Row(
                 [
                     ft.Container(
-                        ft.Text("Ingredient", weight=ft.FontWeight.BOLD, size=18, color="white"),
+                        ft.Text("Ingredient", weight=ft.FontWeight.BOLD, size=18, color=Styles.TABLE_HEADER_FONT_COLOR),
                         width=200,
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
-                        ft.Text("Percentage", weight=ft.FontWeight.BOLD, size=18, color="white"),
+                        ft.Text("Percentage", weight=ft.FontWeight.BOLD, size=18, color=Styles.TABLE_HEADER_FONT_COLOR),
                         width=120,
                         alignment=ft.alignment.center,
                     ),
@@ -228,9 +210,9 @@ class ProductTableUI:
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=20,
             ),
-            bgcolor="#1A3E3E",
+            bgcolor=Styles.TABLE_HEADER_COLOR,
             padding=10,
-            border_radius=10,
+            border_radius=Styles.BORDER_RADIUS,
             margin=5,
         )
 
@@ -244,29 +226,21 @@ class ProductTableUI:
         return ft.Container(
             content=ft.Row(
                 [
-                    ft.ElevatedButton(
+                    Styles.primary_button(
                         "Add Ingredient",
                         icon=ft.Icons.ADD,
                         on_click=lambda e: self.on_add_click(),
-                        bgcolor="#1A3E3E",
-                        color="white",
-                        width=200,
                     ),
-                    ft.ElevatedButton(
+
+                    Styles.primary_button(
                         "Submit Product",
                         icon=ft.Icons.ANALYTICS,
                         on_click=lambda e: self.on_submit_click(),
-                        bgcolor="#1A3E3E",
-                        color="white",
-                        width=200,
                     ),
-                    ft.ElevatedButton(
+                    Styles.primary_button(
                         "Clear All",
                         icon=ft.Icons.CLEAR,
                         on_click=lambda e: (self.on_clearall_click(), self.on_add_click()),
-                        bgcolor="#1A3E3E",
-                        color="white",
-                        width=200,
                     ),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
@@ -282,13 +256,15 @@ class ProductTableUI:
         Returns:
             ft.Container: The complete UI layout ready to be added to the page.
         """
-        return ft.Container(
+        # Input section stays the same, just wrapped in a container
+        input_section = ft.Container(
             content=ft.Column(
                 [
-                    self.build_title(),
+                    Styles.build_title("Analyze a product"),
                     self.build_name_input(),
+                    Styles.primary_button("Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO), 
+                    self.instruction_container,
                     self.build_table_header(),
-                    self.build_instruction_text(),
                     self.ingredient_rows,
                     self.feedback,
                     self.build_table_buttons(),
@@ -296,14 +272,43 @@ class ProductTableUI:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
             ),
-            width=1000,
-            padding=20,
-            bgcolor="#FFFFFF",
-            border_radius=15,
-            shadow=ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=15,
-                color=ft.Colors.BLACK12,
-                offset=ft.Offset(0, 0),
-            ),
+            width=700,  
         )
+
+        # Container for results that will be filled later
+        # In ProductTableUI.__init__, create a placeholder
+        self.results_section = ft.Container(
+            content=ft.Column(
+                [
+                    Styles.build_title("Generated Recipe"),
+                    ft.Text("Recipe will appear here after analysis...", 
+                        color=Styles.TEXT_COLOR, italic=True),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=10,
+            ),
+            width=700,
+            padding=ft.padding.only(top=0, left=20, right=20, bottom=20),
+        )
+
+        return ft.Container(
+            content=ft.ResponsiveRow(
+                [
+                    ft.Container(
+                        content=input_section,
+                        col={"sm": 12, "md": 6, "lg": 6},  # Full width on small, half on medium+
+                    ),
+                    ft.Container(
+                        content=self.results_section,
+                        col={"sm": 12, "md": 6, "lg": 6},  # Full width on small, half on medium+
+                    ),
+                ],
+                vertical_alignment=ft.CrossAxisAlignment.START,
+            ),
+            expand=True,
+            alignment=ft.alignment.top_left,
+            padding=20,
+            bgcolor=Styles.BACKGROUND_COLOR,
+        )
+    
+    

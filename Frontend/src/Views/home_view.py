@@ -1,0 +1,72 @@
+import flet as ft
+from styles import Styles
+
+
+class HomeView:
+
+    def __init__(self, page: ft.Page):
+        self.page = page
+
+    def build(self):
+        content = ft.Column(
+            controls=[
+                ft.Text("Hack The Snack", size=65, weight=ft.FontWeight.BOLD, color=Styles.TEXT_COLOR),
+                ft.Container(
+                    content=Styles.build_explanation(
+                        "Recreate your favorite food products at home with the help of our food hacker \n - \n Crack it · Cook it · Love it"
+                    ),
+                    padding=30,
+                    width=650,
+                    bgcolor=Styles.BOX_COLOR,
+                    border_radius=Styles.BORDER_RADIUS,
+                    shadow=ft.BoxShadow(
+                        blur_radius=10,
+                        color="rgba(0,0,0,0.25)",
+                        offset=ft.Offset(0, 4)
+                              ),
+                ),
+                ft.Row(
+                    controls=[
+                        Styles.primary_button(
+                            "Try it out",
+                            on_click=lambda e: self.page.go("/generator"),
+                            icon=ft.Icons.FAVORITE,
+                            ),
+                        Styles.primary_button(
+                            "More about us",
+                            on_click=lambda e: self.page.go("/about"),
+                            icon=ft.Icons.INFO,
+                            ),
+                        
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=25,
+        )
+
+
+        return ft.View(
+            route="/",
+            controls=[
+                ft.Stack(
+                    controls=[
+                        ft.Image(
+                            src="bg_test.png",
+                            width=float("inf"),  # Full width
+                            height=float("inf"),  # Full height
+                            fit=ft.ImageFit.COVER,
+                        ),
+                        ft.Container(
+                            content=content,
+                            alignment=ft.alignment.center,
+                            padding=50,
+                            expand=True,
+                        )
+                    ],
+                    expand=True
+                )
+            ]
+        )
