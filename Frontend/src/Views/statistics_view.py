@@ -1,4 +1,5 @@
 import flet as ft
+from Backend.translation import Translation
 
 from styles import Styles  # Assumes Styles has utility methods for title and colors
 
@@ -10,8 +11,8 @@ class StatisticsView:
     def get_products_and_ingredients(self):
         # You would replace this with actual DB logic.
         # Example: Fetching from DB, API, or service layer.
-        dropdown_products = ["Choice A", "Choice B", "Choice C"]
-        dropdown_ingredients = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"]
+        dropdown_products = Translation.collect_product_list()
+        dropdown_ingredients = Translation.collect_ingredient_list()
         return dropdown_products, dropdown_ingredients  
     
     def build_dropdown(self, label: str, items: list[str]):
