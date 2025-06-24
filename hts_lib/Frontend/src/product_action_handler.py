@@ -13,6 +13,7 @@ import json
 from hts_lib.Backend.data_base_manager.product_manager import ProductManager
 from hts_lib.Frontend.src.add_product_table.logic.input_validator import InputValidator
 from hts_lib.Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
+from hts_lib.Frontend.src.styles import Styles
 
 
 class ProductActionHandler:

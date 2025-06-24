@@ -13,6 +13,7 @@ import json
 from Frontend.src.add_product_table.logic.input_validator import InputValidator
 from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 from Frontend.src.create_result_table.result_table_ui import RecipeResultUI
+from hts_lib.Frontend.src.styles import Styles
 from Backend.recipe_generator import RecipeGenerator
 from Backend.data_base_manager.recipe_manager import RecipeManager
 
@@ -50,7 +51,7 @@ class ProductSubmitHandler:
         Returns:
             tuple | None: (product name, ingredient dict) if valid, else None
         """
-        #Validate all fields using InputValidator
+        # Validate all fields using InputValidator
         if not InputValidator.validate_all_inputs(
             product_name_field,
             ingredient_rows,
@@ -61,8 +62,8 @@ class ProductSubmitHandler:
 
         # If valid, update UI feedback
         feedback_text.value = "✅ Product is valid. Recipe generated!"
-        feedback_text.color = "#67CD6B"  
-        feedback_text.size = 14
+        feedback_text.color = Styles.GREEN_COLOR
+        feedback_text.size = Styles.FEEDBACK_FONT_SIZE
         page.update()
 
         # Extract product name and ingredient dictionary
