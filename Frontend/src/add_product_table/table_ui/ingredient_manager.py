@@ -146,7 +146,11 @@ class IngredientManager:
 
         self.ingredients.append(row)
         self.quantity_table.controls.append(row)
-        self.quantity_table.update()
+        #self.quantity_table.update()
+        try:
+            self.quantity_table.update()
+        except AssertionError:
+            pass  # Ignoriere den Fehler vorerst
 
     def remove_ingredient_row(self, row: ft.Container):
         """
@@ -190,3 +194,17 @@ class IngredientManager:
         """
         if len(self.quantity_table.controls) == 0:
             self.add_ingredient_row(self.page)
+
+    ''' def safe_update_control(self, control):
+    """Safely updates a control, falling back to page update if needed"""
+    try:
+        if hasattr(control, 'page') and control.page:
+            control.update()
+        else:
+            self.page.update()
+    except AssertionError:
+        # Fallback wenn Control nicht zur Page gehört
+        self.page.update()
+    '''
+
+    #self.safe_update_control(self.quantity_table)

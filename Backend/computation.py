@@ -31,7 +31,9 @@ class Computation:
             np.ones(D), A_ub=A, b_ub=a - eps, A_eq=B, b_eq=b, method="highs-ipm"
         )
         if not out.success:
-            print("⚠️ No feasible solution found for the constraint system.")
+            print(
+                f"⚠️ No feasible solution found for the constraint system with the given eps: {eps}."
+            )
             return None
 
         return out.x
@@ -184,43 +186,61 @@ class Computation:
         return Computation._point_construction(xi, s, A, a)
 
     @staticmethod
-    def _handle_only_one_possible_initial_point(A, a, B, b, num_iter, thinning):
+    def _handle_only_one_possible_initial_point(A, a, B, b):
         """
-        Attempts to find a feasible point without adding any slack (eps = 0).
-        If this point exists and no movement is possible in any direction,
-        then there is only one valid solution, and two identical copies of it
-        are returned as the sample matrix.
+        Tries to find a valid point without adding any slack (eps = 0).
+        If it finds one, it checks if it is the only solution by checking the null space of B.
+        If there is no freedom to move or movement is extremely small, it returns the initial point.
+        If there is freedom to move, it returns None, indicating that sampling might not be reliable.
 
-        This avoids problems when sampling would fail due to lack of degrees of freedom,
-        even though a solution exists.
+        Args:
+            A (np.ndarray): Matrix for inequality constraints A @ x <= a.
+            a (np.ndarray): Vector for inequality constraints.
+            B (np.ndarray): Matrix for equality constraints B @ x = b.
+            b (np.ndarray): Vector for equality constraints.
+        Returns:
+            Two identical points if the solution is (almost) unique, otherwise None.
         """
 
-        # Try to find a solution exactly on the boundary
+        # Try to find a feasible point without slack, exactly on the boundary
         x0 = Computation._find_initial_point(A, a, B, b, eps=0.0)
 
         if x0 is None:
             return None
 
-        # Make a direction that follows the equality rules
+        # Generate a random direction that satisfies the equality constraints
         generate_direction = Computation._construct_directions(B)
         test_direction = generate_direction()
 
-        # Check how far the point can move in that direction without violating the constraints
+        # Check how far movement is allowed in this direction without violating inequalities
         _, step_limit_forward, step_limit_backward, _ = (
             Computation._constrain_reduction(x0, test_direction, A, a)
         )
 
-        # If movement isn't possible in that direction there is only one valid point
-        if np.isclose(step_limit_forward, step_limit_backward):
-            print("ℹ️ Only one valid solution found, returning it.")
-            return np.tile(
-                x0, (2, 1) # Two identical points are created so that mean and standard deviation can still be calculated
-            )  
+        # Check the null space of B to see if there are possible movement directions
+        null_space_basis, _ = Computation._svd_projection(B)
 
-        # If movement is allowed, the point is on the boundary but not unique
+        # No valid directions available → the point is unique
+        if null_space_basis.shape[1] == 0:
+            print(
+                "ℹ️ Found a unique point that satisfies all constraints. Returning it."
+            )
+            return np.tile(
+                x0, (2, 1)  # Return the same point twice to allow mean/std calculations
+            )
+
+        # Only minimal movement possible → treat it as a unique solution
+        if step_limit_forward - step_limit_backward < 1e-2:
+            print("ℹ️ Movement directions are very small, returning the initial point.")
+            return np.tile(
+                x0, (2, 1)  # Return the same point twice to avoid sampling issues
+            )
+
+        # Movement is possible → not a unique solution
         print(
-            "⚠️ Found a possible solution in the boundary but movement is possible —> it is unsafe to sample."
+            "⚠️ Found an initial point in the boundary, but there are multiple valid solutions."
         )
+        print("ℹ️ Returning None to indicate that sampling might not be reliable.")
         return None
 
     @staticmethod
@@ -249,7 +269,7 @@ class Computation:
         # In that case, check if it is the only valid solution (no direction to move in)
         if x0 is None:
             boundary_solution = Computation._handle_only_one_possible_initial_point(
-                A, a, B, b, num_iter, thinning
+                A, a, B, b
             )
             if boundary_solution is not None:
                 return boundary_solution
@@ -261,8 +281,8 @@ class Computation:
         if null_space_basis.shape[1] == 0:
             print("ℹ️ No valid directions to move in, returning initial point.")
             return np.tile(
-                x0, (2, 1) # Needed to calculate mean and standard deviation
-            )  
+                x0, (2, 1)  # Needed to calculate mean and standard deviation
+            )
 
         sample = Computation._construct_directions(B)
 

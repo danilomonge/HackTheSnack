@@ -4,6 +4,8 @@ from Frontend.src.add_product_table.logic.input_validator import InputValidator
 from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 from Frontend.src.product_submit_handler import ProductSubmitHandler
 from styles import Styles
+from Frontend.src.product_action_handler import ProductActionHandler
+from Backend.data_base_manager.product_manager import ProductManager
 
 
 class ProductTableUI:
@@ -26,6 +28,7 @@ class ProductTableUI:
         """
         self.page = page
         self.ingredient_rows = ft.Column()
+        self.result_text = ft.Text(value="", color=Styles.GREEN_COLOR, size=12, weight=ft.FontWeight.BOLD)
 
         self.instruction_container = self.build_instruction_text()
 
@@ -44,7 +47,27 @@ class ProductTableUI:
             self.page 
         )
 
-        self.feedback = ft.Text(value="", color=Styles.RED_COLOR, size=Styles.FEEDBACK_FONT_SIZE, weight=ft.FontWeight.BOLD)
+        self.feedback = ft.Text(value="", color=Styles.RED_COLOR, size=12, weight=ft.FontWeight.BOLD)
+
+    def on_find_product_click(self, e):
+        """
+        Handles the find Product button click by calling ProductCreator.
+        """
+        return ProductActionHandler.handle_product_search(
+            self.product_name,
+            self.feedback,
+            self.page,
+        )
+    
+    def on_create_product_click(self, e):
+        """
+        Handles the find Product button click by calling ProductCreator.
+        """
+        return ProductActionHandler.handle_create_product(
+            self.product_name,
+            self.feedback,
+            self.page,
+        )
 
     def on_add_click(self):
         """
@@ -78,21 +101,45 @@ class ProductTableUI:
 
     def build_name_input(self):
         """
-        Creates the product name input section.
+        Creates the product name input section with a Find button.
 
         Returns:
-            ft.Container: A container with label and input field.
+            ft.Container: A container with label, input field, and find button.
         """
         return ft.Container(
             content=ft.Column(
                 [
                     ft.Container(
-                        Styles.build_subtitle("Enter product name"),
+                        Styles.build_subtitle(
+                            "Enter product name"
+                        ),
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
-                        content=self.product_name, alignment=ft.alignment.center
+                        content=ft.Row(
+                            [
+                                self.product_name,
+                                Styles.primary_button(
+                                    text="Search",
+                                    on_click=self.on_find_product_click,
+                                    icon=ft.Icons.SEARCH,
+                                ),
+                                Styles.primary_button(
+                                    text="Create",
+                                    on_click=self.on_create_product_click,
+                                    icon=ft.Icons.CREATE,
+                                ),
+                            ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            spacing=10,
+                        ),
+                        alignment=ft.alignment.center,
                     ),
+                    ft.Container(
+                        content=self.result_text,
+                        alignment=ft.alignment.center,
+                        padding=5,
+                    )
                 ],
                 spacing=5,
             ),

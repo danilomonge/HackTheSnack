@@ -72,6 +72,7 @@ def main(page: ft.Page):
                     ],
                 )
             )
+            generator_view.ingredient_manager.initialize_with_empty_row()
         elif page.route == "/recipes":
             page.views.append(
                 ft.View(
