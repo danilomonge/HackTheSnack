@@ -22,30 +22,24 @@ class DataFiller:
             ingredient_data (dict[str, float]): Dictionary with name and percentage of ingredients.
             ingredient_manager (IngredientManager): Instance of the ingredient manager.
         """
-        style = ingredient_manager.input_style()
 
         ingredient_manager.clear_ingredient_rows()
-
+    
         for name, percentage in ingredient_data.items():
-            last_valid = [f"{percentage:.2f}"]
+            # Add a new ingredient row 
+            ingredient_manager.add_ingredient_row(ingredient_manager.page)
 
-            name_input = ingredient_manager.name_input(style)
+            # Get the most recent (last added) row
+            row = ingredient_manager.ingredients[-1]
+
+            # Extract inputs from the structured row
+            name_input = row.content.controls[0].content
+            percent_input = row.content.controls[1].content.controls[1]  # Middle element in percent_section
+
+            # Fill values
             name_input.value = name
-
-            percent_input = ingredient_manager.percent_input(style, last_valid=[], page=ingredient_manager.page)
-            percent_input.value = ""    #f"{percentage:.2f}"
-
-            percent_section = ingredient_manager.percent_section(percent_input)
-
-            # Row creation
-            row = ingredient_manager.ingredient_row(
-                name_input, percent_section,
-                lambda r=None: ingredient_manager.remove_ingredient_row(row)
-            )
-
-            ingredient_manager.ingredients.append(row)
-            ingredient_manager.quantity_table.controls.append(row)
-
+            percent_input.value = ""  #f"{percentage:.2f}"
+        
         ingredient_manager.quantity_table.update()
 
 
