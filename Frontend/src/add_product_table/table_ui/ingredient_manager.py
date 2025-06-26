@@ -187,6 +187,14 @@ class IngredientManager:
         self.quantity_table.update()
         self.product_name.update()
         self.page.update()
+    
+    def clear_ingredient_rows(self):
+        """
+        Clears only the ingredient rows from the table, without modifying the product name input.
+        """
+        self.ingredients.clear()
+        self.quantity_table.controls.clear()
+        self.quantity_table.update()
 
     def initialize_with_empty_row(self):
         """
@@ -195,16 +203,4 @@ class IngredientManager:
         if len(self.quantity_table.controls) == 0:
             self.add_ingredient_row(self.page)
 
-    ''' def safe_update_control(self, control):
-    """Safely updates a control, falling back to page update if needed"""
-    try:
-        if hasattr(control, 'page') and control.page:
-            control.update()
-        else:
-            self.page.update()
-    except AssertionError:
-        # Fallback wenn Control nicht zur Page gehört
-        self.page.update()
-    '''
 
-    #self.safe_update_control(self.quantity_table)
