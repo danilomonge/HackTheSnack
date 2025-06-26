@@ -1,11 +1,11 @@
-import sys
+"""import sys
 
 sys.dont_write_bytecode = True
 
 import os
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-sys.path.insert(0, BASE_DIR)
+sys.path.insert(0, BASE_DIR) """
 
 import flet as ft
 from Frontend.src.add_product_table.table_ui.product_table_ui import ProductTableUI
@@ -13,6 +13,7 @@ from Frontend.src.navbar import NavigationBar
 from Frontend.src.Views.about_view import AboutView
 from Frontend.src.Views.home_view import HomeView
 from Frontend.src.Views.recipes_view import RecipesView
+from Frontend.src.add_product_table.table_ui.ingredient_manager import IngredientManager
 
 
 def main(page: ft.Page):

@@ -1,5 +1,5 @@
 import flet as ft
-from hts_lib.Frontend.src.styles import Styles
+from Frontend.src.styles import Styles
 
 
 class NavigationBar:

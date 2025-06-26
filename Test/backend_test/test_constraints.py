@@ -1,11 +1,11 @@
 import numpy as np
-"""import sys
+import sys
 import os
-
 
 sys.dont_write_bytecode = True
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))) """
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+import numpy as np
 
 from hts_lib.Backend.constraints import Constraints  
 

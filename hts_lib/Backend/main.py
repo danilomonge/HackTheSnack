@@ -13,7 +13,7 @@ while not os.path.isdir(os.path.join(current_path, "Backend")):
 
 sys.path.insert(0, current_path) """
 
-from hts_lib.Backend.recipe_generator import RecipeGenerator
+from Backend.recipe_generator import RecipeGenerator
 
 def main():
 
