@@ -14,6 +14,7 @@ from Frontend.src.add_product_table.logic.data_filler import DataFiller
 from Backend.translation import Translation
 from Frontend.src.add_product_table.logic.input_validator import InputValidator
 from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
+from styles import Styles
 
 
 
@@ -55,10 +56,16 @@ class ProductActionHandler:
             
             if response.status_code == 200:
                 feedback_text.value = "✅ Product found."
+                feedback_text.color = Styles.GREEN_COLOR
+                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
             elif response.status_code == 404:
                 feedback_text.value = "❌ Product not found."
+                feedback_text.color = Styles.RED_COLOR
+                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
             else:
                 feedback_text.value = f"❌ Error {response.status_code}: {response.text}"
+                feedback_text.color = Styles.RED_COLOR
+                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
         except Exception as ex:
             feedback_text.value = f"⚠️ Exception: {ex}"
 
@@ -126,8 +133,12 @@ class ProductActionHandler:
             if response.status_code == 201:
 
                 feedback_text.value = "✅ Product created successfully!"
+                feedback_text.color = Styles.GREEN_COLOR
+                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
             else:
                 feedback_text.value = f"❌ Error {response.status_code}: {response.text}"
+                feedback_text.color = Styles.RED_COLOR
+                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
         except Exception as ex:
             feedback_text.value = f"⚠️ Exception: {ex}"
 
