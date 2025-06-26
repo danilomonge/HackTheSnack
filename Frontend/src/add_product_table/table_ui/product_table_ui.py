@@ -5,6 +5,7 @@ from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuil
 from Frontend.src.product_submit_handler import ProductSubmitHandler
 from styles import Styles
 from Frontend.src.product_action_handler import ProductActionHandler
+from Frontend.src.add_product_table.table_ui.autofill_confirmation_window import AutofillConfirmationWindow
 from Backend.data_base_manager.product_manager import ProductManager
 
 
@@ -14,6 +15,7 @@ class ProductTableUI:
 
     Includes:
     - An input field for the product name
+    - Buttons to search and create a product
     - A list of ingredient rows (each with name and percentage)
     - Buttons to add ingredients and submit the product
     - Validation and feedback display
@@ -49,15 +51,36 @@ class ProductTableUI:
 
         self.feedback = ft.Text(value="", color=Styles.RED_COLOR, size=12, weight=ft.FontWeight.BOLD)
 
+        self.autofill_dialog_handler = AutofillConfirmationWindow(
+            self.page,
+            on_confirm = ProductActionHandler.handle_search_and_fill(
+            self.product_name,
+            self.feedback,
+            self.page,
+            self.ingredient_manager
+        )
+        )
+        
     def on_find_product_click(self, e):
         """
         Handles the find Product button click by calling ProductCreator.
         """
-        return ProductActionHandler.handle_product_search(
+        found = ProductActionHandler.check_if_product_exists(
             self.product_name,
             self.feedback,
             self.page,
         )
+        if found:
+           dialog = AutofillConfirmationWindow(
+            self.page,
+            on_confirm=lambda: ProductActionHandler.handle_search_and_fill(
+                self.product_name,
+                self.feedback,
+                self.page,
+                self.ingredient_manager),
+            on_cancel=lambda: print("Cancelled.")
+        )
+        dialog.show_dialog()
     
     def on_create_product_click(self, e):
         """

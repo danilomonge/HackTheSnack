@@ -5,9 +5,6 @@ class ProductManager:
     """
     Handles API interactions for product-related actions.
 
-    Attributes:
-        page (ft.Page): The Flet page object for UI updates.
-        
     """
     @staticmethod
     def create_product(product_name):
@@ -42,7 +39,7 @@ class ProductManager:
     @staticmethod
     def find_product(product_name):
         """
-        Searches for a product by name in the product data base.
+        Searches for a product by name in the data base.
 
         Args:
         product_name (str): The name of the product to search for.
