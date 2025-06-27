@@ -43,6 +43,7 @@ class testPage:
     def __init__(self):
         self.controls = []
         self.updated = False
+        self.views = []
 
     def update(self):
         self.updated = True
