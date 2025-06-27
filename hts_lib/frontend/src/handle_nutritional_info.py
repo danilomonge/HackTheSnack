@@ -1,0 +1,211 @@
+import flet as ft
+import requests
+
+from Secure_env.env_enc_decipher import SecureEnvLoader
+
+# Load environment variables securely to acces API keys
+SecureEnvLoader.load_env()
+
+import os
+
+# Get API keys from environment variables
+usda_key = os.environ.get("USDA_API_KEY")
+deepl_key = os.environ.get("DEEPL_API_KEY")
+
+# Route URLs for USDA and DeepL APIs
+SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
+DEEPL_URL = "https://api-free.deepl.com/v2/translate"
+
+
+def translate_to_english(text):
+    """
+    Translates a given text from German to English using the DeepL API.
+    Args:
+        text (str): The text to translate.
+    Returns:
+        str: The translated text.
+    """
+    params = {
+        "auth_key": deepl_key,
+        "text": text,
+        "source_lang": "DE",
+        "target_lang": "EN",
+    }
+    response = requests.post(DEEPL_URL, data=params)
+    result = response.json()
+    return result["translations"][0]["text"]
+
+
+def get_nutrition_usda(ingredient_name):
+    """
+    Fetches nutritional information for a given ingredient from the USDA API.
+    Args:
+        ingredient_name (str): The name of the ingredient to search for.
+    Returns:
+        dict: A dictionary containing nutritional values or None if not found.
+    """
+    params = {
+        "query": ingredient_name,
+        "api_key": usda_key,
+        "pageSize": 1,
+        "dataType": ["Foundation", "SR Legacy"],
+    }
+    res = requests.get(SEARCH_URL, params=params)
+    data = res.json()
+
+    # if the response is empty or no foods are found, return None
+    if "foods" not in data or not data["foods"]:
+        print(f"⚠️ No reliable data found for: {ingredient_name} (likely processed)")
+        return None
+
+    # Exctract the first food item found and its nutrients
+    food = data["foods"][0]
+    nutrients = {n["nutrientName"]: n["value"] for n in food["foodNutrients"]}
+
+    return {
+        "name": food["description"],
+        "kcal": nutrients.get("Energy", 0),
+        "carbs": nutrients.get("Carbohydrate, by difference", 0),
+        "fat": nutrients.get("Total lipid (fat)", 0),
+        "protein": nutrients.get("Protein", 0),
+        "per": "100g",
+    }
+
+
+class NutritionalInfoHandler:
+    """
+    Handles the display of nutritional information for ingredients in a dialog.
+    """
+
+    def __init__(self, page: ft.Page):
+        """
+        Initializes the NutritionalInfoHandler with a Flet page instance.
+        """
+        self.page = page
+        self.dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Nutrition Info", size=16, weight=ft.FontWeight.BOLD),
+            actions=[ft.TextButton("OK", on_click=self.close_dialog)],
+        )
+        self.page.overlay.append(self.dialog)
+        self.page.update()
+
+    def show_nutritional_info(self, ingredient_name: str, amount: float):
+        """
+        Displays nutritional information for a given ingredient in a dialog.
+        """
+        self.dialog.title = ft.Text(
+            f"{ingredient_name} — Nutrition Info", size=16, weight=ft.FontWeight.BOLD
+        )
+        self.dialog.content = ft.Text("⏳ Fetching data...")
+        self.dialog.open = True
+        self.page.update()
+
+        # Step 1: Try translating the ingredient name
+        try:
+            translated = translate_to_english(ingredient_name)
+        except Exception:
+            translated = ingredient_name  # fallback to original
+
+        # Step 2: Try fetching nutritional data from USDA
+        try:
+            data = get_nutrition_usda(translated)
+        except Exception:
+            data = None
+
+        # Step 3: Display result or fallback message if the data is not available
+        if not data:
+            self.dialog.content = ft.Text(
+                f"😕 Sorry, we couldn't find any information for '{ingredient_name}'."
+            )
+
+        else:
+            self.dialog.content = ft.Container(
+                width=360,
+                height=300,
+                padding=10,
+                content=ft.Column(
+                    controls=[
+                        ft.Text(
+                            f"In 100g of pure {ingredient_name.lower()}, the estimated nutritional values are:",
+                            weight=ft.FontWeight.BOLD,
+                            size=14,
+                        ),
+                        ft.Row(
+                            [
+                                ft.Icon(name="local_fire_department", size=18),
+                                ft.Text(f"Energy: {data['kcal']:.2f} kcal"),
+                            ]
+                        ),
+                        ft.Row(
+                            [
+                                ft.Icon(name="lunch_dining", size=18),
+                                ft.Text(f"Fat: {data['fat']:.2f} g"),
+                            ]
+                        ),
+                        ft.Row(
+                            [
+                                ft.Icon(name="ramen_dining", size=18),
+                                ft.Text(f"Carbohydrates: {data['carbs']:.2f} g"),
+                            ]
+                        ),
+                        ft.Row(
+                            [
+                                ft.Icon(name="egg", size=18),
+                                ft.Text(f"Protein: {data['protein']:.2f} g"),
+                            ]
+                        ),
+                        ft.Divider(height=15, color="transparent"),
+                        ft.Text(
+                            f"In the given product (per 100g), {ingredient_name.lower()} contributes approximately:",
+                            weight=ft.FontWeight.BOLD,
+                            size=14,
+                        ),
+                        ft.Row(
+                            [
+                                ft.Icon(name="local_fire_department", size=18),
+                                ft.Text(
+                                    f"Energy: {(data['kcal'] * amount / 100):.2f} kcal"
+                                ),
+                            ]
+                        ),
+                        ft.Row(
+                            [
+                                ft.Icon(name="lunch_dining", size=18),
+                                ft.Text(f"Fat: {(data['fat'] * amount / 100):.2f} g"),
+                            ]
+                        ),
+                        ft.Row(
+                            [
+                                ft.Icon(name="ramen_dining", size=18),
+                                ft.Text(
+                                    f"Carbohydrates: {(data['carbs'] * amount / 100):.2f} g"
+                                ),
+                            ]
+                        ),
+                        ft.Row(
+                            [
+                                ft.Icon(name="egg", size=18),
+                                ft.Text(
+                                    f"Protein: {(data['protein'] * amount / 100):.2f} g"
+                                ),
+                            ]
+                        ),
+                        ft.Divider(height=50, color="transparent"),
+                        ft.Text(
+                            f"Proportion of {ingredient_name.lower()} in the product: {amount:.2f}%",
+                            size=13,
+                            weight=ft.FontWeight.BOLD,
+                            italic=True,
+                            color=ft.Colors.PRIMARY,
+                        ),
+                    ],
+                    spacing=6,
+                ),
+            )
+
+        self.page.update()
+
+    def close_dialog(self, e=None):
+        self.dialog.open = False
+        self.page.update()
