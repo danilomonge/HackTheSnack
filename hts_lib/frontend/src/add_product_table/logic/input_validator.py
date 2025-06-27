@@ -1,5 +1,5 @@
 import flet as ft
-from frontend_.src.styles import Styles
+from ...styles import Styles
 
 
 class InputValidator:

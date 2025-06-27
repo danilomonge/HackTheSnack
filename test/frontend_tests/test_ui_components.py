@@ -14,6 +14,7 @@ class Page:
     def __init__(self):
         self.updated = False
         self.controls = [] #?
+        self.views = []
 
     def update(self, *args, **kwargs):
         self.updated = True

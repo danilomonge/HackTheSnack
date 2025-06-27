@@ -7,7 +7,7 @@ sys.dont_write_bytecode = True
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from Backend.algorithm.constraints import Constraints  
+from hts_lib.backend.algorithm.constraints import Constraints  
 
 
 def test_inequality_constraints_shape_one():

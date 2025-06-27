@@ -4,7 +4,7 @@ import os
 sys.dont_write_bytecode = True
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from Frontend.src.add_product_table.logic.percentage_adjuster import PercentageAdjuster
+from hts_lib.frontend.src.add_product_table.logic.percentage_adjuster import PercentageAdjuster
 
 import flet as ft
 

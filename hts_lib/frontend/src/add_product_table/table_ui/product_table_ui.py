@@ -1,12 +1,12 @@
 import flet as ft
-from frontend_.src.add_product_table.table_ui.ingredient_manager import IngredientManager
-from frontend_.src.add_product_table.logic.input_validator import InputValidator
-from frontend_.src.add_product_table.logic.data_builder import IngredientDataBuilder
-from frontend_.src.product_submit_handler import ProductSubmitHandler
-from frontend_.src.styles import Styles
-from frontend_.src.product_action_handler import ProductActionHandler
-from frontend_.src.add_product_table.table_ui.autofill_confirmation_window import AutofillConfirmationWindow
-from backend_.data_base_manager.product_manager import ProductManager
+from frontend.src.add_product_table.table_ui.ingredient_manager import IngredientManager
+from frontend.src.add_product_table.logic.input_validator import InputValidator
+from frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
+from frontend.src.product_submit_handler import ProductSubmitHandler
+from frontend.src.styles import Styles
+from frontend.src.product_action_handler import ProductActionHandler
+from frontend.src.add_product_table.table_ui.autofill_confirmation_window import AutofillConfirmationWindow
+from backend.data_base_manager.product_manager import ProductManager
 
 
 class ProductTableUI:
