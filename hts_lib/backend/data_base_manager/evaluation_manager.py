@@ -71,8 +71,8 @@ class EvaluationManager:
             "idProduct": product_id,
             "idIngredient": ingredient_ids[0],
             "idRecipe": recipe_ids[0],
-            "ingredientMeanPercentage": 0,
-            "ingredientStdPercentage": 0,
+            "ingredientMeanPercentage": 0.5,
+            "ingredientStdPercentage": 0.2,
             "resultList": result_list
         }
 
