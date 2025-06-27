@@ -26,3 +26,34 @@ class Translation:
                 ingredients[name] = id_
 
         return ingredients
+    
+    @staticmethod
+    def evaluation_translation(results_json: dict) -> dict[int, dict[str, float]]:
+        """
+        Parses a result JSON from a find_evaluation service and returns a dictionary mapping ingredient IDs to their mean and std percentages.
+        Args:
+            results_json (dict): The JSON object containing resultList.
+        Returns:
+            dict[int, dict[str, float]]: A dictionary with structure:
+                {
+                    ingredient_id: {
+                        'mean': float,
+                        'variation': float
+                    },
+                    ...
+                }
+        """
+        ingredient_dict = {}
+
+        for result in results_json.get("resultList", []):
+            ingredient_id = result.get("ingredientId")
+            mean = result.get("ingredientMeanPercentage")
+            std = result.get("ingredientStdPercentage")
+
+            if ingredient_id is not None:
+                ingredient_dict[ingredient_id] = {
+                    "mean": mean,
+                    "variation": std,
+                }
+
+        return ingredient_dict
