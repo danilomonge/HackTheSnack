@@ -1,4 +1,4 @@
-from Frontend.src.add_product_table.table_ui.ingredient_manager  import IngredientManager
+from frontend_.src.add_product_table.table_ui.ingredient_manager  import IngredientManager
 
 
 class DataFiller:

@@ -1,7 +1,7 @@
 import httpx
 import json
-from Backend.data_base_manager.ingredient_manager import IngredientManager
-from Backend.data_base_manager.product_manager import ProductManager
+from backend_.data_base_manager.ingredient_manager import IngredientManager
+from backend_.data_base_manager.product_manager import ProductManager
 
 
 class RecipeManager:

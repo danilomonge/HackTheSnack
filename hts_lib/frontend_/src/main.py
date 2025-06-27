@@ -8,11 +8,11 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, BASE_DIR)
 
 import flet as ft
-from add_product_table.table_ui.product_table_ui import ProductTableUI
-from navbar import NavigationBar
-from Views.about_view import AboutView
-from Views.home_view import HomeView
-from Views.recipes_view import RecipesView
+from frontend_.src.add_product_table.table_ui.product_table_ui import ProductTableUI
+from frontend_.src.navbar import NavigationBar
+from frontend_.src.views.about_view import AboutView
+from frontend_.src.views.home_view import HomeView
+from frontend_.src.views.recipes_view import RecipesView
 
 
 def main(page: ft.Page):

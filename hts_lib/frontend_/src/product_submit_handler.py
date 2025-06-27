@@ -10,15 +10,12 @@ sys.path.insert(0, BASE_DIR)
 import flet as ft
 import httpx
 import json
-from Frontend.src.add_product_table.logic.input_validator import InputValidator
-from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
-from Frontend.src.create_result_table.result_table_ui import RecipeResultUI
-from styles import Styles
-from Backend.recipe_generator import RecipeGenerator
-from Backend.data_base_manager.recipe_manager import RecipeManager
-
-
-
+from frontend_.src.add_product_table.logic.input_validator import InputValidator
+from frontend_.src.add_product_table.logic.data_builder import IngredientDataBuilder
+from frontend_.src.create_result_table.result_table_ui import RecipeResultUI
+from frontend_.src.styles import Styles
+from backend_.recipe_generator import RecipeGenerator
+from backend_.data_base_manager.recipe_manager import RecipeManager
 
 
 class ProductSubmitHandler:
