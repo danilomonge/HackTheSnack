@@ -1,5 +1,5 @@
 import flet as ft
-from frontend_.src.styles import Styles
+from frontend.src.styles import Styles
 
 class NavigationBar:
     def __init__(self, page: ft.Page):

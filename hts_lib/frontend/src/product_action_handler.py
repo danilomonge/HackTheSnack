@@ -8,13 +8,13 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, BASE_DIR)
 
 import flet as ft
-from backend_.data_base_manager.product_manager import ProductManager
-from backend_.data_base_manager.recipe_manager  import RecipeManager
-from frontend_.src.add_product_table.logic.data_filler import DataFiller
-from backend_.translation import Translation
-from frontend_.src.add_product_table.logic.input_validator import InputValidator
-from frontend_.src.add_product_table.logic.data_builder import IngredientDataBuilder
-from frontend_.src.styles import Styles
+from backend.data_base_manager.product_manager import ProductManager
+from backend.data_base_manager.recipe_manager  import RecipeManager
+from frontend.src.add_product_table.logic.data_filler import DataFiller
+from backend.translation import Translation
+from frontend.src.add_product_table.logic.input_validator import InputValidator
+from frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
+from frontend.src.styles import Styles
 
 
 class ProductActionHandler:
