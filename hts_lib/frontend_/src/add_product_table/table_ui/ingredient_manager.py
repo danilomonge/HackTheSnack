@@ -1,7 +1,7 @@
 import flet as ft
-from ..logic.input_validator import InputValidator
-from ..logic.percentage_adjuster import PercentageAdjuster
-from styles import Styles 
+from frontend_.src.add_product_table.logic.input_validator import InputValidator
+from frontend_.src.add_product_table.logic.percentage_adjuster import PercentageAdjuster
+from frontend_.src.styles import Styles
 
 class IngredientManager:
     """

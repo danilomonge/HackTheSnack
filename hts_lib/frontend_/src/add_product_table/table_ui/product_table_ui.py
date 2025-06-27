@@ -1,12 +1,12 @@
 import flet as ft
-from Frontend.src.add_product_table.table_ui.ingredient_manager import IngredientManager
-from Frontend.src.add_product_table.logic.input_validator import InputValidator
-from Frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
-from Frontend.src.product_submit_handler import ProductSubmitHandler
-from styles import Styles
-from Frontend.src.product_action_handler import ProductActionHandler
-from Frontend.src.add_product_table.table_ui.autofill_confirmation_window import AutofillConfirmationWindow
-from Backend.data_base_manager.product_manager import ProductManager
+from frontend_.src.add_product_table.table_ui.ingredient_manager import IngredientManager
+from frontend_.src.add_product_table.logic.input_validator import InputValidator
+from frontend_.src.add_product_table.logic.data_builder import IngredientDataBuilder
+from frontend_.src.product_submit_handler import ProductSubmitHandler
+from frontend_.src.styles import Styles
+from frontend_.src.product_action_handler import ProductActionHandler
+from frontend_.src.add_product_table.table_ui.autofill_confirmation_window import AutofillConfirmationWindow
+from backend_.data_base_manager.product_manager import ProductManager
 
 
 class ProductTableUI:
@@ -79,8 +79,8 @@ class ProductTableUI:
                 self.page,
                 self.ingredient_manager),
             on_cancel=lambda: print("Cancelled.")
-        )
-        dialog.show_dialog()
+            )
+           dialog.show_dialog()
     
     def on_create_product_click(self, e):
         """

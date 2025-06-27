@@ -5,8 +5,8 @@ sys.dont_write_bytecode = True
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 
-from Frontend.src.product_submit_handler import ProductSubmitHandler
-import Frontend.src.product_submit_handler as handler_module
+from hts_lib.frontend.src.product_submit_handler import ProductSubmitHandler
+import hts_lib.frontend.src.product_submit_handler as handler_module
 
 import flet as ft
 
@@ -43,6 +43,7 @@ class testPage:
     def __init__(self):
         self.controls = []
         self.updated = False
+        self.views = []
 
     def update(self):
         self.updated = True

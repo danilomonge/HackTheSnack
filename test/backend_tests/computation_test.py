@@ -6,7 +6,7 @@ import numpy as np
 sys.dont_write_bytecode = True
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from Backend.algorithm.computation import Computation
+from hts_lib.backend.algorithm.computation import Computation
 
 #Definition of standard constraints for 3 ingredients 
 D = 3
