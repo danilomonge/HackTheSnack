@@ -5,9 +5,9 @@ class Translation:
     """ 
 
     @staticmethod
-    def product_table_filter(api_response: dict) -> dict[str, float]:
+    def product_table_filter(api_response: dict) -> tuple[dict[str, float], list[float]]:
         """
-        Transforms an API-recipe response into a dictionary mapping ingredient names to their IDs.
+        Extracts data from an API-recipe response and puts it into a dictionary mapping ingredient names to their IDs.
 
         Args:
             api_response (dict): Dictionary containing 'data' key with ingredient info.
@@ -16,6 +16,7 @@ class Translation:
             dict[str, float]: Dictionary with {ingredient_name: ingredient_id}
         """
         ingredients = {}
+        ingredient_ids = []
 
         data = api_response.get("data", [])
         for item in data:
@@ -24,8 +25,9 @@ class Translation:
             id_ = item.get("idIngredient")
             if name is not None and id_ is not None:
                 ingredients[name] = id_
+                ingredient_ids.append(id_)
 
-        return ingredients
+        return ingredients, ingredient_ids
     
     @staticmethod
     def evaluation_translation(results_json: dict) -> dict[int, dict[str, float]]:

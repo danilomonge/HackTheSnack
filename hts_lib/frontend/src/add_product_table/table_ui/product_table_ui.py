@@ -31,6 +31,11 @@ class ProductTableUI:
         self.page = page
         self.ingredient_rows = ft.Column()
         self.result_text = ft.Text(value="", color=Styles.GREEN_COLOR, size=12, weight=ft.FontWeight.BOLD)
+        self.product_id = int
+        self.ingredient_ids = []
+        self.recipe_ids = []
+        self.result_dict = dict
+        self.change = bool
 
         self.instruction_container = self.build_instruction_text()
 
@@ -57,7 +62,8 @@ class ProductTableUI:
             self.product_name,
             self.feedback,
             self.page,
-            self.ingredient_manager
+            self.ingredient_manager,
+            self.store_submission_results
         )
         )
         
@@ -77,7 +83,8 @@ class ProductTableUI:
                 self.product_name,
                 self.feedback,
                 self.page,
-                self.ingredient_manager),
+                self.ingredient_manager,
+                self.store_submission_results),
             on_cancel=lambda: print("Cancelled.")
             )
            dialog.show_dialog()
@@ -119,7 +126,33 @@ class ProductTableUI:
             self.ingredient_manager.ingredients,
             self.feedback,
             self.page,
+            self.store_result_dict
         )
+    
+    def on_save_recipe_click(self):
+        """
+        Handles the save recipe button click action.
+
+        Stores recipe and evaluation information in the database
+        """
+        if self.product_id == 0:
+            ProductActionHandler.handle_save_new_recipe(self.product_name, self.result_dict, self.store_submission_results)
+            
+        else:
+            return ProductActionHandler.handle_save_existing_recipe(self.product_id,
+                                                        self.ingredient_ids,
+                                                        self.recipe_ids,
+                                                        self.result_dict,
+                                                        self.store_submission_results)
+    
+    def store_submission_results(self, product_id, ingredient_ids, recipe_ids, result_dict):
+        self.product_id = product_id
+        self.ingredient_ids = ingredient_ids
+        self.recipe_ids = recipe_ids
+        self.result_dict = result_dict
+
+    def store_result_dict(self, result_dict):
+        self.result_dict = result_dict
 
 
     def build_name_input(self):
