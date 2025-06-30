@@ -1,5 +1,6 @@
 import flet as ft
 from frontend.src.styles import Styles
+from handle_nutritional_info import NutritionalInfoHandler
 
 
 class RecipeResultUI:
@@ -31,6 +32,8 @@ class RecipeResultUI:
             icon=ft.Icons.INFO,
             on_click=self.toggle_explanation
         )
+        self.ingredient_rows: list[tuple[ft.Container, ft.Container, ft.Container]] = []
+        self.nutrition_handler = NutritionalInfoHandler(page)
 
     def show_recipe(self, result: dict[str, dict[str, float]]):
         """
@@ -64,9 +67,13 @@ class RecipeResultUI:
             content = ft.Column(
                 [
                     Styles.build_explanation(
-                        "Explanation of your results: \n"
-                        "The amount shows the average percentage that each ingredient in your recipe has. \n "
-                        "The variation shows you how much the percentage might vary.\n",
+                        "\n \n".join([
+                            "💬 Explanation of your results:",
+                            "• Amount: shows the average percentage that each ingredient in your recipe has.",
+                            "• Variation: shows you how much the percentage might vary.",
+                            "• Nutrition facts: gives the standard nutritional info of the selected ingredient.",
+                        ])
+
                     ),
                 ],
                 spacing=5,
@@ -78,6 +85,13 @@ class RecipeResultUI:
             bgcolor=Styles.BOX_COLOR,
             visible=False,
             )
+    
+    def make_icon_button(self, ingredient_name, amount):
+        return ft.IconButton(
+            icon="search",
+            tooltip="View nutrition info",
+            on_click=lambda e: self.nutrition_handler.show_nutritional_info(ingredient_name, amount)
+        )
 
     def toggle_explanation(self, e):
         """
@@ -97,14 +111,39 @@ class RecipeResultUI:
         Args:
             result (dict): Recipe output.
         """
+        
+        col_widths = {
+        "ingredient": 160,
+        "amount": 130,
+        "variation": 130,
+        "actions": 130,
+        }
+        
         rows = [
             ft.Container(
                 content=ft.Row(
                     [
-                        ft.Text("Ingredient", weight=ft.FontWeight.BOLD, width=200, color=Styles.TEXT_COLOR),
-                        ft.Text("% Amount", weight=ft.FontWeight.BOLD, width=100, color=Styles.TEXT_COLOR),
-                        ft.Text("± Variation", weight=ft.FontWeight.BOLD, width=120, color=Styles.TEXT_COLOR),
-                    ],
+                    ft.Container(
+                        content=ft.Text("Ingredient", weight=ft.FontWeight.BOLD, color="#4d4d4d"),
+                        width=col_widths["ingredient"],
+                        alignment=ft.alignment.center,
+                    ),
+                    ft.Container(
+                        content=ft.Text("% Amount", weight=ft.FontWeight.BOLD, color="#4d4d4d"),
+                        width=col_widths["amount"],
+                        alignment=ft.alignment.center,
+                    ),
+                    ft.Container(
+                        content=ft.Text("± Variation", weight=ft.FontWeight.BOLD, color="#4d4d4d"),
+                        width=col_widths["variation"],
+                        alignment=ft.alignment.center,
+                    ),
+                    ft.Container(
+                        content=ft.Text("Nutrition Facts", weight=ft.FontWeight.BOLD, color="#4d4d4d"),
+                        width=col_widths["actions"],
+                        alignment=ft.alignment.center,
+                    ),
+                ],
                     alignment=ft.MainAxisAlignment.CENTER,
                 ),
                 bgcolor=Styles.TABLE_HEADER_COLOR,
@@ -115,13 +154,37 @@ class RecipeResultUI:
         ]
 
         for i, (name, data) in enumerate(result.items()):
+            ingredient_text = ft.Container(
+                content=ft.Text(name, color="#666666"),
+                width=col_widths["ingredient"],
+                alignment=ft.alignment.center,
+            )
+            amount_text = ft.Container(
+                content=ft.Text(f"{data['mean']}%", color="#666666"),
+                width=col_widths["amount"],
+                alignment=ft.alignment.center,
+            )
+            variation_text = ft.Container(
+                content=ft.Text(f"±{data['variation']}%", color="#666666"),
+                width=col_widths["variation"],
+                alignment=ft.alignment.center,
+            )
+            icon_button = ft.Container(
+                content=self.make_icon_button(name, data['mean']),
+                width=col_widths["actions"],
+                alignment=ft.alignment.center,
+            )
+
+            self.ingredient_rows.append((ingredient_text, amount_text, variation_text))
+            
             rows.append(
                 ft.Container(
                     content=ft.Row(
                         [
-                            ft.Text(name, width=200, color=Styles.TEXT_COLOR),
-                            ft.Text(f"{data['mean']}%", width=100, color=Styles.TEXT_COLOR),
-                            ft.Text(f"±{data['variation']}%", width=120, color=Styles.TEXT_COLOR),
+                        ingredient_text,
+                        amount_text,
+                        variation_text,
+                        icon_button,
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
                     ),
