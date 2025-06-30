@@ -16,6 +16,7 @@ from frontend.src.create_result_table.result_table_ui import RecipeResultUI
 from frontend.src.styles import Styles
 from backend.recipe_generator import RecipeGenerator
 from backend.data_base_manager.recipe_manager import RecipeManager
+from backend.data_base_manager.evaluation_manager import EvaluationManager
 
 
 class ProductSubmitHandler:
@@ -31,10 +32,11 @@ class ProductSubmitHandler:
 
     @staticmethod
     def handle_submit(
-        product_name_field: ft.TextField,
-        ingredient_rows: list[ft.Container],
-        feedback_text: ft.Text,
-        page: ft.Page,
+        product_name_field,
+        ingredient_rows,
+        feedback_text,
+        page,
+        store_values_callback
     ) -> tuple[str, dict[str, float | None]] | None:
         """
         Validates the input and returns the product data if valid.
@@ -62,17 +64,19 @@ class ProductSubmitHandler:
         feedback_text.color = Styles.GREEN_COLOR
         feedback_text.size = Styles.FEEDBACK_FONT_SIZE
         page.update()
-
+        
         # Extract product name and ingredient dictionary
         product_name = (product_name_field.value or "").strip()
         ingredient_dict = IngredientDataBuilder.build_data_from_rows(ingredient_rows)
-
-        # Store recipe in data base
-        RecipeManager.submit_recipe(product_name, ingredient_dict)
         
         # Generate the recipe using the RecipeGenerator from the backend
         result_dict = RecipeGenerator.generate_recipe(ingredient_dict)
+        
+        #load results in frontend 
+        store_values_callback(None, None, None, result_dict = result_dict)
 
         # Display the recipe result
         RecipeResultUI.display_recipe_result(page, result_dict)
+
+        return result_dict # type: ignore
 
