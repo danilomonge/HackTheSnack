@@ -68,7 +68,7 @@ class InputValidator:
         return value
 
     @classmethod
-    def fix_input_while_typing(cls, last_valid: list[str], page: ft.Page):
+    def fix_input_while_typing(cls, last_valid: list[str], page: ft.Page, on_change_extra=None):
         """
         Returns a function for on_change that formats the input while typing.
 
@@ -81,21 +81,20 @@ class InputValidator:
         Args:
             last_valid (list[str]): Stores the last valid formatted string.
             page (ft.Page): The Flet page to trigger updates.
+            on_change_extra (Callable, optional): Additional logic to run after formatting.
 
         Returns:
             function: To use as a TextField's on_change handler.
         """
-        return lambda event: (
-            setattr(
-                event.control,
-                "value",
-                cls.format_to_two_decimal(
-                    cls.clean_percentage_input(event.control.value), last_valid
-                ),
-            ),
-            # Update the page to reflect changes in the UI
-            page.update(),
-        )
+        def handler(event):
+            event.control.value = cls.format_to_two_decimal(
+                cls.clean_percentage_input(event.control.value), last_valid
+            )
+            page.update()
+            if on_change_extra:
+                on_change_extra(event)
+
+        return handler
 
     @staticmethod
     def _has_product_name(

@@ -10,6 +10,7 @@ sys.path.insert(0, BASE_DIR)
 import flet as ft
 from backend.data_base_manager.product_manager import ProductManager
 from backend.data_base_manager.recipe_manager  import RecipeManager
+from backend.data_base_manager.evaluation_manager import EvaluationManager
 from frontend.src.add_product_table.logic.data_filler import DataFiller
 from backend.translation import Translation
 from frontend.src.add_product_table.logic.input_validator import InputValidator
@@ -147,7 +148,8 @@ class ProductActionHandler:
     def handle_search_and_fill(product_name_field: ft.TextField, 
                           feedback_text: ft.Text,
                           page: ft.Page,
-                          ingredient_manager):
+                          ingredient_manager,
+                          store_values_callback):
         """
         Sends a GET request to search a product in the database. If the product exist sends a request
         to get all their related ingredients and fills the product table automatically.
@@ -167,12 +169,50 @@ class ProductActionHandler:
 
                 data = RecipeManager.find_product_ingredient_list(id_product)
                 recipe_json = data.json()
-                recipe_dict = Translation.product_table_filter(recipe_json)
+                recipe_dict, ingredient_ids = Translation.product_table_filter(recipe_json)
+                #could traverse a find-Detail recipe to save recipe_ids 
+                
+                store_values_callback(id_product, ingredient_ids, [], recipe_dict)
+
                 DataFiller.fill_rows_from_data(recipe_dict, ingredient_manager)
             
         except Exception as ex:
             feedback_text.value = f"⚠️ Exception: {ex}"
         
         page.update()
+
+    @staticmethod
+    def handle_save_new_recipe(product_name_field, 
+                               result_dict,  
+                               store_values_callback):
+        try:
+
+            product_name = (product_name_field.value or "").strip()
+            product_id, ingredient_ids, recipe_ids = RecipeManager.submit_recipe(product_name, result_dict)
+
+            EvaluationManager.create_evaluation(product_id, ingredient_ids, recipe_ids, result_dict)
+            store_values_callback(product_id=product_id,
+                                ingredient_ids=ingredient_ids,
+                                recipe_ids=recipe_ids,
+                                result_dict=result_dict)
+
+        except Exception as ex:
+            print(f"⚠️ Exception: {ex}")
+
+    @staticmethod
+    def handle_save_existing_recipe(product_id,
+                            ingredient_ids,
+                            recipe_ids,
+                            result_dict,
+                            store_values_callback):
+        try:
+            #Need to handle the case when a recipe is edited i.e. an ingredient id added or deleted
+
+            EvaluationManager.create_evaluation(product_id, ingredient_ids, recipe_ids, result_dict)
+            
+        except Exception as ex:
+            print(f"⚠️ Exception: {ex}")
+        
+
     
 
