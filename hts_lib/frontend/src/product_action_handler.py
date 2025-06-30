@@ -182,12 +182,19 @@ class ProductActionHandler:
         page.update()
 
     @staticmethod
-    def handle_save_new_recipe(product_name, result_dict, store_values_callback):
+    def handle_save_new_recipe(product_name_field, 
+                               result_dict,  
+                               store_values_callback):
         try:
 
+            product_name = (product_name_field.value or "").strip()
             product_id, ingredient_ids, recipe_ids = RecipeManager.submit_recipe(product_name, result_dict)
+
             EvaluationManager.create_evaluation(product_id, ingredient_ids, recipe_ids, result_dict)
-            store_values_callback(product_id, ingredient_ids, recipe_ids, result_dict)
+            store_values_callback(product_id=product_id,
+                                ingredient_ids=ingredient_ids,
+                                recipe_ids=recipe_ids,
+                                result_dict=result_dict)
 
         except Exception as ex:
             print(f"⚠️ Exception: {ex}")

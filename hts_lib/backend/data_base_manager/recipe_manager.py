@@ -107,9 +107,9 @@ class RecipeManager:
         return recipe_ids
 
     @staticmethod
-    def delete_product_ingredient(idProduct):
+    def delete_product_ingredient(idProduct, idIngredient):
         """
-        Deletes the association between a product and their ingredients.
+        Deletes the association between a product and an ingredient.
 
         Args:
         idProduct (int):     The number of the product beeing associated.
@@ -120,7 +120,7 @@ class RecipeManager:
                         and response.json() to access the response data.
         """
         
-        response = httpx.get(f"http://localhost:8087/user-management/product/detail?name={idProduct}")
+        response = httpx.get(f"http://localhost:8087/user-management/recipe/deleteByProduct/?idProduct={idProduct}&idIngredient={idIngredient}")
         
         return response
     
