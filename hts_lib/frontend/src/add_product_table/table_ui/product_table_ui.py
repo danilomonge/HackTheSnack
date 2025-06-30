@@ -55,13 +55,13 @@ class ProductTableUI:
             on_user_input_change = self.on_user_input_change
         )
 
-        self.search_button = Styles.primary_button(
+        self.search_button = Styles.build_button(
                                     text="Search",
                                     on_click=self.on_find_product_click,
                                     icon=ft.Icons.SEARCH,
                                 )
         
-        self.save_button = Styles.primary_button(
+        self.save_button = Styles.build_button(
             text="Save",
             on_click=self.on_save_recipe_click,
             icon=ft.Icons.CREATE,
@@ -202,12 +202,24 @@ class ProductTableUI:
                     ft.Container(
                         content=ft.ResponsiveRow(
                             [
-                                self.product_name,
-                                self.search_button,
-                                self.save_button,
+                                ft.Container(
+                                    self.product_name,
+                                    col={"sm": 12, "md": 8, "lg": 8},
+                                    padding=ft.padding.only(bottom=10)  # Abstand auf kleinen Screens
+                                ),
+                                ft.Container(
+                                    ft.Row(
+                                        [
+                                            self.search_button,
+                                            self.save_button,
+                                        ],
+                                        alignment=ft.MainAxisAlignment.CENTER,
+                                        spacing=10,
+                                    ),
+                                    col={"sm": 12, "md": 4, "lg": 4},
+                                ),
                             ],
-                            alignment=ft.MainAxisAlignment.CENTER,
-                            spacing=10,
+                            run_spacing=10,
                         ),
                         alignment=ft.alignment.center,
                     ),
