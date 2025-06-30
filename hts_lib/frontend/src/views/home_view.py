@@ -27,12 +27,12 @@ class HomeView:
                 ),
                 ft.Row(
                     controls=[
-                        Styles.primary_button(
+                        Styles.build_button(
                             "Try it out",
                             on_click=lambda e: self.page.go("/generator"),
                             icon=ft.Icons.FAVORITE,
                             ),
-                        Styles.primary_button(
+                        Styles.build_button(
                             "More about us",
                             on_click=lambda e: self.page.go("/about"),
                             icon=ft.Icons.INFO,

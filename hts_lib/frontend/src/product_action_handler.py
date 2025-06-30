@@ -48,6 +48,7 @@ class ProductActionHandler:
             product_name = product_name_field.value
             if not product_name:
                 feedback_text.value = "⚠️ Please enter a product name to search."
+                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
                 page.update()
                 return
             
@@ -67,6 +68,7 @@ class ProductActionHandler:
                 feedback_text.size = Styles.FEEDBACK_FONT_SIZE
         except Exception as ex:
             feedback_text.value = f"⚠️ Exception: {ex}"
+            feedback_text.size = Styles.FEEDBACK_FONT_SIZE
 
         page.update()
 
@@ -88,6 +90,7 @@ class ProductActionHandler:
             product_name = product_name_field.value
             if not product_name:
                 feedback_text.value = "⚠️ Please enter a product name to search."
+                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
                 page.update()
                 return
         
@@ -99,10 +102,13 @@ class ProductActionHandler:
                 return True
             else:
                 feedback_text.value = "❌ Product not found."
+                feedback_text.color = Styles.RED_COLOR
+                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
                 page.update()
                 return False
         except Exception as ex:
             feedback_text.value = f"⚠️ Exception: {ex}"
+            feedback_text.size = Styles.FEEDBACK_FONT_SIZE
 
         page.update()
 
@@ -124,6 +130,7 @@ class ProductActionHandler:
             product_name = product_name_field.value
             if not product_name:
                 feedback_text.value = "⚠️ Please enter a product name to create."
+                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
                 page.update()
                 return
             
@@ -140,6 +147,7 @@ class ProductActionHandler:
                 feedback_text.size = Styles.FEEDBACK_FONT_SIZE
         except Exception as ex:
             feedback_text.value = f"⚠️ Exception: {ex}"
+            feedback_text.size = Styles.FEEDBACK_FONT_SIZE
 
         page.update()
 
@@ -172,6 +180,7 @@ class ProductActionHandler:
             
         except Exception as ex:
             feedback_text.value = f"⚠️ Exception: {ex}"
+            feedback_text.size = Styles.FEEDBACK_FONT_SIZE
         
         page.update()
     

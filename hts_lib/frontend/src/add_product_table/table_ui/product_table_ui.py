@@ -142,12 +142,12 @@ class ProductTableUI:
                         content=ft.Row(
                             [
                                 self.product_name,
-                                Styles.primary_button(
+                                Styles.build_button(
                                     text="Search",
                                     on_click=self.on_find_product_click,
                                     icon=ft.Icons.SEARCH,
                                 ),
-                                Styles.primary_button(
+                                Styles.build_button(
                                     text="Create",
                                     on_click=self.on_create_product_click,
                                     icon=ft.Icons.CREATE,
@@ -249,18 +249,18 @@ class ProductTableUI:
         return ft.Container(
             content=ft.Row(
                 [
-                    Styles.primary_button(
+                    Styles.build_button(
                         "Add Ingredient",
                         icon=ft.Icons.ADD,
                         on_click=lambda e: self.on_add_click(),
                     ),
 
-                    Styles.primary_button(
+                    Styles.build_button(
                         "Submit Product",
                         icon=ft.Icons.ANALYTICS,
                         on_click=lambda e: self.on_submit_click(),
                     ),
-                    Styles.primary_button(
+                    Styles.build_button(
                         "Clear All",
                         icon=ft.Icons.CLEAR,
                         on_click=lambda e: (self.on_clearall_click(), self.on_add_click()),
@@ -279,13 +279,13 @@ class ProductTableUI:
         Returns:
             ft.Container: The complete UI layout ready to be added to the page.
         """
-        # Input section stays the same, just wrapped in a container
+
         input_section = ft.Container(
             content=ft.Column(
                 [
                     Styles.build_title("Analyze a product"),
                     self.build_name_input(),
-                    Styles.primary_button("Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO), 
+                    Styles.build_button("Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO), 
                     self.instruction_container,
                     self.build_table_header(),
                     self.ingredient_rows,
@@ -298,8 +298,6 @@ class ProductTableUI:
             width=700,  
         )
 
-        # Container for results that will be filled later
-        # In ProductTableUI.__init__, create a placeholder
         self.results_section = ft.Container(
             content=ft.Column(
                 [
@@ -319,11 +317,11 @@ class ProductTableUI:
                 [
                     ft.Container(
                         content=input_section,
-                        col={"sm": 12, "md": 6, "lg": 6},  # Full width on small, half on medium+
+                        col={"sm": 12, "md": 6, "lg": 6}, 
                     ),
                     ft.Container(
                         content=self.results_section,
-                        col={"sm": 12, "md": 6, "lg": 6},  # Full width on small, half on medium+
+                        col={"sm": 12, "md": 6, "lg": 6},
                     ),
                 ],
                 vertical_alignment=ft.CrossAxisAlignment.START,

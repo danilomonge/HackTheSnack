@@ -26,7 +26,7 @@ class RecipeResultUI:
         self.result_text_container = self.build_result_text()
         self.result_text_container.visible = False  
 
-        self.toggle_button = Styles.primary_button(
+        self.toggle_button = Styles.build_button(
             "Show Explanation",
             icon=ft.Icons.INFO,
             on_click=self.toggle_explanation
