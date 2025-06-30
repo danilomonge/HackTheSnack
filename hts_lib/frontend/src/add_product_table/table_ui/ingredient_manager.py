@@ -14,7 +14,7 @@ class IngredientManager:
     - Stores all current rows in a list
    """
     
-    def __init__(self, quantity_table: ft.Column, product_name: ft.TextField, page: ft.Page):
+    def __init__(self, quantity_table: ft.Column, product_name: ft.TextField, page: ft.Page, on_user_input_change=None):
         """
         Creates a manager to control the ingredient rows in the table.
 
@@ -26,6 +26,7 @@ class IngredientManager:
         self.quantity_table = quantity_table
         self.product_name = product_name
         self.page = page
+        self.on_user_input_change = on_user_input_change #Callback function
 
 
     def name_input(self, style):
@@ -38,7 +39,7 @@ class IngredientManager:
         Returns:
             ft.TextField: Configured text field for the ingredient name.
         """
-        return ft.TextField(label="Ingredient", width=200, **style)
+        return ft.TextField(label="Ingredient", width=200, on_change=self.on_user_input_change, **style)
 
     def percent_input(self, style, last_valid, page):
         """
@@ -59,7 +60,7 @@ class IngredientManager:
             suffix_text="%",
             suffix_style=ft.TextStyle(color=Styles.TEXT_COLOR),
             keyboard_type=ft.KeyboardType.NUMBER,
-            on_change=InputValidator.fix_input_while_typing(last_valid, page),
+            on_change=InputValidator.fix_input_while_typing(last_valid, page, self.on_user_input_change),
             data={"last_valid": last_valid},
             **style
         )
@@ -152,6 +153,9 @@ class IngredientManager:
         except AssertionError:
             pass  # Ignoriere den Fehler vorerst
 
+        if self.on_user_input_change: 
+            self.on_user_input_change(None)
+
     def remove_ingredient_row(self, row: ft.Container):
         """
         Removes a row from both the ingredient list and the UI.
@@ -162,6 +166,9 @@ class IngredientManager:
         self.ingredients.remove(row)
         self.quantity_table.controls.remove(row)
         self.quantity_table.update()
+
+        if self.on_user_input_change:  # NEW
+            self.on_user_input_change(None)
 
     def clear_all(self):
         """
@@ -183,6 +190,8 @@ class IngredientManager:
         for recipe in recipe_to_remove:
             self.page.controls.remove(recipe) # type: ignore
 
+        if self.on_user_input_change:  # NEW
+            self.on_user_input_change(None)
 
         self.quantity_table.update()
         self.product_name.update()
@@ -195,6 +204,9 @@ class IngredientManager:
         self.ingredients.clear()
         self.quantity_table.controls.clear()
         self.quantity_table.update()
+
+        if self.on_user_input_change:  # NEW
+            self.on_user_input_change(None)
 
     def initialize_with_empty_row(self):
         """

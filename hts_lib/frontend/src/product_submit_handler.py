@@ -73,8 +73,10 @@ class ProductSubmitHandler:
         result_dict = RecipeGenerator.generate_recipe(ingredient_dict)
         
         #load results in frontend 
-        store_values_callback(result_dict)
+        store_values_callback(None, None, None, result_dict = result_dict)
 
         # Display the recipe result
         RecipeResultUI.display_recipe_result(page, result_dict)
+
+        return result_dict # type: ignore
 

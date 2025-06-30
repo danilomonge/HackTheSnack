@@ -31,12 +31,12 @@ class ProductTableUI:
         self.page = page
         self.ingredient_rows = ft.Column()
         self.result_text = ft.Text(value="", color=Styles.GREEN_COLOR, size=12, weight=ft.FontWeight.BOLD)
-        self.product_id = int
+        self.product_id = 0
         self.ingredient_ids = []
         self.recipe_ids = []
-        self.result_dict = dict
-        self.change = bool
-
+        self.result_dict = dict 
+        self.is_submitted = False
+        
         self.instruction_container = self.build_instruction_text()
 
         style = Styles.input_style()
@@ -47,12 +47,27 @@ class ProductTableUI:
             width=400,
             **style
         )
+        self.product_name.on_change = self.on_user_input_change
 
         self.ingredient_manager = IngredientManager(
             self.ingredient_rows,
             self.product_name,
-            self.page 
+            self.page,
+            on_user_input_change = self.on_user_input_change
         )
+
+        self.search_button = Styles.primary_button(
+                                    text="Search",
+                                    on_click=self.on_find_product_click,
+                                    icon=ft.Icons.SEARCH,
+                                )
+        
+        self.save_button = Styles.primary_button(
+            text="Save",
+            on_click=self.on_save_recipe_click,
+            icon=ft.Icons.CREATE,
+        )
+        self.save_button.disabled = True
 
         self.feedback = ft.Text(value="", color=Styles.RED_COLOR, size=12, weight=ft.FontWeight.BOLD)
 
@@ -88,16 +103,6 @@ class ProductTableUI:
             on_cancel=lambda: print("Cancelled.")
             )
            dialog.show_dialog()
-    
-    def on_create_product_click(self, e):
-        """
-        Handles the find Product button click by calling ProductCreator.
-        """
-        return ProductActionHandler.handle_create_product(
-            self.product_name,
-            self.feedback,
-            self.page,
-        )
 
     def on_add_click(self):
         """
@@ -106,6 +111,8 @@ class ProductTableUI:
         Adds a new ingredient row to the table.
         """
         self.ingredient_manager.add_ingredient_row(self.page)
+        self.disable_save_button()
+
 
     def on_clearall_click(self):
         """
@@ -114,6 +121,8 @@ class ProductTableUI:
         Clears all ingredient rows from the table and resets the product name.
         """
         self.ingredient_manager.clear_all()
+        self.disable_save_button()
+
 
     def on_submit_click(self):
         """
@@ -121,39 +130,60 @@ class ProductTableUI:
 
         Delegates validation, feedback and recipe generation to ProductSubmitHandler.
         """
-        return ProductSubmitHandler.handle_submit(
+        result = ProductSubmitHandler.handle_submit(
             self.product_name,
             self.ingredient_manager.ingredients,
             self.feedback,
             self.page,
-            self.store_result_dict
+            self.store_submission_results
         )
+
+        if result:  # Only if submit was successful
+            self.is_submitted = True
+            self.update_save_button_state(enabled=True)
+            self.page.update()
+
+        return result
     
-    def on_save_recipe_click(self):
+    def on_save_recipe_click(self, e):
         """
         Handles the save recipe button click action.
 
         Stores recipe and evaluation information in the database
         """
-        if self.product_id == 0:
-            ProductActionHandler.handle_save_new_recipe(self.product_name, self.result_dict, self.store_submission_results)
-            
-        else:
-            return ProductActionHandler.handle_save_existing_recipe(self.product_id,
-                                                        self.ingredient_ids,
-                                                        self.recipe_ids,
-                                                        self.result_dict,
+        self.update_save_button_state(enabled=False)
+        
+        return ProductActionHandler.handle_save_new_recipe(self.product_name, 
+                                                        self.result_dict, 
                                                         self.store_submission_results)
+            
     
     def store_submission_results(self, product_id, ingredient_ids, recipe_ids, result_dict):
-        self.product_id = product_id
-        self.ingredient_ids = ingredient_ids
-        self.recipe_ids = recipe_ids
-        self.result_dict = result_dict
+        if product_id is not None:
+            self.product_id = product_id
+        if ingredient_ids is not None:
+            self.ingredient_ids = ingredient_ids
+        if recipe_ids is not None:
+            self.recipe_ids = recipe_ids
+        if result_dict is not None:
+            self.result_dict = result_dict
 
-    def store_result_dict(self, result_dict):
-        self.result_dict = result_dict
+    def on_user_input_change(self, e=None): 
+        self.is_submitted = False
+        self.update_save_button_state(enabled=False)
+        self.page.update()
+    
+    def disable_save_button(self):
+        self.is_submitted = False
+        self.update_save_button_state(enabled=False)
+        self.page.update()
 
+    def update_save_button_state(self, enabled: bool):
+        self.save_button.disabled = not enabled
+        self.save_button.bgcolor = Styles.BUTTON_FILL_COLOR if enabled else Styles.BUTTON_FILL_DISABLED_COLOR
+        self.save_button.color = ft.Colors.WHITE if enabled else ft.Colors.GREY_600
+        self.save_button.tooltip = "Click to save recipe" if enabled else "Submit first before saving"
+        self.page.update()
 
     def build_name_input(self):
         """
@@ -175,16 +205,8 @@ class ProductTableUI:
                         content=ft.Row(
                             [
                                 self.product_name,
-                                Styles.primary_button(
-                                    text="Search",
-                                    on_click=self.on_find_product_click,
-                                    icon=ft.Icons.SEARCH,
-                                ),
-                                Styles.primary_button(
-                                    text="Create",
-                                    on_click=self.on_create_product_click,
-                                    icon=ft.Icons.CREATE,
-                                ),
+                                self.search_button,
+                                self.save_button,
                             ],
                             alignment=ft.MainAxisAlignment.CENTER,
                             spacing=10,
