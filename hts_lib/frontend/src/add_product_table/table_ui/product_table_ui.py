@@ -39,7 +39,6 @@ class ProductTableUI:
         self.product_name = ft.TextField(
             label="Product Name",
             hint_text="e.g. Fruit Yogurt",
-            width=400,
             **style
         )
 
@@ -129,32 +128,39 @@ class ProductTableUI:
         Returns:
             ft.Container: A container with label, input field, and find button.
         """
+    
         return ft.Container(
             content=ft.Column(
                 [
                     ft.Container(
-                        Styles.build_subtitle(
-                            "Enter product name"
-                        ),
+                        Styles.build_subtitle("Enter product name"),
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
-                        content=ft.Row(
+                        content=ft.ResponsiveRow(
                             [
-                                self.product_name,
-                                Styles.build_button(
-                                    text="Search",
-                                    on_click=self.on_find_product_click,
-                                    icon=ft.Icons.SEARCH,
-                                ),
-                                Styles.build_button(
-                                    text="Create",
-                                    on_click=self.on_create_product_click,
-                                    icon=ft.Icons.CREATE,
+                                ft.Container(self.product_name, col={"sm": 12, "md": 8, "lg": 8}),
+                                ft.Container(
+                                    ft.Row(
+                                        [
+                                            Styles.build_button(
+                                                text="Search",
+                                                on_click=self.on_find_product_click,
+                                                icon=ft.Icons.SEARCH,
+                                            ),
+                                            Styles.build_button(
+                                                text="Create",
+                                                on_click=self.on_create_product_click,
+                                                icon=ft.Icons.CREATE,
+                                            ),
+                                        ],
+                                        alignment=ft.MainAxisAlignment.CENTER,
+                                        spacing=10,
+                                    ),
+                                    col={"sm": 12, "md": 4, "lg": 4},
                                 ),
                             ],
-                            alignment=ft.MainAxisAlignment.CENTER,
-                            spacing=10,
+                            run_spacing=10,
                         ),
                         alignment=ft.alignment.center,
                     ),
