@@ -99,7 +99,7 @@ class RecipeManager:
 
             elif response.status_code == 400:
                 recipe_ids.append(id_ingredient)
-                print(f"Allready associated {id_ingredient} with product {idProduct}")
+                print(f"Already associated {id_ingredient} with product {idProduct}")
 
             else:    
                 print(f"Error: {response.status_code} while associating ingredient {id_ingredient}")
