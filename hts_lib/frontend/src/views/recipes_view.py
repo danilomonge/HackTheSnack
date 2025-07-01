@@ -7,18 +7,18 @@ from styles import Styles
 class RecipesView:
     def __init__(self, page: ft.Page):
         self.page = page
+        self.recipe_titles = ["Pizza Margherita", "Fruit Yogurt"] #self.get_recipe_titles_from_db() 
 
-    def build(self):
-
-        recipe_titles = ["Pizza Margherita", "Fruit Yogurt"] #self.get_recipe_titles_from_db() 
-
-        recipe_images = [
+        self.recipe_images = [
             "dish_1.png",
             "dish_2.png",
             "dish_3.png",
             "dish_4.png",
             "dish_5.png",
         ]
+        
+
+    def build(self):
 
         def on_recipe_tap(title):
             def handler(e):
@@ -33,7 +33,7 @@ class RecipesView:
                     content=ft.Column(
                         controls=[
                             ft.Image(
-                                src=random.choice(recipe_images),
+                                src=random.choice(self.recipe_images),
                                 fit=ft.ImageFit.COVER,
                             ),
                             ft.Text(title, size=18, weight=ft.FontWeight.BOLD, color=Styles.TEXT_COLOR),
@@ -48,7 +48,7 @@ class RecipesView:
                 ),
                 on_tap=on_recipe_tap(title)
             )
-            for title in recipe_titles
+            for title in self.recipe_titles
         ]
 
 
