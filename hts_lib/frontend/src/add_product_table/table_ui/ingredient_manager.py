@@ -58,7 +58,7 @@ class IngredientManager:
             hint_text="00.00",
             width=120,
             suffix_text="%",
-            suffix_style=ft.TextStyle(color=Styles.TEXT_COLOR),
+            suffix_style=ft.TextStyle(),
             keyboard_type=ft.KeyboardType.NUMBER,
             on_change=InputValidator.fix_input_while_typing(last_valid, page, self.on_user_input_change),
             data={"last_valid": last_valid},
