@@ -10,6 +10,7 @@ class Styles:
 
     LOADING_BAR_COLOR = "#a3b188"
     LOADING_BAR_BACKGROUNDCOLOR = "#f7f9f0" 
+    HOVER_COLOR = "#DEE5CA" 
 
 
     NAVBAR_COLOR = "#a3b188"
@@ -63,6 +64,7 @@ class Styles:
                              on_click=on_click,
                              icon_color=color,
                              icon_size=Styles.ICON_BUTTON_SIZE,
+                             hover_color= Styles.HOVER_COLOR,
                              tooltip=tooltip)
 
     @staticmethod
