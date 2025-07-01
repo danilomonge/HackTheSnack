@@ -70,6 +70,8 @@ class ProductTableUI:
 
         self.feedback = ft.Text(value="", color=Styles.RED_COLOR, size=12, weight=ft.FontWeight.BOLD)
 
+        self.loading_indicator = ft.ProgressBar(visible=False, color=Styles.LOADING_BAR_COLOR, bgcolor= Styles.LOADING_BAR_BACKGROUNDCOLOR)
+
         self.autofill_dialog_handler = AutofillConfirmationWindow(
             self.page,
             on_confirm = ProductActionHandler.handle_search_and_fill(
@@ -129,17 +131,22 @@ class ProductTableUI:
 
         Delegates validation, feedback and recipe generation to ProductSubmitHandler.
         """
+        self.loading_indicator.visible = True
+        self.page.update()
+
         result = ProductSubmitHandler.handle_submit(
             self.product_name,
             self.ingredient_manager.ingredients,
             self.feedback,
             self.page,
-            self.store_submission_results
+            self.store_submission_results,
+            self.loading_indicator
         )
 
         if result:  # Only if submit was successful
             self.is_submitted = True
             self.update_save_button_state(enabled=True)
+            self.loading_indicator.visible = False
             self.page.update()
 
         return result
@@ -343,6 +350,11 @@ class ProductTableUI:
                     self.ingredient_rows,
                     self.feedback,
                     self.build_table_buttons(),
+                    ft.Container(
+                        content=self.loading_indicator,
+                        alignment=ft.alignment.center,
+                        padding=10,
+                    ),
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
