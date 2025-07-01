@@ -8,6 +8,9 @@ class Styles:
     - Provides utility functions for creating styled buttons and inputs
     """
 
+    LOADING_BAR_COLOR = "#a3b188"
+    LOADING_BAR_BACKGROUNDCOLOR = "#f7f9f0" 
+
 
     NAVBAR_COLOR = "#a3b188"
     NAVBAR_ACTIVE_COLOR = "#2b321f"
