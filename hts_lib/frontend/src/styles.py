@@ -8,6 +8,10 @@ class Styles:
     - Provides utility functions for creating styled buttons and inputs
     """
 
+    LOADINGBAR_COLOR = "#a3b188"
+    LOADINGBAR_BACKGROUNDCOLOR = "#f7f9f0" 
+    HOVER_COLOR = "#DEE5CA" 
+
 
     NAVBAR_COLOR = "#a3b188"
     NAVBAR_ACTIVE_COLOR = "#2b321f"
@@ -48,7 +52,7 @@ class Styles:
     BORDER_RADIUS = 10
 
     @staticmethod
-    def primary_button(text, icon=None, on_click=None):
+    def build_button(text, icon=None, on_click=None):
         return ft.ElevatedButton(text+" ", icon=icon, on_click=on_click, color=Styles.BUTTON_TEXT_COLOR,bgcolor=Styles.BUTTON_FILL_COLOR,)
 
     ICON_BUTTON_SIZE = 20
@@ -60,6 +64,7 @@ class Styles:
                              on_click=on_click,
                              icon_color=color,
                              icon_size=Styles.ICON_BUTTON_SIZE,
+                             hover_color= Styles.HOVER_COLOR,
                              tooltip=tooltip)
 
     @staticmethod
