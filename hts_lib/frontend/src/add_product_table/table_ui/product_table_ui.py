@@ -191,7 +191,6 @@ class ProductTableUI:
         Returns:
             ft.Container: A container with label, input field, and find button.
         """
-    
         return ft.Container(
             content=ft.Column(
                 [
@@ -200,26 +199,14 @@ class ProductTableUI:
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
-                        content=ft.ResponsiveRow(
+                        content=ft.Row(
                             [
-                                ft.Container(
-                                    self.product_name,
-                                    col={"sm": 12, "md": 8, "lg": 8},
-                                    padding=ft.padding.only(bottom=10)  # Abstand auf kleinen Screens
-                                ),
-                                ft.Container(
-                                    ft.Row(
-                                        [
-                                            self.search_button,
-                                            self.save_button,
-                                        ],
-                                        alignment=ft.MainAxisAlignment.CENTER,
-                                        spacing=10,
-                                    ),
-                                    col={"sm": 12, "md": 4, "lg": 4},
-                                ),
+                                self.product_name,
+                                self.search_button,
+                                self.save_button,
                             ],
-                            run_spacing=10,
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            spacing=10,
                         ),
                         alignment=ft.alignment.center,
                     ),
@@ -382,11 +369,11 @@ class ProductTableUI:
                 [
                     ft.Container(
                         content=input_section,
-                        col={"sm": 12, "md": 6, "lg": 6}, 
+                        col={"sm": 12, "md": 12, "lg": 12, "xl":6}, 
                     ),
                     ft.Container(
                         content=self.results_section,
-                        col={"sm": 12, "md": 6, "lg": 6},
+                        col={"sm": 12, "md": 12, "lg": 12, "xl":6},
                     ),
                 ],
                 vertical_alignment=ft.CrossAxisAlignment.START,
