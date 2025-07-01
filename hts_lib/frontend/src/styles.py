@@ -33,6 +33,8 @@ class Styles:
 
     BOX_COLOR = "#F0F4E3" 
 
+    RECIPE_CONTAINER_COLOR = "#a3b188"
+
 
     FEEDBACK_FONT_SIZE = 16
     # Red -> error and delete button

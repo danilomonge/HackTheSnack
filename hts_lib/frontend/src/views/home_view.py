@@ -55,8 +55,8 @@ class HomeView:
                     controls=[
                         ft.Image(
                             src="bg_test.png",
-                            width=float("inf"),  # Full width
-                            height=float("inf"),  # Full height
+                            width=float("inf"),  
+                            height=float("inf"),  
                             fit=ft.ImageFit.COVER,
                         ),
                         ft.Container(
