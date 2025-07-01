@@ -8,8 +8,8 @@ class Styles:
     - Provides utility functions for creating styled buttons and inputs
     """
 
-    LOADING_BAR_COLOR = "#a3b188"
-    LOADING_BAR_BACKGROUNDCOLOR = "#f7f9f0" 
+    LOADINGBAR_COLOR = "#a3b188"
+    LOADINGBAR_BACKGROUNDCOLOR = "#f7f9f0" 
     HOVER_COLOR = "#DEE5CA" 
 
 

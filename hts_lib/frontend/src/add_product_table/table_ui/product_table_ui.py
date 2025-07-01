@@ -70,7 +70,7 @@ class ProductTableUI:
 
         self.feedback = ft.Text(value="", color=Styles.RED_COLOR, size=12, weight=ft.FontWeight.BOLD)
 
-        self.loading_indicator = ft.ProgressBar(visible=False, color=Styles.LOADING_BAR_COLOR, bgcolor= Styles.LOADING_BAR_BACKGROUNDCOLOR)
+        self.loading_indicator = ft.ProgressBar(visible=False, color=Styles.LOADINGBAR_COLOR, bgcolor= Styles.LOADINGBAR_BACKGROUNDCOLOR)
 
         self.autofill_dialog_handler = AutofillConfirmationWindow(
             self.page,

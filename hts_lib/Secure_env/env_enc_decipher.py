@@ -9,7 +9,6 @@ class SecureEnvLoader:
     # Set the decryption password here
     password = "Write the decryption password here"
 
-
     @staticmethod
     def openssl_decrypt(ciphertext: str) -> str | None:
         """
