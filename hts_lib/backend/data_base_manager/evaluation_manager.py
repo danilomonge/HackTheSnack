@@ -102,7 +102,7 @@ class EvaluationManager:
     @staticmethod
     def find_evaluation_product_ingredient(product_id, ingredient_id):
         """
-        Searches for a product or ingredient by ID and returns all related result-items
+        Searches all evaluations related to a product and ingredient ID. 
         Args:
             product_id (int)
             
