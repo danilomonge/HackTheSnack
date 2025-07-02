@@ -1,3 +1,5 @@
+from backend.data_base_manager.product_manager import ProductManager
+from backend.data_base_manager.ingredient_manager import IngredientManager
 
 class Translation:
     """
@@ -59,3 +61,44 @@ class Translation:
                 }
 
         return ingredient_dict
+    
+    @staticmethod
+    def collect_product_list() -> list[str]:
+        """
+        Sends a Product GET request, parses a result JSON from a find_product_list service 
+        and returns a list with all product names.
+        Returns:
+            product_list: List of all product names in the database
+        """
+        product_list = []
+        response = ProductManager.find_product_list("")
+        product_data = response.json()
+
+        for result in product_data.get("data", []):
+            product_name = result.get("name")
+
+            if product_name is not None:
+                product_list.append(product_name)
+
+        return product_list
+
+
+    @staticmethod
+    def collect_ingredient_list() -> list[str]:
+        """
+        Sends a Ingredient GET request, parses a result JSON from a find_ingredient_list service 
+        and returns a list with all ingredient names.
+        Returns:
+            ingredient_list: List of all ingredient names in the database
+        """
+        ingredient_list = []
+        response = IngredientManager.find_ingredient_list("")
+        ingredient_data = response.json()
+
+        for result in ingredient_data.get("data", []):
+            ingredient_name = result.get("name")
+
+            if ingredient_name is not None:
+                ingredient_list.append(ingredient_name)
+
+        return ingredient_list

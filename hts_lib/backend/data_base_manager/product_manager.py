@@ -78,6 +78,7 @@ class ProductManager:
     def find_product_list(product_name):
         """
         Searches for multiple products by name in the data base.
+        If no name given, returns all products
 
         Args:
         product_name (str): The name of the product to search for.
