@@ -1,5 +1,5 @@
 import flet as ft
-from FakeTheSnack.hts_lib.frontend.src.add_product_table.table_ui.ingredient_row_manager import IngredientRowManager
+from frontend.src.add_product_table.table_ui.ingredient_row_manager import IngredientRowManager
 from frontend.src.add_product_table.logic.input_validator import InputValidator
 from frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 from frontend.src.product_submit_handler import ProductSubmitHandler
@@ -160,7 +160,7 @@ class ProductTableUI:
         self.update_save_button_state(enabled=False)
         delete_ingredients = self.ingredient_manager.deleted_ingredient_ids
         ProductActionHandler.handle_delete_ingredients(self.product_id, delete_ingredients)
-        
+        self.ingredient_manager.deleted_ingredient_ids.clear()
         
         return ProductActionHandler.handle_save_new_recipe(self.product_name, 
                                                         self.result_dict, 

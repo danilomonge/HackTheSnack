@@ -145,7 +145,7 @@ class IngredientRowManager:
         percent_section = self.percent_section(percent_input)
 
         row = self.ingredient_row(
-            name_input, percent_section, lambda: self.remove_ingredient_row(row,)
+            name_input, percent_section, lambda: self.remove_ingredient_row(row, name_input)
         )
 
         self.ingredients.append(row)
@@ -159,16 +159,19 @@ class IngredientRowManager:
         if self.on_user_input_change: 
             self.on_user_input_change(None)
 
-    def remove_ingredient_row(self, row: ft.Container, ingredient_name: str):
+    def remove_ingredient_row(self, row: ft.Container, name_input: ft.TextField):
         """
         Removes a row from both the ingredient list and the UI.
 
         Args:
             row (ft.Container): The ingredient row to remove.
         """
+        ingredient_name = name_input.value
+
         ingredient_response = IngredientManager.find_ingredient(ingredient_name)
         ingredient_data = ingredient_response.json()
         ingredient_id = Translation.get_ingredient_id_by_name(ingredient_data)
+        
         if ingredient_id is not None:
             if ingredient_id not in self.deleted_ingredient_ids:
                 self.deleted_ingredient_ids.append(ingredient_id)
