@@ -1,12 +1,12 @@
 import flet as ft
-from frontend.src.add_product_table.table_ui.ingredient_manager import IngredientManager
+from FakeTheSnack.hts_lib.frontend.src.add_product_table.table_ui.ingredient_row_manager import IngredientRowManager
 from frontend.src.add_product_table.logic.input_validator import InputValidator
 from frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 from frontend.src.product_submit_handler import ProductSubmitHandler
 from frontend.src.styles import Styles
 from frontend.src.product_action_handler import ProductActionHandler
 from frontend.src.add_product_table.table_ui.autofill_confirmation_window import AutofillConfirmationWindow
-from backend.data_base_manager.product_manager import ProductManager
+from backend.data_base_manager.recipe_manager import RecipeManager
 
 
 class ProductTableUI:
@@ -48,7 +48,7 @@ class ProductTableUI:
         )
         self.product_name.on_change = self.on_user_input_change
 
-        self.ingredient_manager = IngredientManager(
+        self.ingredient_manager = IngredientRowManager(
             self.ingredient_rows,
             self.product_name,
             self.page,
@@ -158,6 +158,9 @@ class ProductTableUI:
         Stores recipe and evaluation information in the database
         """
         self.update_save_button_state(enabled=False)
+        delete_ingredients = self.ingredient_manager.deleted_ingredient_ids
+        ProductActionHandler.handle_delete_ingredients(self.product_id, delete_ingredients)
+        
         
         return ProductActionHandler.handle_save_new_recipe(self.product_name, 
                                                         self.result_dict, 
