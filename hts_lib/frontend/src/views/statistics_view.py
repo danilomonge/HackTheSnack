@@ -122,6 +122,13 @@ class StatisticsView:
 
         all_dates = sorted({record[0] for records in mock_data.values() for record in records})
         date_to_x = {date: idx for idx, date in enumerate(all_dates)}
+        
+        # Ensure all ingredients have data for all dates
+        for ingredient_name in mock_data:
+            existing_dates = {d for d, _ in mock_data[ingredient_name]}
+            mock_data[ingredient_name] += [
+                (d, 0.0) for d in all_dates if d not in existing_dates
+            ]
         color_palette = ["#FF5252", "#4CAF50", "#2196F3", "#FFC107", "#9C27B0", "#00BCD4"]
 
         lines = []
@@ -143,10 +150,10 @@ class StatisticsView:
         x_labels = [
             ft.ChartAxisLabel(
                 label=ft.Container(
-                    content=ft.Text(f"Day {i+1}", color="black"),
+                    content=ft.Text(f"Recipe {i+1}", color="black"),
                     padding=ft.padding.only(top=10)
                 ),
-                value=i + 0.5
+                value=i  
             )
             for i in range(len(all_dates))
         ]
