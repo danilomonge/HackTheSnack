@@ -16,7 +16,8 @@ class StatisticsView:
         self.chart_container = ft.Container()
         self.product_dict = {}
         self.ingredient_dict = {}
-
+        self.ingredient_container = ft.Container()
+        
     def get_products_and_ingredients(self):
         self.product_dict = Translation.collect_product_dict()
 
@@ -25,14 +26,27 @@ class StatisticsView:
         dropdown_ingredients = list(self.ingredient_dict.keys())
         return dropdown_products, dropdown_ingredients  
 
-    def build_dropdown(self, label: str, items: list[str]):
+    def build_dropdown(self, label: str, items: list[str], on_change=None):
         return ft.Dropdown(
             label=label,
             options=[ft.dropdown.Option(item) for item in items],
             width=200,
+            on_change=on_change
         )
     
+    def on_product_select(self, e):
+        selected_product_name = self.product_dropdown.value
+        selected_product_id = self.product_dict.get(selected_product_name) # type: ignore
 
+        ingredient_response = RecipeManager.find_product_ingredient_list(selected_product_id)
+        ingredient_data = ingredient_response.json()
+        ingredients, ids = Translation.product_table_filter(ingredient_data)
+
+        updated_dropdown = self.build_dropdown("Select Ingredient", list(ingredients.keys()))
+        self.ingredient_dropdown = updated_dropdown
+        self.ingredient_container.content = self.ingredient_dropdown
+        self.page.update()
+    
     def on_confirm(self, e):
         selected_product_name = self.product_dropdown.value
         if not selected_product_name:
@@ -61,6 +75,30 @@ class StatisticsView:
             ft.LineChart: Configured LineChart displaying trends per ingredient.
         """
         ingredient_data = {}
+        mock_data = {'TOMATE': [('2025-06-28T22:00:00.000+00:00', 9.31), 
+                                ('2025-06-30T22:00:00.000+00:00', 9.55), 
+                                ('2025-07-01T22:00:00.000+00:00', 0.94), 
+                                ('2025-07-02T22:00:00.000+00:00', 0.0), 
+                                ('2025-07-03T22:00:00.000+00:00', 10.11), 
+                                ('2025-07-04T22:00:00.000+00:00', 3.68), 
+                                ('2025-07-05T22:00:00.000+00:00', 13.69), 
+                                ('2025-07-06T22:00:00.000+00:00', 10.79)], 
+                        'APF': [('2025-06-28T22:00:00.000+00:00', 68.69), 
+                            ('2025-06-30T22:00:00.000+00:00', 71.45), 
+                            ('2025-07-01T22:00:00.000+00:00', 56.31), 
+                            ('2025-07-02T22:00:00.000+00:00', 67.21), 
+                            ('2025-07-0T22:00:00.000+00:00', 97.06), 
+                            ('2025-07-041T22:00:00.000+00:00', 89.32), 
+                            ('2025-07-05T22:00:00.000+00:00', 50.0), 
+                            ('2025-07-06T22:00:00.000+00:00', 69.89)], 
+                        'EL': [('2025-06-28T22:00:00.000+00:00', 22.0), 
+                               ('2025-06-30T22:00:00.000+00:00', 19.0), 
+                               ('2025-07-01T22:00:00.000+00:00', 50.0), 
+                               ('2025-07-02T22:00:00.000+00:00', 2.0), 
+                               ('2025-07-03T22:00:00.000+00:00', 20.0), 
+                               ('2025-07-04T22:00:00.000+00:00', 7.0), 
+                               ('2025-07-05T22:00:00.000+00:00', 22.0), 
+                               ('2025-07-06T22:00:00.000+00:00', 30.0)]}
         all_dates = set()
 
         # Extract and group values by ingredient name
@@ -79,11 +117,6 @@ class StatisticsView:
 
         # Map dates to X-axis indices (0, 1, 2, ...)
         date_to_x = {date: idx for idx, date in enumerate(all_dates)}
-
-        # # Collect all unique sorted dates
-        # all_dates = sorted({date for entries in mock_data.values() for date, _ in entries})
-        # #date_labels = [date.strftime("%Y-%m-%d") for date in all_dates]
-        # date_index_map = {date: idx for idx, date in enumerate(all_dates)}
 
         # Build data series for each ingredient
         lines = []
@@ -104,20 +137,22 @@ class StatisticsView:
                 )
             )
 
-        width_per_label = 80
-        page_width = self.page.width
-        total_width = max(len(all_dates) * width_per_label, page_width) # type: ignore
+        # width_per_label = 80
+        # page_width = self.page.width
+        # total_width = max(len(all_dates) * width_per_label, page_width) # type: ignore
 
         return ft.LineChart(
             data_series=lines,
             tooltip_bgcolor=ft.Colors.BLUE_GREY_100,
-
             left_axis=ft.ChartAxis(
                 labels_size=40,
                 title=ft.Text("Mean %"),
             ),
             bottom_axis=ft.ChartAxis(
-                labels=[ft.ChartAxisLabel(label=ft.Text(date), value=i) for i, date in enumerate(all_dates)],
+                labels=[
+                    ft.ChartAxisLabel(label=ft.Text(date), value=i)
+                    for i, date in enumerate(all_dates)
+                ],
                 labels_size=40,
                 title=ft.Text("Evaluation Date"),
             ),
@@ -130,8 +165,13 @@ class StatisticsView:
     def build(self):
         dropdown_product_data, dropdown_ingredient_data = self.get_products_and_ingredients()
     
-        self.product_dropdown = self.build_dropdown("Select Product", dropdown_product_data)
+        self.product_dropdown = self.build_dropdown(
+            "Select Product",
+            dropdown_product_data,
+            on_change=self.on_product_select
+        )
         self.ingredient_dropdown = self.build_dropdown("Select Ingredient", dropdown_ingredient_data)
+        self.ingredient_container.content = self.ingredient_dropdown
 
         return ft.Column(
             controls=[
@@ -140,7 +180,10 @@ class StatisticsView:
                         controls=[
                             Styles.build_title("Make Your Selection"),
                             ft.Row(
-                                controls=[self.product_dropdown, self.ingredient_dropdown],
+                                controls=[
+                                    self.product_dropdown,
+                                    self.ingredient_container
+                                ],
                                 alignment=ft.MainAxisAlignment.CENTER,
                                 spacing=20,
                             ),
