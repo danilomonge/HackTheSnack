@@ -49,16 +49,18 @@ class StatisticsView:
     
     def on_confirm(self, e):
         selected_product_name = self.product_dropdown.value
-        if not selected_product_name:
-            print("No product selected")
-            return
+        selected_ingredient_name = self.ingredient_dropdown.value
+        
+        if not selected_ingredient_name:
+            ingredient_id = 0
+        else: ingredient_id = self.ingredient_dict.get(selected_ingredient_name.upper()) # type: ignore
         
         product_id = self.product_dict.get(selected_product_name) # type: ignore
         if not product_id:
             print("Product ID not found for selected name.")
             return
         
-        response = EvaluationManager.find_evaluation_product_ingredient(product_id, 0)
+        response = EvaluationManager.find_evaluation_product_ingredient(product_id, ingredient_id)
         data = response.json()
         chart = self.build_ingredient_line_chart(data)
 
