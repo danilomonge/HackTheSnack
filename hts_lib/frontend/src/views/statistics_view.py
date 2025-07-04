@@ -5,6 +5,9 @@ from backend.data_base_manager.recipe_manager import RecipeManager
 from backend.translation import Translation
 from frontend.src.styles import Styles
 
+
+from datetime import datetime
+from styles import Styles  
 import json
 
 
@@ -107,6 +110,7 @@ class StatisticsView:
         Parses the ingredient data from the provided JSON-like dict and returns a dictionary with ingredient names as keys
         and lists of (date, percentage) tuples as values.
         """
+        ingredient_data = {}
         mock_data = {
             "TOMATE": [
                 ("2025-06-28T22:00:00.000+00:00", 9.31),
@@ -139,26 +143,36 @@ class StatisticsView:
                 ("2025-07-06T22:00:00.000+00:00", 30.0),
             ],
         }
+        all_dates = set()
+
         # Convert the data into a dictionary
         for item in data.get("data", []):
             name = item["ingredientName"]
             date = item["evaluationDate"]
             percentage = item["ingredientMeanPercentage"]
-            # Create a new entry for the ingredient if it doesn't exist
-            if name not in mock_data:
-                mock_data[name] = []
-            # Add the date and percentage to the ingredient's list
-            mock_data[name].append((date, percentage))
-        return mock_data
 
-    def _get_all_dates_and_mapping(self, mock_data):
+            if name not in ingredient_data:
+                ingredient_data[name] = []
+            ingredient_data[name].append((date, percentage))
+            all_dates.add(date)
+
+        # Ensure all ingredients have data for all dates
+        for ingredient_name in ingredient_data:
+            existing_dates = {d for d, _ in ingredient_data[ingredient_name]}
+            ingredient_data[ingredient_name] += [
+                (d, 0.0) for d in all_dates if d not in existing_dates
+            ]
+        color_palette = ["#FF5252", "#4CAF50", "#2196F3", "#FFC107", "#9C27B0", "#00BCD4"]
+
+    def _get_all_dates_and_mapping(self, ingredient_data):
         """
         Gets all unique dates from the data and creates a mapping from date to x-axis position.
         Returns a sorted list of all dates and a dictionary mapping each date to its x-axis position
         """
         # Extract all unique dates from the data
         all_dates = sorted(
-            {date for records in mock_data.values() for date, _ in records}
+            all_dates,
+            key=lambda d: datetime.fromisoformat(d)
         )
         # Map each date to its x-axis position from 1 because 0 is reserved for the initial zero point
         date_to_x = {date: idx + 1 for idx, date in enumerate(all_dates)}
@@ -177,6 +191,7 @@ class StatisticsView:
                 # If the date is not already in the ingredient's records, append it with a percentage of 0.0
                 if missing_date not in existing_dates:
                     mock_data[ingredient].append((missing_date, 0.0))
+
 
     def _get_color_palette(self):
         """
@@ -216,10 +231,21 @@ class StatisticsView:
         """
         lines = []
 
+        for idx, (ingredient_name, records) in enumerate(ingredient_data.items()): 
+            sorted_points = sorted(
+                records,
+                key=lambda x: datetime.fromisoformat(x[0])
+            )
+            points = [
+                ft.LineChartDataPoint(x=date_to_x[date], y=percentage)
+                for date, percentage in sorted_points
+            ]
+
+
         # Iterate over each ingredient and its records to create line data points
-        for idx, (ingredient, records) in enumerate(mock_data.items()):
+        for idx, (ingredient, records) in enumerateingredient_data.items()):
             # Sort the records by date
-            sorted_points = sorted(records, key=lambda r: r[0])
+            sorted_points = sorted(records, key=lambda x: datetime.fromisoformat(x[0])
 
             # Spot the first real date that is not "INITIAL_ZERO" that represents the first actual recipe version
             first_real_date = next(
@@ -246,6 +272,7 @@ class StatisticsView:
             points.append(ft.LineChartDataPoint(x=last_point.x + 1, y=last_point.y))
 
             # Join the points into a line with the specified color and stroke width
+
             lines.append(
                 ft.LineChartData(
                     data_points=points,
@@ -311,7 +338,9 @@ class StatisticsView:
                 ),
                 padding=ft.padding.only(right=12),
             )
-            for idx, name in enumerate(mock_data)
+
+            for idx, ingredient_name in enumerate(ingredient_data.keys())
+
         ]
 
         return ft.Container(
