@@ -5,7 +5,8 @@ from backend.data_base_manager.recipe_manager import RecipeManager
 from backend.translation import Translation
 from frontend.src.styles import Styles
 
-from styles import Styles  # Assumes Styles has utility methods for title and colors
+from datetime import datetime
+from styles import Styles  
 import json
 
 
@@ -79,6 +80,7 @@ class StatisticsView:
         Returns:
             ft.Control: A Row with LineChart and aligned legend on the right.
         """
+        ingredient_data = {}
         mock_data = {
             'TOMATE': [
                 ('2025-06-28T22:00:00.000+00:00', 9.31),
@@ -111,29 +113,37 @@ class StatisticsView:
                 ('2025-07-06T22:00:00.000+00:00', 30.0)
             ]
         }
+        all_dates = set()
 
         for item in data.get("data", []):
             name = item["ingredientName"]
             date = item["evaluationDate"]
             percentage = item["ingredientMeanPercentage"]
-            if name not in mock_data:
-                mock_data[name] = []
-            mock_data[name].append((date, percentage))
+            if name not in ingredient_data:
+                ingredient_data[name] = []
+            ingredient_data[name].append((date, percentage))
+            all_dates.add(date)
 
-        all_dates = sorted({record[0] for records in mock_data.values() for record in records})
+        all_dates = sorted(
+            all_dates,
+            key=lambda d: datetime.fromisoformat(d)
+        )
         date_to_x = {date: idx for idx, date in enumerate(all_dates)}
         
         # Ensure all ingredients have data for all dates
-        for ingredient_name in mock_data:
-            existing_dates = {d for d, _ in mock_data[ingredient_name]}
-            mock_data[ingredient_name] += [
+        for ingredient_name in ingredient_data:
+            existing_dates = {d for d, _ in ingredient_data[ingredient_name]}
+            ingredient_data[ingredient_name] += [
                 (d, 0.0) for d in all_dates if d not in existing_dates
             ]
         color_palette = ["#FF5252", "#4CAF50", "#2196F3", "#FFC107", "#9C27B0", "#00BCD4"]
 
         lines = []
-        for idx, (ingredient_name, records) in enumerate(mock_data.items()): 
-            sorted_points = sorted(records, key=lambda x: x[0])
+        for idx, (ingredient_name, records) in enumerate(ingredient_data.items()): 
+            sorted_points = sorted(
+                records,
+                key=lambda x: datetime.fromisoformat(x[0])
+            )
             points = [
                 ft.LineChartDataPoint(x=date_to_x[date], y=percentage)
                 for date, percentage in sorted_points
@@ -180,7 +190,7 @@ class StatisticsView:
                 ),
                 padding=ft.padding.only(right=12)
             )
-            for idx, ingredient_name in enumerate(mock_data.keys())
+            for idx, ingredient_name in enumerate(ingredient_data.keys())
         ]
 
         legend = ft.Container(
