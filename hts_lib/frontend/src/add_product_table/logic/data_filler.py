@@ -1,4 +1,4 @@
-from FakeTheSnack.hts_lib.frontend.src.add_product_table.table_ui.ingredient_row_manager  import IngredientRowManager
+from frontend.src.add_product_table.table_ui.ingredient_row_manager  import IngredientRowManager
 
 
 class DataFiller:

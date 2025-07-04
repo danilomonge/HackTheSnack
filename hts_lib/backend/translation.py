@@ -63,6 +63,6 @@ class Translation:
     @staticmethod
     def get_ingredient_id_by_name(response_json: dict):
     
-        ingredient_id = response_json.get("data")
+        ingredient_id = response_json['data']['id'] 
 
         return ingredient_id

@@ -2,7 +2,7 @@ import httpx
 import json
 
 
-class SubstanceManager:
+class IngredientManager:
     """
     Handles API interactions for ingredient-related actions.
 
