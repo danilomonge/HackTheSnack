@@ -88,7 +88,7 @@ class ProductManager:
                         Use response.status_code to check for success,
                         and response.json() to access the response data.
         """
-        response = httpx.get(f"http://localhost:8087/user-management/product/list?page=1&size=100&name={product_name}")
+        response = httpx.get(f"http://localhost:8087/user-management/product/list?page=1&size=10&name={product_name}")
 
         return response
 
