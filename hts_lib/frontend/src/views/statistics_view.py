@@ -5,6 +5,7 @@ from backend.data_base_manager.recipe_manager import RecipeManager
 from backend.translation import Translation
 from frontend.src.styles import Styles
 
+from datetime import datetime
 import json
 
 
@@ -36,33 +37,31 @@ class StatisticsView:
 
     def on_product_select(self, e):
         selected_product_name = self.product_dropdown.value
-        selected_product_id = self.product_dict.get(selected_product_name)  # type: ignore
+        selected_product_id = self.product_dict.get(selected_product_name) # type: ignore
 
-        ingredient_response = RecipeManager.find_product_ingredient_list(
-            selected_product_id
-        )
+        ingredient_response = RecipeManager.find_product_ingredient_list(selected_product_id)
         ingredient_data = ingredient_response.json()
         ingredients, ids = Translation.product_table_filter(ingredient_data)
 
-        updated_dropdown = self.build_dropdown(
-            "Select Ingredient", list(ingredients.keys())
-        )
+        updated_dropdown = self.build_dropdown("Select Ingredient", list(ingredients.keys()))
         self.ingredient_dropdown = updated_dropdown
         self.ingredient_container.content = self.ingredient_dropdown
         self.page.update()
 
     def on_confirm(self, e):
         selected_product_name = self.product_dropdown.value
-        if not selected_product_name:
-            print("No product selected")
-            return
-
-        product_id = self.product_dict.get(selected_product_name)  # type: ignore
+        selected_ingredient_name = self.ingredient_dropdown.value
+        
+        if not selected_ingredient_name:
+            ingredient_id = 0
+        else: ingredient_id = self.ingredient_dict.get(selected_ingredient_name.upper()) # type: ignore
+        
+        product_id = self.product_dict.get(selected_product_name) # type: ignore
         if not product_id:
             print("Product ID not found for selected name.")
             return
-
-        response = EvaluationManager.find_evaluation_product_ingredient(product_id, 0)
+        
+        response = EvaluationManager.find_evaluation_product_ingredient(product_id, ingredient_id)
         data = response.json()
         chart = self.build_ingredient_line_chart(data)
 
@@ -80,21 +79,21 @@ class StatisticsView:
             ft.Control: A Column containing the chart and the legend.
         """
         # Parse the ingredient data from the provided JSON-like dict
-        mock_data = self._parse_ingredient_data(data)
+        ingredient_data, dates = self._parse_ingredient_data(data)
         # Get all unique dates and a mapping from date to x-axis position
-        all_dates, date_to_x = self._get_all_dates_and_mapping(mock_data)
+        all_dates, date_to_x = self._get_all_dates_and_mapping(dates)
         # Fill in missing dates with zeros for each ingredient
-        self._fill_missing_dates_with_zeros(mock_data, all_dates)
+        self._fill_missing_dates_with_zeros(ingredient_data, all_dates)
         # Get a color palette for the lines
         color_palette = self._get_color_palette()
         # Create line data for the chart
-        lines = self._create_line_data(mock_data, date_to_x, color_palette)
+        lines = self._create_line_data(ingredient_data, date_to_x, color_palette)
         # Create x-axis labels based on the number of unique dates
         x_labels = self._create_x_labels(len(all_dates))
         # Create y-axis labels for percentage values
         y_labels = self._create_y_labels()
         # Create the legend (the ingredient names with colors) for the chart
-        legend = self._create_legend(mock_data, color_palette)
+        legend = self._create_legend(ingredient_data, color_palette)
         # Create the line chart with the prepared data
         chart = self._create_chart(lines, x_labels, y_labels)
         # Return a Column containing the legend and the chart
@@ -107,76 +106,49 @@ class StatisticsView:
         Parses the ingredient data from the provided JSON-like dict and returns a dictionary with ingredient names as keys
         and lists of (date, percentage) tuples as values.
         """
-        mock_data = {
-            "TOMATE": [
-                ("2025-06-28T22:00:00.000+00:00", 9.31),
-                ("2025-06-30T22:00:00.000+00:00", 9.55),
-                ("2025-07-01T22:00:00.000+00:00", 0.94),
-                ("2025-07-02T22:00:00.000+00:00", 0.0),
-                ("2025-07-03T22:00:00.000+00:00", 10.11),
-                ("2025-07-04T22:00:00.000+00:00", 3.68),
-                ("2025-07-05T22:00:00.000+00:00", 13.69),
-                ("2025-07-06T22:00:00.000+00:00", 10.79),
-            ],
-            "APF": [
-                ("2025-06-28T22:00:00.000+00:00", 68.69),
-                ("2025-06-30T22:00:00.000+00:00", 71.45),
-                ("2025-07-01T22:00:00.000+00:00", 56.31),
-                ("2025-07-02T22:00:00.000+00:00", 67.21),
-                ("2025-07-0T22:00:00.000+00:00", 97.06),
-                ("2025-07-041T22:00:00.000+00:00", 89.32),
-                ("2025-07-05T22:00:00.000+00:00", 50.0),
-                ("2025-07-06T22:00:00.000+00:00", 69.89),
-            ],
-            "EL": [
-                ("2025-06-28T22:00:00.000+00:00", 22.0),
-                ("2025-06-30T22:00:00.000+00:00", 19.0),
-                ("2025-07-01T22:00:00.000+00:00", 50.0),
-                ("2025-07-02T22:00:00.000+00:00", 2.0),
-                ("2025-07-03T22:00:00.000+00:00", 20.0),
-                ("2025-07-04T22:00:00.000+00:00", 7.0),
-                ("2025-07-05T22:00:00.000+00:00", 22.0),
-                ("2025-07-06T22:00:00.000+00:00", 30.0),
-            ],
-        }
+        ingredient_data = {}
+        all_dates = set()
+        
         # Convert the data into a dictionary
         for item in data.get("data", []):
             name = item["ingredientName"]
             date = item["evaluationDate"]
             percentage = item["ingredientMeanPercentage"]
             # Create a new entry for the ingredient if it doesn't exist
-            if name not in mock_data:
-                mock_data[name] = []
+            if name not in ingredient_data:
+                ingredient_data[name] = []
             # Add the date and percentage to the ingredient's list
-            mock_data[name].append((date, percentage))
-        return mock_data
+            ingredient_data[name].append((date, percentage))
+            all_dates.add(date)
+        return ingredient_data, all_dates
 
-    def _get_all_dates_and_mapping(self, mock_data):
+    def _get_all_dates_and_mapping(self, all_dates):
         """
         Gets all unique dates from the data and creates a mapping from date to x-axis position.
         Returns a sorted list of all dates and a dictionary mapping each date to its x-axis position
         """
         # Extract all unique dates from the data
         all_dates = sorted(
-            {date for records in mock_data.values() for date, _ in records}
+            all_dates,
+            key=lambda d: datetime.fromisoformat(d)
         )
         # Map each date to its x-axis position from 1 because 0 is reserved for the initial zero point
         date_to_x = {date: idx + 1 for idx, date in enumerate(all_dates)}
         return all_dates, date_to_x
 
-    def _fill_missing_dates_with_zeros(self, mock_data, all_dates):
+    def _fill_missing_dates_with_zeros(self, ingredient_data, all_dates):
         """
         Fills in missing dates for each ingredient with a zero percentage.
         Inserts an initial zero point for each ingredient and appends missing dates with a percentage of 0.0.
         """
-        for ingredient in mock_data:
+        for ingredient in ingredient_data:
             # Insert an initial zero point for each ingredient so that the chart looks cleaner
-            mock_data[ingredient].insert(0, ("INITIAL_ZERO", 0.0))
-            existing_dates = {date for date, _ in mock_data[ingredient]}
+            ingredient_data[ingredient].insert(0, ("0000-00-00T00:00:00.000+00:00", 0.0))
+            existing_dates = {date for date, _ in ingredient_data[ingredient]}
             for missing_date in all_dates:
                 # If the date is not already in the ingredient's records, append it with a percentage of 0.0
                 if missing_date not in existing_dates:
-                    mock_data[ingredient].append((missing_date, 0.0))
+                    ingredient_data[ingredient].append((missing_date, 0.0))
 
     def _get_color_palette(self):
         """
@@ -209,7 +181,7 @@ class StatisticsView:
             "#00E5FF",
         ]
 
-    def _create_line_data(self, mock_data, date_to_x, color_palette):
+    def _create_line_data(self, ingredient_data, date_to_x, color_palette):
         """
         Creates line data for the chart from the given data.
         Returns a list of LineChartData objects, each representing a line for an ingredient.
@@ -217,13 +189,13 @@ class StatisticsView:
         lines = []
 
         # Iterate over each ingredient and its records to create line data points
-        for idx, (ingredient, records) in enumerate(mock_data.items()):
+        for idx, (ingredient, records) in enumerate(ingredient_data.items()):
             # Sort the records by date
             sorted_points = sorted(records, key=lambda r: r[0])
 
             # Spot the first real date that is not "INITIAL_ZERO" that represents the first actual recipe version
             first_real_date = next(
-                (d for d, _ in sorted_points if d != "INITIAL_ZERO"), None
+                (d for d, _ in sorted_points if d != "0000-00-00T00:00:00.000+00:00"), None
             )
             if not first_real_date:
                 continue
@@ -237,7 +209,7 @@ class StatisticsView:
 
             # Iterate through the sorted points and create LineChartDataPoint objects for each date
             for date, y in sorted_points:
-                if date in ["INITIAL_ZERO", first_real_date]:
+                if date in ["0000-00-00T00:00:00.000+00:00", first_real_date]:
                     continue
                 points.append(ft.LineChartDataPoint(x=date_to_x[date], y=y))
 
@@ -288,7 +260,7 @@ class StatisticsView:
             for y in range(0, 110, 10)
         ]
 
-    def _create_legend(self, mock_data, color_palette):
+    def _create_legend(self, ingredient_data, color_palette):
         """
         Creates a legend for the chart, showing ingredient names with corresponding colors.
         Returns a Container with a Row of items, each containing a colored circle and the ingredient name.
@@ -311,7 +283,7 @@ class StatisticsView:
                 ),
                 padding=ft.padding.only(right=12),
             )
-            for idx, name in enumerate(mock_data)
+            for idx, name in enumerate(ingredient_data)
         ]
 
         return ft.Container(
