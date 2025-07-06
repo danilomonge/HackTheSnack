@@ -67,7 +67,7 @@ class Computation:
         Q, S, Ut = np.linalg.svd(np.eye(D) - ut.T @ ut)
 
         S[S < 1e-12] = 0  # set numerically zero to actually zero
-        Q[np.abs(Q) < 1e-12] = 0  # do the same for the directions
+        Q[np.abs(Q) < 1e-26] = 0  # do the same for the directions
         R = Q[:, S != 0]  # only keep directions with nonzero singular value
         S = np.sqrt(S[S != 0])
 
