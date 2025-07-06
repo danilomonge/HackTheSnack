@@ -391,6 +391,7 @@ class ProductTableUI:
                 vertical_alignment=ft.CrossAxisAlignment.START,
             ),
             expand=True,
+            height=850,
             alignment=ft.alignment.top_left,
             padding=20,
             bgcolor=Styles.BACKGROUND_COLOR,
