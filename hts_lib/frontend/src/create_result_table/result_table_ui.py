@@ -1,6 +1,6 @@
 import flet as ft
 from frontend.src.styles import Styles
-from handle_nutritional_info import NutritionalInfoHandler
+from ..handle_nutritional_info import NutritionalInfoHandler
 
 
 class RecipeResultUI:
