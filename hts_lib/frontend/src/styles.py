@@ -144,3 +144,24 @@ class Styles:
             color=Styles.EXPLANATION_FONT_COLOR,
             text_align=ft.TextAlign.CENTER,
         )
+    
+
+    @staticmethod
+    def build_description(text: str):
+        """
+        Creates an description text with specific styling.
+
+        Args:
+            text (str): The description text to display.
+
+        Returns:
+            ft.Text: A styled text element.
+        """
+        return ft.Text(
+            text,
+            size=Styles.EXPLANATION_FONT_SIZE,
+            weight=ft.FontWeight.BOLD,
+            color=Styles.EXPLANATION_FONT_COLOR,
+            text_align=ft.TextAlign.CENTER,
+            font_family= "Arial",
+        )

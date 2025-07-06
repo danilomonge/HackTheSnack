@@ -43,7 +43,7 @@ class AboutView:
                 controls=[
                     Styles.build_title("About Hack The Snack"),
                     ft.Container(
-                        Styles.build_explanation(
+                        Styles.build_description(
                             "This app helps you analyze and generate recipes based on ingredient lists. Is is designed to assist you in recreating your favorite food products at home."
                         ),
                         padding=20,

@@ -15,7 +15,7 @@ class RecipesView:
                         controls=[
                             Styles.build_title("Your Recipes"),
                             ft.Container(
-                                content=Styles.build_explanation(
+                                content=Styles.build_description(
                                     "Here you can find all your saved recipes. \n"
                                     "Click on a recipe to view its details and ingredients."
                                 ),
