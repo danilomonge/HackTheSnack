@@ -1,5 +1,10 @@
 import flet as ft
 import requests
+import sys
+import os
+
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, BASE_DIR)
 
 from Secure_env.env_enc_decipher import SecureEnvLoader
 
