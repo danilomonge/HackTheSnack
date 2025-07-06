@@ -43,11 +43,12 @@ class AboutView:
                 controls=[
                     Styles.build_title("About Hack The Snack"),
                     ft.Container(
-                        Styles.build_description(
-                            "This app helps you analyze and generate recipes based on ingredient lists. Is is designed to assist you in recreating your favorite food products at home."
+                        Styles.build_explanation(
+                            "We are a group of four students currently studying at the University of Tübingen. This semester we decided to take part in a team project, which is how this app came to be. \n" \
+                            "The app helps you analyze and generate recipes based on ingredient lists of products of your choice. It is designed to assist you in recreating your favorite food products at home."
                         ),
                         padding=20,
-                        width=650,
+                        width=800,
                         bgcolor=Styles.BOX_COLOR,
                         border_radius=Styles.BORDER_RADIUS,
                     ),
