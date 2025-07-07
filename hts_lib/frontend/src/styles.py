@@ -8,10 +8,14 @@ class Styles:
     - Provides utility functions for creating styled buttons and inputs
     """
 
+    LOADINGBAR_COLOR = "#a3b188"
+    LOADINGBAR_BACKGROUNDCOLOR = "#f7f9f0" 
+    HOVER_COLOR = "#DEE5CA" 
+
 
     NAVBAR_COLOR = "#a3b188"
     NAVBAR_ACTIVE_COLOR = "#2b321f"
-    NAVBAR_HOVER_COLOR = "#9AA87E"
+    NAVBAR_HOVER_COLOR = "#8D9B72"
     NAVBAR_TEXT_COLOR = "#FFFFFF"
 
     INPUT_FILL_COLOR = "#f7f9f0" 
@@ -52,7 +56,7 @@ class Styles:
     BORDER_RADIUS = 10
 
     @staticmethod
-    def primary_button(text, icon=None, on_click=None):
+    def build_button(text, icon=None, on_click=None):
         return ft.ElevatedButton(text+" ", icon=icon, on_click=on_click, color=Styles.BUTTON_TEXT_COLOR,bgcolor=Styles.BUTTON_FILL_COLOR,)
 
     ICON_BUTTON_SIZE = 20
@@ -64,6 +68,7 @@ class Styles:
                              on_click=on_click,
                              icon_color=color,
                              icon_size=Styles.ICON_BUTTON_SIZE,
+                             hover_color= Styles.HOVER_COLOR,
                              tooltip=tooltip)
 
     @staticmethod
@@ -142,4 +147,25 @@ class Styles:
             size=Styles.EXPLANATION_FONT_SIZE,
             color=Styles.EXPLANATION_FONT_COLOR,
             text_align=ft.TextAlign.CENTER,
+        )
+    
+
+    @staticmethod
+    def build_description(text: str):
+        """
+        Creates an description text with specific styling.
+
+        Args:
+            text (str): The description text to display.
+
+        Returns:
+            ft.Text: A styled text element.
+        """
+        return ft.Text(
+            text,
+            size=Styles.EXPLANATION_FONT_SIZE,
+            weight=ft.FontWeight.BOLD,
+            color=Styles.EXPLANATION_FONT_COLOR,
+            text_align=ft.TextAlign.CENTER,
+            font_family= "Arial",
         )

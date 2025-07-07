@@ -1,6 +1,7 @@
 import flet as ft
 from frontend.src.styles import Styles
 from frontend.src.handle_nutritional_info import NutritionalInfoHandler
+from ..handle_nutritional_info import NutritionalInfoHandler
 
 
 class RecipeResultUI:
@@ -27,7 +28,7 @@ class RecipeResultUI:
         self.result_text_container = self.build_result_text()
         self.result_text_container.visible = False  
 
-        self.toggle_button = Styles.primary_button(
+        self.toggle_button = Styles.build_button(
             "Show Explanation",
             icon=ft.Icons.INFO,
             on_click=self.toggle_explanation
@@ -195,6 +196,46 @@ class RecipeResultUI:
         self.table.controls.clear()
         self.table.controls.extend(rows)
         self.page.update()
+
+    @staticmethod
+    def clear_current_result(page: ft.Page):
+        """
+        Clears the current recipe result and resets the display to default state.
+        
+        Args:
+            page (ft.Page): The Flet page instance.
+        """
+        if RecipeResultUI._current_result_container:
+            # Find the results section container and clear it
+            generator_view = next(
+                (view for view in page.views if view.route == "/generator"),
+                None
+            )
+            
+            if generator_view and len(generator_view.controls) > 1:
+                main_column = generator_view.controls[1]
+                if isinstance(main_column, ft.Column):
+                    container = main_column.controls[0]
+                    if isinstance(container, ft.Container):
+                        responsive_row = container.content
+                        if isinstance(responsive_row, ft.ResponsiveRow):
+                            if len(responsive_row.controls) >= 2:
+                                results_container_wrapper = responsive_row.controls[1]
+                                if isinstance(results_container_wrapper, ft.Container):
+                                    # Reset the results section to default state
+                                    results_container_wrapper.content = ft.Column(
+                                        [
+                                            Styles.build_title("Generated Recipe"),
+                                            ft.Text("Recipe will appear here after analysis...", 
+                                                color=Styles.TEXT_COLOR, italic=True),
+                                        ],
+                                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                        spacing=10,
+                                    )
+                                    
+            # Reset the static variable
+            RecipeResultUI._current_result_container = None
+            page.update()
 
     def build_chart(self, result: dict[str, dict[str, float]]) -> ft.Container:
      """

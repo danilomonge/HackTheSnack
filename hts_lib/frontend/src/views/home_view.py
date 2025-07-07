@@ -12,7 +12,7 @@ class HomeView:
             controls=[
                 ft.Text("Hack The Snack", size=65, weight=ft.FontWeight.BOLD, color=Styles.TEXT_COLOR),
                 ft.Container(
-                    content=Styles.build_explanation(
+                    content=Styles.build_description(
                         "Recreate your favorite food products at home with the help of our food hacker \n - \n Crack it · Cook it · Love it"
                     ),
                     padding=30,
@@ -27,12 +27,12 @@ class HomeView:
                 ),
                 ft.Row(
                     controls=[
-                        Styles.primary_button(
+                        Styles.build_button(
                             "Try it out",
                             on_click=lambda e: self.page.go("/generator"),
                             icon=ft.Icons.FAVORITE,
                             ),
-                        Styles.primary_button(
+                        Styles.build_button(
                             "More about us",
                             on_click=lambda e: self.page.go("/about"),
                             icon=ft.Icons.INFO,

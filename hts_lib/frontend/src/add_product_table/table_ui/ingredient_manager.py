@@ -2,6 +2,7 @@ import flet as ft
 from frontend.src.add_product_table.logic.input_validator import InputValidator
 from frontend.src.add_product_table.logic.percentage_adjuster import PercentageAdjuster
 from frontend.src.styles import Styles
+from frontend.src.create_result_table.result_table_ui import RecipeResultUI
 
 class IngredientManager:
     """
@@ -58,7 +59,7 @@ class IngredientManager:
             hint_text="00.00",
             width=120,
             suffix_text="%",
-            suffix_style=ft.TextStyle(color=Styles.TEXT_COLOR),
+            suffix_style=ft.TextStyle(),
             keyboard_type=ft.KeyboardType.NUMBER,
             on_change=InputValidator.fix_input_while_typing(last_valid, page, self.on_user_input_change),
             data={"last_valid": last_valid},
@@ -173,29 +174,26 @@ class IngredientManager:
     def clear_all(self):
         """
         Clears all ingredient rows and the product name from the table and resets the list.
+        Also removes any generated recipe from the results section.
         """
+        
+        # Clear ingredients and product name
         self.ingredients.clear()
-        self.product_name.value = "" 
+        self.product_name.value = ""
         self.quantity_table.controls.clear()
-
-        recipe_to_remove = []
-
-        if hasattr(self.page, 'controls'):
-            recipe_to_remove = [
-                control for control in self.page.controls #type: ignore
-                if isinstance(control, ft.Container) and 
-                any(isinstance(text, ft.Text) and text.value == "Generated Recipe" 
-                    for text in getattr(control.content, 'controls', []))
-            ]
-        for recipe in recipe_to_remove:
-            self.page.controls.remove(recipe) # type: ignore
-
-        if self.on_user_input_change:  # NEW
+        
+        # Clear the generated recipe using the new static method
+        RecipeResultUI.clear_current_result(self.page)
+        
+        # Trigger user input change callback
+        if self.on_user_input_change:
             self.on_user_input_change(None)
-
+        
+        # Update the UI
         self.quantity_table.update()
         self.product_name.update()
         self.page.update()
+
     
     def clear_ingredient_rows(self):
         """
