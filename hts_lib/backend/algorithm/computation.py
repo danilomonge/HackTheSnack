@@ -105,10 +105,14 @@ class Computation:
             Returns:
             np.ndarray: A random unit direction vector.
             """
-            K = R.shape[1]
-            u = R @ np.reshape(np.sqrt(S) * randn(K), [K, 1])
-            u /= np.linalg.norm(u)
-            return u.flatten()
+            if R.shape[1] == 0:  # No valid directions available
+                return np.zeros(B.shape[1])  # return a zero vector
+            else:
+                # if there are valid directions, sample a random direction
+                K = R.shape[1]
+                u = R @ np.reshape(np.sqrt(S) * randn(K), [K, 1]) 
+                u /= np.linalg.norm(u) 
+                return u.flatten() 
 
         return sample
 
