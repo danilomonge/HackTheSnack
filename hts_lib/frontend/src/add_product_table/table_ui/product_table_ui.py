@@ -371,6 +371,7 @@ class ProductTableUI:
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
+                height=850,
             ),
             width=700,
             padding=ft.padding.only(top=0, left=20, right=20, bottom=20),
