@@ -312,7 +312,7 @@ class RecipeResultUI:
                     self.toggle_button,
                     self.result_text_container,
                     self.table,
-                    chart,
+                    chart, # type: ignore
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 alignment=ft.MainAxisAlignment.START,
