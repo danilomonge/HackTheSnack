@@ -7,7 +7,7 @@ class SecureEnvLoader:
     A class to securely load API encrypted API keys from an encrypted .env file.
     """
     # Set the decryption password here
-    password = "hts_api"
+    password = "Write the decryption password here"
 
     @staticmethod
     def openssl_decrypt(ciphertext: str) -> str | None:
