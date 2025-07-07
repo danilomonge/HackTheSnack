@@ -67,7 +67,7 @@ class Computation:
         Q, S, Ut = np.linalg.svd(np.eye(D) - ut.T @ ut)
 
         S[S < 1e-12] = 0  # set numerically zero to actually zero
-        Q[np.abs(Q) < 1e-12] = 0  # do the same for the directions
+        Q[np.abs(Q) < 1e-26] = 0  # do the same for the directions
         R = Q[:, S != 0]  # only keep directions with nonzero singular value
         S = np.sqrt(S[S != 0])
 
@@ -105,10 +105,14 @@ class Computation:
             Returns:
             np.ndarray: A random unit direction vector.
             """
-            K = R.shape[1]
-            u = R @ np.reshape(np.sqrt(S) * randn(K), [K, 1])
-            u /= np.linalg.norm(u)
-            return u.flatten()
+            if R.shape[1] == 0:  # No valid directions available
+                return np.zeros(B.shape[1])  # return a zero vector
+            else:
+                # if there are valid directions, sample a random direction
+                K = R.shape[1]
+                u = R @ np.reshape(np.sqrt(S) * randn(K), [K, 1]) 
+                u /= np.linalg.norm(u) 
+                return u.flatten() 
 
         return sample
 
@@ -230,7 +234,7 @@ class Computation:
             )
 
         # Only minimal movement possible → treat it as a unique solution
-        if step_limit_forward - step_limit_backward < 1e-2:
+        if step_limit_forward - step_limit_backward < 1e-6:
             print("ℹ️ Movement directions are very small, returning the initial point.")
             return np.tile(
                 x0, (2, 1)  # Return the same point twice to avoid sampling issues

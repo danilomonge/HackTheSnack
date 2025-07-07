@@ -1,6 +1,11 @@
 import flet as ft
 import requests
 from frontend.src.styles import Styles
+import sys
+import os
+
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, BASE_DIR)
 
 from Secure_env.env_enc_decipher import SecureEnvLoader
 
@@ -45,11 +50,18 @@ def get_nutrition_usda(ingredient_name):
     Returns:
         dict: A dictionary containing nutritional values or None if not found.
     """
+    # Use the stripped and lowercased ingredient name for searching
+    searched = ingredient_name.strip().lower()
+    
+    if len(ingredient_name.strip()) < 3:
+        # Don't search for very short names that are likely not valid
+        return None
+    
     params = {
         "query": ingredient_name,
         "api_key": usda_key,
-        "pageSize": 1,
-        "dataType": ["Foundation", "SR Legacy"],
+        "pageSize": 5,
+        "dataType": ["Branded", "Branded Foods"],
     }
     res = requests.get(SEARCH_URL, params=params)
     data = res.json()
@@ -59,18 +71,27 @@ def get_nutrition_usda(ingredient_name):
         print(f"⚠️ No reliable data found for: {ingredient_name} (likely processed)")
         return None
 
-    # Exctract the first food item found and its nutrients
-    food = data["foods"][0]
-    nutrients = {n["nutrientName"]: n["value"] for n in food["foodNutrients"]}
+    # Check for an exact match in the food descriptions (avoiding similar names with unreliable data)
+    for food in data["foods"]:
+        # Convert the food description to lowercase and strip whitespace
+        name = food["description"].strip().lower()
+        # If the name matches the searched ingredient, return its nutritional values
+        if name == searched:
+            nutrients = {n["nutrientName"]: n["value"] for n in food["foodNutrients"]}
+            return {
+                "name": food["description"],
+                "kcal": nutrients.get("Energy", 0),
+                "carbs": nutrients.get("Carbohydrate, by difference", 0),
+                "fat": nutrients.get("Total lipid (fat)", 0),
+                "protein": nutrients.get("Protein", 0),
+                "sodium": nutrients.get("Sodium, Na", 0),
+                "per": "100g",
+            }
 
-    return {
-        "name": food["description"],
-        "kcal": nutrients.get("Energy", 0),
-        "carbs": nutrients.get("Carbohydrate, by difference", 0),
-        "fat": nutrients.get("Total lipid (fat)", 0),
-        "protein": nutrients.get("Protein", 0),
-        "per": "100g",
-    }
+    # If no exact match was found
+    print(f"❌ No exact match for: '{ingredient_name}'")
+    return None
+
 
 
 class NutritionalInfoHandler:
@@ -99,7 +120,7 @@ class NutritionalInfoHandler:
         Displays nutritional information for a given ingredient in a dialog.
         """
         self.dialog.title = ft.Text(
-            f"{ingredient_name} — Nutrition Info", size=16, weight=ft.FontWeight.BOLD
+            f"{ingredient_name} — Estimated Nutrition Info 🌱 ", size=15, weight=ft.FontWeight.BOLD
         )
         self.dialog.content = ft.Text("⏳ Fetching data...")
         self.dialog.open = True
@@ -126,7 +147,8 @@ class NutritionalInfoHandler:
         else:
             self.dialog.content = ft.Container(
                 width=360,
-                height=310,
+                height=300,
+                padding=10,
                 content=ft.Column(
                     controls=[
                         ft.Text(
@@ -165,7 +187,13 @@ class NutritionalInfoHandler:
                                 ft.Text(f"Protein: {data['protein']:.2f} g"),
                             ]
                         ),
-                        ft.Divider(height=15, color="transparent"),
+                        ft.Row(
+                            [
+                                ft.Icon(name="science", size=18),
+                                ft.Text(f"Sodium: {(data['sodium'] / 1000):.2f} g"),
+                            ]
+                        ),
+                        ft.Divider(height=10, color="transparent"),
                         ft.Text(
                             f"In the given product (per 100g), {ingredient_name.lower()} contributes approximately:",
                             weight=ft.FontWeight.BOLD,
@@ -200,6 +228,14 @@ class NutritionalInfoHandler:
                                     f"Protein: {(data['protein'] * amount / 100):.2f} g",
                                 ),
                             ]
+                        ),
+                        ft.Divider(height=50, color="transparent"),
+                        ft.Text(
+                            f"Proportion of {ingredient_name.lower()} in the product: {amount:.2f}%",
+                            size=13,
+                            weight=ft.FontWeight.BOLD,
+                            italic=True,
+                            color=ft.Colors.PRIMARY,
                         ),
                     ],
                     spacing=6,
