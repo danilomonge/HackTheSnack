@@ -1,5 +1,6 @@
 import flet as ft
 import requests
+from frontend.src.styles import Styles
 
 from Secure_env.env_enc_decipher import SecureEnvLoader
 
@@ -85,7 +86,10 @@ class NutritionalInfoHandler:
         self.dialog = ft.AlertDialog(
             modal=True,
             title=ft.Text("Nutrition Info", size=16, weight=ft.FontWeight.BOLD),
-            actions=[ft.TextButton("OK", on_click=self.close_dialog)],
+            actions=[ft.TextButton("OK", 
+                                   on_click=self.close_dialog,
+                                   style=ft.ButtonStyle(
+                                       color=Styles.ICON_COLOR,),)],
         )
         self.page.overlay.append(self.dialog)
         self.page.update()
@@ -122,10 +126,16 @@ class NutritionalInfoHandler:
         else:
             self.dialog.content = ft.Container(
                 width=360,
-                height=300,
-                padding=10,
+                height=310,
                 content=ft.Column(
                     controls=[
+                        ft.Text(
+                            f"Proportion of {ingredient_name.lower()} in the product: {amount:.2f}%",
+                            size=14,
+                            weight=ft.FontWeight.BOLD,
+                            color=Styles.ICON_COLOR,
+                        ),
+                        ft.Divider(height=6, color="transparent"),
                         ft.Text(
                             f"In 100g of pure {ingredient_name.lower()}, the estimated nutritional values are:",
                             weight=ft.FontWeight.BOLD,
@@ -133,25 +143,25 @@ class NutritionalInfoHandler:
                         ),
                         ft.Row(
                             [
-                                ft.Icon(name="local_fire_department", size=18),
+                                ft.Icon(name="local_fire_department", color=Styles.ICON_COLOR, size=18),
                                 ft.Text(f"Energy: {data['kcal']:.2f} kcal"),
                             ]
                         ),
                         ft.Row(
                             [
-                                ft.Icon(name="lunch_dining", size=18),
+                                ft.Icon(name="lunch_dining", color=Styles.ICON_COLOR, size=18),
                                 ft.Text(f"Fat: {data['fat']:.2f} g"),
                             ]
                         ),
                         ft.Row(
                             [
-                                ft.Icon(name="ramen_dining", size=18),
+                                ft.Icon(name="ramen_dining", color=Styles.ICON_COLOR, size=18),
                                 ft.Text(f"Carbohydrates: {data['carbs']:.2f} g"),
                             ]
                         ),
                         ft.Row(
                             [
-                                ft.Icon(name="egg", size=18),
+                                ft.Icon(name="egg", color=Styles.ICON_COLOR, size=18),
                                 ft.Text(f"Protein: {data['protein']:.2f} g"),
                             ]
                         ),
@@ -163,7 +173,7 @@ class NutritionalInfoHandler:
                         ),
                         ft.Row(
                             [
-                                ft.Icon(name="local_fire_department", size=18),
+                                ft.Icon(name="local_fire_department", color=Styles.ICON_COLOR, size=18),
                                 ft.Text(
                                     f"Energy: {(data['kcal'] * amount / 100):.2f} kcal"
                                 ),
@@ -171,13 +181,13 @@ class NutritionalInfoHandler:
                         ),
                         ft.Row(
                             [
-                                ft.Icon(name="lunch_dining", size=18),
+                                ft.Icon(name="lunch_dining", color=Styles.ICON_COLOR, size=18),
                                 ft.Text(f"Fat: {(data['fat'] * amount / 100):.2f} g"),
                             ]
                         ),
                         ft.Row(
                             [
-                                ft.Icon(name="ramen_dining", size=18),
+                                ft.Icon(name="ramen_dining", color=Styles.ICON_COLOR, size=18),
                                 ft.Text(
                                     f"Carbohydrates: {(data['carbs'] * amount / 100):.2f} g"
                                 ),
@@ -185,19 +195,11 @@ class NutritionalInfoHandler:
                         ),
                         ft.Row(
                             [
-                                ft.Icon(name="egg", size=18),
+                                ft.Icon(name="egg", color=Styles.ICON_COLOR, size=18),
                                 ft.Text(
-                                    f"Protein: {(data['protein'] * amount / 100):.2f} g"
+                                    f"Protein: {(data['protein'] * amount / 100):.2f} g",
                                 ),
                             ]
-                        ),
-                        ft.Divider(height=50, color="transparent"),
-                        ft.Text(
-                            f"Proportion of {ingredient_name.lower()} in the product: {amount:.2f}%",
-                            size=13,
-                            weight=ft.FontWeight.BOLD,
-                            italic=True,
-                            color=ft.Colors.PRIMARY,
                         ),
                     ],
                     spacing=6,
