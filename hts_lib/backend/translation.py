@@ -90,7 +90,7 @@ class Translation:
         Sends a Product GET request, parses a result JSON from a find_product_list service 
         and returns a list with all product names.
         Returns:
-            product_dictt: Dictt of all product names matched to their ids in the database
+            product_dict: Dict of all product names matched to their ids in the database
         """
         product_dict = {}
         response = ProductManager.find_product_list("")
