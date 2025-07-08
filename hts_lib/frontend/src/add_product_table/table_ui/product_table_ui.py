@@ -244,10 +244,22 @@ class ProductTableUI:
                     Styles.build_explanation(
                         "Only include a percentage if known; otherwise, leave it blank or use 0%."
                     ),
+                    Styles.build_explanation(
+                        "Error 101: The ingredients below an empty row must not total more than 50%. Please reduce the values below the empty ingredient."
+                    ),
+                    Styles.build_explanation(
+                        "Error 102: There is not enough space left for the empty fields based on the values that follow them. Please lower the values that come after empty fields."
+                    ),
+                    Styles.build_explanation(
+                        "Error 103: The total is already 100%, but there are still empty ingredient values. Please reduce one or more percentages."
+                    ),
+                    Styles.build_explanation(
+                        "Error 104: This is an invalid position for empty or zero ingredients. Try changing their order or erasing them."
+                    ),
                 ],
                 spacing=5,
-                alignment=ft.MainAxisAlignment.CENTER,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.START,
+                horizontal_alignment=ft.CrossAxisAlignment.START,
             ),
             alignment=ft.alignment.center,
             padding=ft.padding.symmetric(vertical=6, horizontal=10),
@@ -361,7 +373,7 @@ class ProductTableUI:
             ),
             width=700,  
         )
-
+        
         self.results_section = ft.Container(
             content=ft.Column(
                 [
@@ -396,5 +408,5 @@ class ProductTableUI:
             padding=20,
             bgcolor=Styles.BACKGROUND_COLOR,
         )
-    
-    
+
+

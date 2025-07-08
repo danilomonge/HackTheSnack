@@ -131,7 +131,7 @@ class InputValidator:
 
             name = (name_field.value or "").strip()
             if not name:
-                message_text.value = "⚠️ One or more ingredients are missing a name. Please check and fill in all ingredient names."
+                message_text.value = "⚠️ One or more ingredients are missing a name. Please check your input again."
                 message_text.color = "red"
                 page.update()
                 return 0.0, None
@@ -154,7 +154,7 @@ class InputValidator:
         Checks that the total percentage does not go over 100%.
         """
         if total > 100.0:
-            message_text.value = f"⚠️ Total percentage is {total:.2f}%. It must not exceed 100%. Please reduce one ore more ingredients."
+            message_text.value = f"⚠️ Total percentage is {total:.2f}%. It must not exceed 100%. Please check your inputs again."
             message_text.color = "red"
             page.update()
             return False
@@ -170,7 +170,7 @@ class InputValidator:
         """
         for i in range(len(percentages) - 1):
             if percentages[i] != 0.0 and percentages[i] < percentages[i + 1]:
-                message_text.value = "⚠️ Ingredient percentages must be in descending order. Please make sure that the first ingredient that you enter has the highest percentage, and each one below must be equal or smaller."
+                message_text.value = "⚠️ Ingredient percentages must be in descending order. Please check your inputs again."
                 message_text.color = "red"
                 page.update()
                 return False
@@ -217,7 +217,7 @@ class InputValidator:
             elif found_empty:
                 subtotal += value
                 if subtotal > 50.0:
-                    message_text.value = "⚠️ Ingredients below an empty row must not total more than 50%. Please reduce the values below the empty ingredient."
+                    message_text.value = "⚠️ Error 101: Please check your inputs again or read the instructions."
                     message_text.color = "red"
                     page.update()
                     return False
@@ -266,7 +266,7 @@ class InputValidator:
         remaining = 100.0 - defined_total
 
         if total_needed_space > remaining:
-            message_text.value = "⚠️ Not enough space left for the empty fields based on the values that follow them. Please lower the values that come after empty fields."
+            message_text.value = "⚠️ Error 102: Please check your inputs again or read the instructions."
             message_text.color = "red"
             page.update()
             return False
@@ -299,7 +299,7 @@ class InputValidator:
             total += value
 
         if has_empty and abs(total - 100.0) < 1e-6:
-            message_text.value = "⚠️ Total is already 100%, but there are still empty ingredient values. Please reduce one or more percentages."
+            message_text.value = "⚠️ Error 103: Please check your inputs again or read the instructions."
             message_text.color = "red"
             page.update()
             return False
@@ -389,7 +389,7 @@ class InputValidator:
                 and simulated[i - 1] is not None
                 and fill_value > round(simulated[i - 1], 5)
             ):
-                message_text.value = "⚠️ Invalid position for empty or zero ingredients. Try changing their order or erasing them."
+                message_text.value = "⚠️ Error 104: Please check your inputs again or read the instructions."
                 message_text.color = "red"
                 page.update()
                 return False
