@@ -1,6 +1,6 @@
 import flet as ft
 import random
-
+from backend.translation import Translation
 from styles import Styles 
 
 
@@ -8,7 +8,8 @@ class RecipesView:
     def __init__(self, page: ft.Page):
         self.page = page
 
-        self.recipe_titles = {"Pizza Margherita": 12, "Fruit Yogurt": 1} # Translation.collect_product_list()
+        self.recipe_titles = {title: idx for idx, title in enumerate(Translation.collect_product_list())}
+
 
         self.recipe_images = [
             "dish_1.png",
@@ -58,7 +59,7 @@ class RecipesView:
         """Öffnet das Overlay mit den Rezeptdaten"""
         
         recipe_title = self.get_recipe_title_by_id(recipe_id)
-        recipe_data = self.recipe_data  # recipe_data = Translation.get_last_evaluation(recipe_id)
+        recipe_data = Translation.get_last_evaluation(recipe_id)
         
         ingredients_controls = []
         for ingredient, data in recipe_data.items():
