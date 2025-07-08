@@ -89,7 +89,6 @@ class RecipesView:
                     ),
                     padding=ft.padding.symmetric(vertical=5, horizontal=10),
                     bgcolor=Styles.RECIPE_CONTAINER_COLOR,
-                    border_radius=5,
                     margin=ft.margin.only(bottom=5)
                 )
             )
@@ -145,7 +144,7 @@ class RecipesView:
                 spacing=20
             ),
             bgcolor=Styles.BOX_COLOR,
-            border_radius=Styles.BORDER_RADIUS,
+            border_radius=25,
             padding=30,
             width=600,
             height=600
