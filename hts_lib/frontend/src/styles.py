@@ -29,7 +29,7 @@ class Styles:
     BACKGROUND_COLOR = "#FFFFFF"
     TEXT_COLOR = "#2b321f"
     EXPLANATION_FONT_COLOR = "#2b321f"
-    EXPLANATION_FONT_SIZE = 16
+    EXPLANATION_FONT_SIZE = 14
 
     BUTTON_FILL_COLOR = "#2b321f"
     BUTTON_FILL_DISABLED_COLOR = "#979D8E"
@@ -142,7 +142,8 @@ class Styles:
             text,
             size=Styles.EXPLANATION_FONT_SIZE,
             color=Styles.EXPLANATION_FONT_COLOR,
-            text_align=ft.TextAlign.CENTER,
+            text_align=ft.TextAlign.START,
+            no_wrap=False
         )
     
 
