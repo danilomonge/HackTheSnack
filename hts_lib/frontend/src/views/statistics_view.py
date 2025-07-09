@@ -248,7 +248,7 @@ class StatisticsView:
                 if y > 0.0:
                     points.append(ft.LineChartDataPoint(x=date_to_x[date], y=y))
 
-            if len(points) < 1:
+            if len(points) <= 1:
                 continue
 
             # # Spot the first real date that is not "INITIAL_ZERO" that represents the first actual recipe version
