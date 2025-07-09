@@ -18,13 +18,14 @@ class StatisticsView:
         self.product_dict = {}
         self.ingredient_dict = {}
         self.ingredient_container = ft.Container()
+        self.only_ingredient = False
 
     def get_products_and_ingredients(self):
         self.product_dict = Translation.collect_product_dict()
-
         self.ingredient_dict = Translation.collect_ingredient_dict()
         dropdown_products = list(self.product_dict.keys())
         dropdown_ingredients = list(self.ingredient_dict.keys())
+
         return dropdown_products, dropdown_ingredients
 
     def build_dropdown(self, label: str, items: list[str], on_change=None):
@@ -52,14 +53,26 @@ class StatisticsView:
         selected_product_name = self.product_dropdown.value
         selected_ingredient_name = self.ingredient_dropdown.value
         
-        if not selected_ingredient_name:
+        if not selected_ingredient_name and selected_product_name:
             ingredient_id = 0
-        else: ingredient_id = self.ingredient_dict.get(selected_ingredient_name.upper()) # type: ignore
+            product_id = self.product_dict.get(selected_product_name) # type: ignore
+            self.only_ingredient = False
+        elif not selected_product_name and selected_ingredient_name:
+            product_id = 0
+            ingredient_id = self.ingredient_dict.get(selected_ingredient_name.upper()) # type: ignore
+            self.only_ingredient = True
+        else:
+            product_id = self.product_dict.get(selected_product_name) # type: ignore
+            ingredient_id = self.ingredient_dict.get(selected_ingredient_name.upper()) # type: ignore
+            self.only_ingredient = False
+
+            if not product_id:
+                print("Product ID not found for selected name.")
+                return
         
-        product_id = self.product_dict.get(selected_product_name) # type: ignore
-        if not product_id:
-            print("Product ID not found for selected name.")
-            return
+            if not ingredient_id:
+                print("Ingredient ID not found for selected name.")
+                return
         
         response = EvaluationManager.find_evaluation_product_ingredient(product_id, ingredient_id)
         data = response.json()
@@ -78,8 +91,11 @@ class StatisticsView:
         Returns:
             ft.Control: A Column containing the chart and the legend.
         """
-        # Parse the ingredient data from the provided JSON-like dict
-        ingredient_data, dates = self._parse_ingredient_data(data)
+        # Check the ehckbox status and parse the ingredient data from the provided JSON-like dict
+        if not self.only_ingredient:
+            ingredient_data, dates = self._parse_product_and_ingredient_data(data)
+        else: 
+            ingredient_data, dates = self._parse_only_ingredient_data(data)
         # Get all unique dates and a mapping from date to x-axis position
         all_dates, date_to_x = self._get_all_dates_and_mapping(dates)
         # Fill in missing dates with zeros for each ingredient
@@ -101,7 +117,7 @@ class StatisticsView:
 
     # ----------------- Helper Functions -----------------
 
-    def _parse_ingredient_data(self, data):
+    def _parse_product_and_ingredient_data(self, data):
         """
         Parses the ingredient data from the provided JSON-like dict and returns a dictionary with ingredient names as keys
         and lists of (date, percentage) tuples as values.
@@ -121,6 +137,28 @@ class StatisticsView:
             ingredient_data[name].append((date, percentage))
             all_dates.add(date)
         return ingredient_data, all_dates
+    
+    def _parse_only_ingredient_data(self, data):
+        """
+        Parses the ingredient data from the provided JSON-like dict and returns a dictionary with product names as keys
+        and lists of (date, percentage) tuples as values. 
+        """
+        product_data = {}
+        all_dates = set()
+        
+        # Convert the data into a dictionary
+        for item in data.get("data", []):
+            name = item["productName"]
+            date = item["evaluationDate"]
+            percentage = item["ingredientMeanPercentage"]
+            # Create a new entry for the product if it doesn't exist
+            if name not in product_data:
+                product_data[name] = []
+            # Add the date and percentage to the product's list
+            product_data[name].append((date, percentage))
+            all_dates.add(date)
+        return product_data, all_dates
+    
 
     def _get_all_dates_and_mapping(self, all_dates):
         """
@@ -192,26 +230,44 @@ class StatisticsView:
         for idx, (ingredient, records) in enumerate(ingredient_data.items()):
             # Sort the records by date
             sorted_points = sorted(records, key=lambda r: r[0])
-
-            # Spot the first real date that is not "INITIAL_ZERO" that represents the first actual recipe version
-            first_real_date = next(
-                (d for d, _ in sorted_points if d != "0000-00-00T00:00:00.000+00:00"), None
+            
+            # Check if ingredient was in first recipe (earliest date in all data)
+            first_date_in_all = min(date_to_x, key=lambda d: datetime.fromisoformat(d))
+            appeared_in_first_recipe = any(
+                date == first_date_in_all and y > 0.0 for date, y in sorted_points
             )
-            if not first_real_date:
+            
+            points = []
+
+            # Add filler point only if ingredient was in first recipe
+            if appeared_in_first_recipe:
+                points.append(ft.LineChartDataPoint(x=0, y=0.0))
+
+            # Add real data points starting from when ingredient first appeared
+            for date, y in sorted_points:
+                if y > 0.0:
+                    points.append(ft.LineChartDataPoint(x=date_to_x[date], y=y))
+
+            if len(points) < 1:
                 continue
 
-            # Get the y value for the first real date
-            first_real_y = next(y for d, y in sorted_points if d == first_real_date)
-            points = [ft.LineChartDataPoint(x=0, y=0.0)]
-            points.append(
-                ft.LineChartDataPoint(x=date_to_x[first_real_date], y=first_real_y)
-            )
+            # # Spot the first real date that is not "INITIAL_ZERO" that represents the first actual recipe version
+            # first_real_date = next(
+            #     (d for d, _ in filtered_points if d != "0000-00-00T00:00:00.000+00:00"), None
+            # )
 
-            # Iterate through the sorted points and create LineChartDataPoint objects for each date
-            for date, y in sorted_points:
-                if date in ["0000-00-00T00:00:00.000+00:00", first_real_date]:
-                    continue
-                points.append(ft.LineChartDataPoint(x=date_to_x[date], y=y))
+            # # Get the y value for the first real date
+            # first_real_y = next(y for d, y in filtered_points if d == first_real_date)
+            # points = [ft.LineChartDataPoint(x=0, y=0.0)]
+            # points.append(
+            #     ft.LineChartDataPoint(x=date_to_x[first_real_date], y=first_real_y)
+            # )
+
+            # # Iterate through the sorted points and create LineChartDataPoint objects for each date
+            # for date, y in filtered_points:
+            #     if date in ["0000-00-00T00:00:00.000+00:00", first_real_date]:
+            #         continue
+            #     points.append(ft.LineChartDataPoint(x=date_to_x[date], y=y))
 
             # Add an additional point to ensure the line extends to the right and the chart looks better
             last_point = points[-1]
