@@ -233,19 +233,22 @@ class Computation:
                 x0, (2, 1)  # Return the same point twice to allow mean/std calculations
             )
 
-        # Only minimal movement possible → treat it as a unique solution
-        if step_limit_forward - step_limit_backward < 1e-6:
-            print("ℹ️ Movement directions are very small, returning the initial point.")
-            return np.tile(
-                x0, (2, 1)  # Return the same point twice to avoid sampling issues
-            )
+        # Check all basis vectors of the null space for possible movement
+        threshold = 1e-6
+        for j in range(null_space_basis.shape[1]):
+            # Use the j-th basis vector as a direction
+            direction = null_space_basis[:, j]
+            # Check how far is it possible to move in this direction
+            _, upper, lower, _ = Computation._constrain_reduction(x0, direction, A, a)
+            # If the range of movement in this direction is too large, the solution is not unique
+            if upper - lower >= threshold:
+                print(f"ℹ️ Movement detected in direction {j} (range={upper-lower:.2e}). Solution not unique.")
+                return None
 
-        # Movement is possible → not a unique solution
-        print(
-            "⚠️ Found an initial point in the boundary, but there are multiple valid solutions."
-        )
-        print("ℹ️ Returning None to indicate that sampling might not be reliable.")
-        return None
+        # All directions blocked → unique solution
+        print("ℹ️ All movement directions blocked. Returning initial point.")
+        return np.tile(x0, (2, 1))
+
 
     @staticmethod
     def _MCMC(A, a, B, b, num_iter=int(1e7), thinning=int(int(1e5) / 100)):
