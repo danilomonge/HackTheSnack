@@ -3,6 +3,7 @@ import sys
 sys.dont_write_bytecode = True
 
 import os
+import time 
 
 current_path = os.path.abspath(os.path.dirname(__file__))
 while not os.path.isdir(os.path.join(current_path, "Backend")):
@@ -19,17 +20,22 @@ def main():
 
     # Example input dictionary with fixed values
     input_ingredients = {
-        "Lentils": 0.63,
-        "Water": None,
-        "Carrots": None,
-        "Onions": None,
-        "Oil": None,
+        "Water": 0.4445,
         "Salt": None,
-        "Pepper": None,
-        "Garlic": 0.016,
+        "Sugar": 0.1111,
+        "Yeast": 0.1111,
+        "Flour": None,
+        "Oil": 0.1111,
     }
+    
+    start = time.perf_counter()
 
     calculated_ingredients_dict = RecipeGenerator.generate_recipe(input_ingredients)
+    
+    end = time.perf_counter()
+    duration = end - start
+    
+    print(f"\n🕒 Execution time (generate_recipe): {duration:.6f} seconds\n")
 
     if calculated_ingredients_dict:
         for name, data in calculated_ingredients_dict.items():
