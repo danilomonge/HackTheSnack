@@ -239,11 +239,13 @@ class ProductTableUI:
             content=ft.Column(
                 [
                     Styles.build_explanation(
-                        "List the ingredients from most to least used.",
+                        "List the ingredients from most to least used. Only include a percentage if known; otherwise, leave it blank or use 0%.",
                     ),
+                    ft.Divider(height=6, color="transparent"),
                     Styles.build_explanation(
-                        "Only include a percentage if known; otherwise, leave it blank or use 0%."
+                        "In total all ingredients must add up to 100%. An empty ingredient row needs to be lower or equal to the ingredient above and higher or equal to the ingredient below it. Therefore there must be enough space left for the undefined percentages, so that in total the recipe has 100%."
                     ),
+                    ft.Divider(height=6, color="transparent"),
                     Styles.build_explanation(
                         "Error 101: The ingredients below an empty row must not total more than 50%. Please reduce the values below the empty ingredient."
                     ),
