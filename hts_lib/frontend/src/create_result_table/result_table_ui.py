@@ -1,7 +1,6 @@
 import flet as ft
 from frontend.src.styles import Styles
 from frontend.src.handle_nutritional_info import NutritionalInfoHandler
-from ..handle_nutritional_info import NutritionalInfoHandler
 
 
 class RecipeResultUI:
@@ -69,18 +68,21 @@ class RecipeResultUI:
             content = ft.Column(
                 [
                     Styles.build_explanation(
-                        "\n \n".join([
-                            "💬 Explanation of your results:",
-                            "• Amount: shows the average percentage that each ingredient in your recipe has.",
-                            "• Variation: shows you how much the percentage might vary.",
-                            "• Nutrition facts: gives the standard nutritional info of the selected ingredient.",
-                        ])
-
+                        "💬 Explanation of your results:"
+                    ),
+                    Styles.build_explanation(
+                        "• Amount: shows the average percentage that each ingredient in your recipe has."
+                    ),
+                    Styles.build_explanation(
+                        "• Variation: shows you how much the percentage might vary."
+                    ),
+                    Styles.build_explanation(
+                        "• Nutrition facts: gives the standard nutritional info of the selected ingredient."
                     ),
                 ],
                 spacing=5,
-                alignment=ft.MainAxisAlignment.CENTER,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.START,
+                horizontal_alignment=ft.CrossAxisAlignment.START,
             ),
             alignment=ft.alignment.center,
             padding=ft.padding.symmetric(vertical=6, horizontal=10),

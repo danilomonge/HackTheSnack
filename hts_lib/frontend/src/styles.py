@@ -29,7 +29,7 @@ class Styles:
     BACKGROUND_COLOR = "#FFFFFF"
     TEXT_COLOR = "#2b321f"
     EXPLANATION_FONT_COLOR = "#2b321f"
-    EXPLANATION_FONT_SIZE = 16
+    EXPLANATION_FONT_SIZE = 14
 
     ICON_COLOR = "#a3b188"
     SEARCH_ICON_COLOR = "#2b321f"
@@ -146,7 +146,8 @@ class Styles:
             text,
             size=Styles.EXPLANATION_FONT_SIZE,
             color=Styles.EXPLANATION_FONT_COLOR,
-            text_align=ft.TextAlign.CENTER,
+            text_align=ft.TextAlign.START,
+            no_wrap=False
         )
     
 
