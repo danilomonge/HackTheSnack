@@ -1,6 +1,6 @@
 import flet as ft
 
-from styles import Styles
+from frontend.src.styles import Styles
 
        
 class AboutView:
