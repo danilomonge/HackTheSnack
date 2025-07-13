@@ -28,11 +28,11 @@ class AboutView:
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=10
+                spacing=10,
             ),
             border_radius=Styles.BORDER_RADIUS,
-            expand=True,
             padding=10,
+            width= 390,
             alignment=ft.alignment.center,
             bgcolor=Styles.BOX_COLOR
         )
@@ -52,24 +52,52 @@ class AboutView:
                         bgcolor=Styles.BOX_COLOR,
                         border_radius=Styles.BORDER_RADIUS,
                     ),
-                    Styles.build_subtitle("The Team"),
+                    ft.Text(
+                        "The Team",
+                        size=27,
+                        weight=ft.FontWeight.BOLD,
+                        color=Styles.TEXT_COLOR,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    ft.Container(
+                        content=ft.Image(
+                            src="Group-1.JPG",
+                            fit=ft.ImageFit.CONTAIN,
+                        ),
+                        width=800,
+                        alignment=ft.alignment.center,
+                    ),
                     ft.Row(
                         controls=[
                             self.team_member("Emilio", "Cognitive Science",
-                                            "https://image.spreadshirtmedia.net/image-server/v1/products/T1459A839PA4459PT28D152850882W4782H10000/views/1,width=550,height=550,appearanceId=839,backgroundColor=FFFFFF/strichmaennchen-sticker.jpg"),
+                                            "Emilio.JPG"),
                             self.team_member("Danilo", "Medical Informatics",
-                                            "https://cdni.iconscout.com/illustration/premium/thumb/gluckliches-strichmannchen-3180113-2666423.png?f=webp"), 
-                            self.team_member("Jana", "Media Informatics",
-                                            "https://img.freepik.com/vektoren-premium/strichmaennchen-mann-doodle-zeichnung-isoliert_566661-1697.jpg"),
-                            self.team_member("Katja", "Cognitive Science",
-                                            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAdpg1zjwqCLvFvBQquT8u7Nmnp65-dcyPhg&s"),
+                                            "Danilo.JPG"), 
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
-                    )
+                    ), 
+                    ft.Row(
+                        controls=[
+                            self.team_member("Jana", "Media Informatics",
+                                            "Jana.JPG"),
+                            self.team_member("Katja", "Cognitive Science",
+                                            "Katja.JPG"),
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    ), 
+                    ft.Container(
+                        content=ft.Image(
+                            src="Group-2.JPG",
+                            fit=ft.ImageFit.CONTAIN,
+                        ),
+                        width=800,
+                        alignment=ft.alignment.center,
+                    ),
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=20,
-                expand=True
+                expand=True,
+                scroll= ft.ScrollMode.ADAPTIVE
             ),
             padding=20,
             bgcolor=Styles.BACKGROUND_COLOR,
