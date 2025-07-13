@@ -6,8 +6,12 @@ from styles import Styles
 class AboutView:
     def __init__(self, page: ft.Page):
         self.page = page
+    
+    def open_github(self, github_url: str):
+        """Opens the GitHub page in the default browser."""
+        self.page.launch_url(github_url)
 
-    def team_member(self, name: str, field: str, image_url: str):
+    def team_member(self, name: str, field: str, image_url: str, github_url: str, github_user: str ):
         """
         Creates a team member container with name, field of study, and image.
 
@@ -25,6 +29,7 @@ class AboutView:
                     ft.Text(name, size=Styles.EXPLANATION_FONT_SIZE, text_align=ft.TextAlign.CENTER, color=Styles.TEXT_COLOR),
                     ft.Image(src=image_url, width=100, height=100, border_radius=50, fit=ft.ImageFit.COVER),
                     ft.Text(field, size=Styles.EXPLANATION_FONT_SIZE, text_align=ft.TextAlign.CENTER, color=Styles.TEXT_COLOR),
+                    Styles.build_button(github_user, ft.Icons.OPEN_IN_NEW, lambda e: self.open_github(github_url))
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -69,19 +74,18 @@ class AboutView:
                     ),
                     ft.Row(
                         controls=[
-                            self.team_member("Emilio", "Cognitive Science",
-                                            "Emilio.JPG"),
+                            self.team_member("Emilio", "Cognitive Science", "Emilio.JPG", "https://github.com/ERibelles12", "ERibelles12" ),
                             self.team_member("Danilo", "Medical Informatics",
-                                            "Danilo.JPG"), 
-                        ],
+                                            "Danilo.JPG", "https://github.com/danilomonge", "danilomonge"), 
+                        ], 
                         alignment=ft.MainAxisAlignment.CENTER,
                     ), 
                     ft.Row(
                         controls=[
                             self.team_member("Jana", "Media Informatics",
-                                            "Jana.JPG"),
+                                            "Jana.JPG", "https://github.com/jd-janadanner", "jd-janadanner"),
                             self.team_member("Katja", "Cognitive Science",
-                                            "Katja.JPG"),
+                                            "Katja.JPG", "https://github.com/katja-gf", "katja-gf"),
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
                     ), 
