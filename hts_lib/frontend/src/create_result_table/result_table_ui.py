@@ -69,11 +69,14 @@ class RecipeResultUI:
                     Styles.build_explanation(
                         "💬 Explanation of your results:"
                     ),
-                    Styles.build_explanation("• Amount: shows the average percentage that each ingredient in your recipe has."
+                    Styles.build_explanation(
+                        "• Amount: shows the average percentage that each ingredient in your recipe has."
                     ),
-                    Styles.build_explanation("• Variation: shows you how much the percentage might vary."
+                    Styles.build_explanation(
+                        "• Variation: shows you how much the percentage might vary."
                     ),
-                    Styles.build_explanation("• Nutrition facts: gives the standard nutritional info of the selected ingredient."
+                    Styles.build_explanation(
+                        "• Nutrition facts: gives the standard nutritional info of the selected ingredient."
                     ),
                 ],
                 spacing=5,
