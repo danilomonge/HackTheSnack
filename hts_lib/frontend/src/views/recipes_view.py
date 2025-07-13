@@ -1,6 +1,6 @@
 import flet as ft
 import random
-
+from backend.translation import Translation
 from styles import Styles 
 
 
@@ -8,7 +8,8 @@ class RecipesView:
     def __init__(self, page: ft.Page):
         self.page = page
 
-        self.recipe_titles = {"Pizza Margherita": 12, "Fruit Yogurt": 1, "test": 2} # Translation.collect_product_list()
+        self.recipe_titles = {title: idx for idx, title in enumerate(Translation.collect_product_list())}
+
 
         self.recipe_images = [
             "recipe_img.png"
