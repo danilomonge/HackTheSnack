@@ -97,6 +97,22 @@ class AboutView:
                         width=800,
                         alignment=ft.alignment.center,
                     ),
+                    ft.Text(
+                        "Project Information",
+                        size=27,
+                        weight=ft.FontWeight.BOLD,
+                        color=Styles.TEXT_COLOR,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    ft.Container(
+                        Styles.build_explanation(
+                            "pls insert info about database and apis or anything else you can think of here"
+                        ),
+                        padding=20,
+                        width=800,
+                        bgcolor=Styles.BOX_COLOR,
+                        border_radius=Styles.BORDER_RADIUS,
+                    ),
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=20,
