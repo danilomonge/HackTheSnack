@@ -43,9 +43,6 @@ class RecipeResultUI:
             result (dict): Final recipe data.
         """
         self._last_result = result
-        self.message.value = "✅ Recipe created successfully!"
-        self.message.color = Styles.GREEN_COLOR
-        self.message.weight = ft.FontWeight.BOLD
         self.page.update()
         self.build_result_table(result)
 
