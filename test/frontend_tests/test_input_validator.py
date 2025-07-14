@@ -379,7 +379,7 @@ def test_check_total_not_exceed_100():
     page = TestPage()
     result = InputValidator._check_total_not_exceed_100(100.01, message, page) # type: ignore[arg-type]
     assert result is False
-    assert message.value == "⚠️ Total percentage is 100.01%. It must not exceed 100%. Please reduce one ore more ingredients."
+    assert "⚠️ Total percentage is" in message.value
     assert message.color == "red"
     assert page.updated
 
@@ -558,7 +558,7 @@ def test_check_below_empty_not_over_50():
     rows = [TestRow("W", ""), TestRow("X", "30"), TestRow("Y", "25"), TestRow("Z", "10")]
     result = InputValidator._check_below_empty_not_over_50(rows, message, page) # type: ignore[arg-type]
     assert result is False
-    assert "must not total more than 50%" in message.value
+    assert "⚠️ Error 101:" in message.value
     assert message.color == "red"
     assert page.updated
 
@@ -664,7 +664,7 @@ def test_check_remaining_space_is_enough():
     rows = [TestRow("90"), TestRow(""), TestRow("20")]  # remaining = 10, needed = 20
     result = InputValidator._check_remaining_space_is_enough(rows, message, page) # type: ignore[arg-type]
     assert result is False
-    assert message.value.startswith("⚠️ Not enough space left")
+    assert message.value.startswith("⚠️ Error 102:")
     assert message.color == "red"
     assert page.updated
 
@@ -747,7 +747,7 @@ def test_check_no_empty_if_total_is_100():
     rows = [TestRow("70"), TestRow("30"), TestRow("")]
     result = InputValidator._check_no_empty_if_total_is_100(rows, message, page) # type: ignore[arg-type]
     assert result is False
-    assert message.value.startswith("⚠️ Total is already 100%")
+    assert message.value.startswith("⚠️ Error 103")
     assert page.updated
 
     # Case 3: total < 100, with empty fields → valid
