@@ -20,12 +20,12 @@ def main():
 
     # Example input dictionary with fixed values
     input_ingredients = {
-        "Water": 0.4445,
-        "Salt": None,
-        "Sugar": 0.1111,
-        "Yeast": 0.1111,
-        "Flour": None,
-        "Oil": 0.1111,
+        "Water": 0.33,
+        "Salt": 0.33,
+        "Sugar": None,
+        "Vinegar": 0.11,
+        "Oil": 0.11,
+        "Spices": None,
     }
     
     start = time.perf_counter()
