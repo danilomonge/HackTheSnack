@@ -239,15 +239,29 @@ class ProductTableUI:
             content=ft.Column(
                 [
                     Styles.build_explanation(
-                        "List the ingredients from most to least used.",
+                        "List the ingredients from most to least used. Only include a percentage if known; otherwise, leave it blank or use 0%.",
+                    ),
+                    ft.Divider(height=6, color="transparent"),
+                    Styles.build_explanation(
+                        "In total all ingredients must add up to 100%. An empty ingredient row needs to be lower or equal to the ingredient above and higher or equal to the ingredient below it. Therefore there must be enough space left for the undefined percentages, so that in total the recipe has 100%."
+                    ),
+                    ft.Divider(height=6, color="transparent"),
+                    Styles.build_explanation(
+                        "Error 101: The ingredients below an empty row must not total more than 50%. Please reduce the values below the empty ingredient."
                     ),
                     Styles.build_explanation(
-                        "Only include a percentage if known; otherwise, leave it blank or use 0%."
+                        "Error 102: There is not enough space left for the empty fields based on the values that follow them. Please lower the values that come after empty fields."
+                    ),
+                    Styles.build_explanation(
+                        "Error 103: The total is already 100%, but there are still empty ingredient values. Please reduce one or more percentages."
+                    ),
+                    Styles.build_explanation(
+                        "Error 104: This is an invalid position for empty or zero ingredients. Try changing their order or erasing them."
                     ),
                 ],
                 spacing=5,
-                alignment=ft.MainAxisAlignment.CENTER,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.START,
+                horizontal_alignment=ft.CrossAxisAlignment.START,
             ),
             alignment=ft.alignment.center,
             padding=ft.padding.symmetric(vertical=6, horizontal=10),
@@ -361,7 +375,7 @@ class ProductTableUI:
             ),
             width=700,  
         )
-
+        
         self.results_section = ft.Container(
             content=ft.Column(
                 [
@@ -396,5 +410,5 @@ class ProductTableUI:
             padding=20,
             bgcolor=Styles.BACKGROUND_COLOR,
         )
-    
-    
+
+
