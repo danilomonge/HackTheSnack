@@ -1,6 +1,6 @@
 import flet as ft
 import requests
-from frontend.src.styles import Styles
+from .styles import Styles
 import sys
 import os
 
@@ -229,10 +229,10 @@ class NutritionalInfoHandler:
                                 ),
                             ]
                         ),
-                        ft.Divider(height=15, color="transparent"),
+                        ft.Divider(height=10, color="transparent"),
                         ft.Text(
                             f"Warning: We do not guarantee the accuracy of this data.",
-                            size=14,
+                            size=10,
                             weight=ft.FontWeight.BOLD,
                             color=Styles.ICON_COLOR,
                         ),
