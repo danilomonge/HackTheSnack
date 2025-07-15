@@ -2,6 +2,8 @@ import numpy as np
 from numpy.random import rand, randn
 from tqdm.auto import tqdm
 from scipy.optimize import linprog
+from scipy.linalg import null_space
+
 
 
 class Computation:
@@ -212,17 +214,8 @@ class Computation:
         if x0 is None:
             return None
 
-        # Generate a random direction that satisfies the equality constraints
-        generate_direction = Computation._construct_directions(B)
-        test_direction = generate_direction()
-
-        # Check how far movement is allowed in this direction without violating inequalities
-        _, step_limit_forward, step_limit_backward, _ = (
-            Computation._constrain_reduction(x0, test_direction, A, a)
-        )
-
         # Check the null space of B to see if there are possible movement directions
-        null_space_basis, _ = Computation._svd_projection(B)
+        null_space_basis = null_space(B, rcond=1e-12)  
 
         # No valid directions available → the point is unique
         if null_space_basis.shape[1] == 0:
