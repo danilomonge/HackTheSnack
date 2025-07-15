@@ -67,7 +67,7 @@ class IngredientManager:
                         Use response.status_code to check for success,
                         and response.json() to access the response data.
         """
-        response = httpx.get(f"http://localhost:8087/user-management/ingredient/list?page=1&size=10&name={ingredient_name}")
+        response = httpx.get(f"http://localhost:8087/user-management/ingredient/list?page=1&size=500&name={ingredient_name}")
 
         return response
     
