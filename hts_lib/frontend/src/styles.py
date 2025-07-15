@@ -37,6 +37,7 @@ class Styles:
 
     BUTTON_FILL_COLOR = "#2b321f"
     BUTTON_TEXT_COLOR = "#FFFFFF"
+    BUTTON_FILL_DISABLED_COLOR = "#CBD4BB"
 
     BOX_COLOR = "#F0F4E3" 
 
