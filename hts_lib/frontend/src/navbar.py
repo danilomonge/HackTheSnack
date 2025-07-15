@@ -64,8 +64,9 @@ class NavigationBar:
                 [
                     self.navbar_button("Home", "/"),
                     self.navbar_button("Recipe Generator", "/generator"),
-                    self.navbar_button("My Recipes", "/recipes"),		
-                    self.navbar_button("About us", "/about"),	
+                    self.navbar_button("My Recipes", "/recipes"),
+                    self.navbar_button("Statistics", "/statistics"), 
+                    self.navbar_button("About us", "/about"),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),

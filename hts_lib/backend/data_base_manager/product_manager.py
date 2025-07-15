@@ -78,6 +78,7 @@ class ProductManager:
     def find_product_list(product_name):
         """
         Searches for multiple products by name in the data base.
+        If no name given, returns all products
 
         Args:
         product_name (str): The name of the product to search for.
@@ -87,7 +88,7 @@ class ProductManager:
                         Use response.status_code to check for success,
                         and response.json() to access the response data.
         """
-        response = httpx.get(f"http://localhost:8087/user-management/product/list?page=1&size=10&name={product_name}")
+        response = httpx.get(f"http://localhost:8087/user-management/product/list?page=1&size=100&name={product_name}")
 
         return response
 
