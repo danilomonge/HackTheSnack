@@ -143,11 +143,13 @@ class ProductTableUI:
             self.loading_indicator
         )
 
+        self.loading_indicator.visible = False
+        self.page.update()
+
         if result:  # Only if submit was successful
             self.is_submitted = True
             self.update_save_button_state(enabled=True)
-            self.loading_indicator.visible = False
-            self.page.update()
+            
 
         return result
     
