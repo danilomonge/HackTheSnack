@@ -147,8 +147,26 @@ class Styles:
             text,
             size=Styles.EXPLANATION_FONT_SIZE,
             color=Styles.EXPLANATION_FONT_COLOR,
-            text_align=ft.TextAlign.START,
-            no_wrap=False
+            text_align=ft.TextAlign.LEFT,
+        )
+        
+    @staticmethod
+    def build_explanation_subtitle(text: str):
+        """
+        Creates a bold subtitle text with the same style as explanations.
+        
+        Args:
+            text (str): The subtitle text to display.
+            
+        Returns:
+            ft.Text: A styled text element.
+        """
+        return ft.Text(
+            text,
+            size=Styles.EXPLANATION_FONT_SIZE,
+            weight=ft.FontWeight.BOLD,
+            color=Styles.EXPLANATION_FONT_COLOR,
+            text_align=ft.TextAlign.LEFT,
         )
     
 
