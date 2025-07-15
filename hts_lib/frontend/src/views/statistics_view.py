@@ -5,7 +5,7 @@ from backend.data_base_manager.recipe_manager import RecipeManager
 from backend.translation import Translation
 from frontend.src.styles import Styles
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 
 
@@ -33,6 +33,9 @@ class StatisticsView:
             label=label,
             options=[ft.dropdown.Option(item) for item in items],
             width=200,
+            border_color=Styles.BUTTON_FILL_COLOR,
+            focused_border_color=Styles.BUTTON_FILL_COLOR,
+            text_style=ft.TextStyle(color=Styles.TEXT_COLOR, size=16),
             on_change=on_change,
         )
 
@@ -80,6 +83,16 @@ class StatisticsView:
 
         self.chart_container.content = chart
         self.page.update()
+
+    def on_clear(self, e):
+        """Reset dropdown values to None without changing their options or the chart."""
+        if isinstance(self.product_dropdown, ft.Dropdown):
+            self.product_dropdown.value = None
+
+        if isinstance(self.ingredient_dropdown, ft.Dropdown):
+            self.ingredient_dropdown.value = None
+
+        self.page.update()    
 
     def build_ingredient_line_chart(self, data: dict) -> ft.Control:
         """
@@ -140,24 +153,56 @@ class StatisticsView:
     
     def _parse_only_ingredient_data(self, data):
         """
-        Parses the ingredient data from the provided JSON-like dict and returns a dictionary with product names as keys
-        and lists of (date, percentage) tuples as values. 
+        Parses ingredient data and aligns evaluations across products.
+        Assigns virtual ISO dates for evaluation rounds to keep compatibility.
+        Returns:
+            - product_data: dict with product names as keys and lists of (virtual_date, percentage) tuples as values
+            - all_dates: set of virtual ISO dates for the x-axis
         """
         product_data = {}
-        all_dates = set()
-        
-        # Convert the data into a dictionary
+        eval_rounds = {}
+
+        # Group data by product
         for item in data.get("data", []):
-            name = item["productName"]
+            product_name = item["productName"]
             date = item["evaluationDate"]
             percentage = item["ingredientMeanPercentage"]
-            # Create a new entry for the product if it doesn't exist
-            if name not in product_data:
-                product_data[name] = []
-            # Add the date and percentage to the product's list
-            product_data[name].append((date, percentage))
-            all_dates.add(date)
-        return product_data, all_dates
+
+            if product_name not in product_data:
+                product_data[product_name] = []
+                eval_rounds[product_name] = []
+
+            eval_rounds[product_name].append(date)
+            product_data[product_name].append((date, percentage))
+
+        # Determine max number of evaluations
+        max_evals = max(len(evals) for evals in eval_rounds.values())
+
+        # Generate virtual ISO dates (e.g., 2025-01-01, 2025-02-01, …)
+        base_date = datetime(2025, 1, 1)  # Arbitrary starting point
+        virtual_dates = [
+            (base_date + timedelta(days=30 * i)).date().isoformat()
+            for i in range(max_evals)
+        ]
+
+        aligned_product_data = {}
+
+        for product, records in product_data.items():
+            # Sort records by actual date
+            sorted_records = sorted(records, key=lambda r: datetime.fromisoformat(r[0]))
+            aligned_points = []
+
+            for i, v_date in enumerate(virtual_dates):
+                if i < len(sorted_records):
+                    _, percentage = sorted_records[i]
+                else:
+                    # Fill missing evaluations with 0.0 or None
+                    percentage = 0.0
+                aligned_points.append((v_date, percentage))
+
+            aligned_product_data[product] = aligned_points
+
+        return aligned_product_data, set(virtual_dates)
     
 
     def _get_all_dates_and_mapping(self, all_dates):
@@ -251,24 +296,6 @@ class StatisticsView:
             if len(points) <= 1:
                 continue
 
-            # # Spot the first real date that is not "INITIAL_ZERO" that represents the first actual recipe version
-            # first_real_date = next(
-            #     (d for d, _ in filtered_points if d != "0000-00-00T00:00:00.000+00:00"), None
-            # )
-
-            # # Get the y value for the first real date
-            # first_real_y = next(y for d, y in filtered_points if d == first_real_date)
-            # points = [ft.LineChartDataPoint(x=0, y=0.0)]
-            # points.append(
-            #     ft.LineChartDataPoint(x=date_to_x[first_real_date], y=first_real_y)
-            # )
-
-            # # Iterate through the sorted points and create LineChartDataPoint objects for each date
-            # for date, y in filtered_points:
-            #     if date in ["0000-00-00T00:00:00.000+00:00", first_real_date]:
-            #         continue
-            #     points.append(ft.LineChartDataPoint(x=date_to_x[date], y=y))
-
             # Add an additional point to ensure the line extends to the right and the chart looks better
             last_point = points[-1]
             points.append(ft.LineChartDataPoint(x=last_point.x + 1, y=last_point.y))
@@ -292,7 +319,7 @@ class StatisticsView:
             ft.ChartAxisLabel(
                 label=ft.Container(
                     content=(
-                        ft.Text(f"Recipe {i}", color="black") if i > 0 else ft.Text("")
+                        ft.Text(f"{i}", color="black") if i > 0 else ft.Text("")
                     ),
                     padding=ft.padding.only(top=10),
                 ),
@@ -373,7 +400,7 @@ class StatisticsView:
                 labels=x_labels,
                 labels_size=50,
                 title=ft.Text(
-                    "Time", size=16, color=Styles.CHART_TEXT_PERC_AND_TIME_COLOR
+                    "Saved recipes", size=16, color=Styles.CHART_TEXT_PERC_AND_TIME_COLOR
                 ),
                 title_size=20,
             ),
@@ -405,12 +432,29 @@ class StatisticsView:
         )
         self.ingredient_container.content = self.ingredient_dropdown
 
+        buttons_row = ft.Row(
+            [
+                Styles.build_button(
+                    text="Confirm",
+                    icon=ft.Icons.CHECK,
+                    on_click=self.on_confirm
+                ),
+                Styles.build_button(
+                    text="Clear",
+                    icon=ft.Icons.CLEAR,
+                    on_click=self.on_clear,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=10
+        )
+        
         return ft.Column(
             controls=[
                 ft.Container(
                     content=ft.Column(
                         controls=[
-                            Styles.build_title("Make Your Selection"), # Main title
+                            Styles.build_title("Your Recipe Statistics"), # Main title
                             ft.Row(
                                 controls=[
                                     self.product_dropdown,
@@ -419,13 +463,7 @@ class StatisticsView:
                                 alignment=ft.MainAxisAlignment.CENTER,
                                 spacing=20,
                             ),
-                            ft.Container(
-                                content=ft.ElevatedButton(
-                                    text="Confirm", on_click=self.on_confirm
-                                ),
-                                alignment=ft.alignment.center,
-                                padding=20,
-                            ),
+                            buttons_row,
                             self.chart_container,  # Chart placeholder
                         ],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -438,4 +476,5 @@ class StatisticsView:
             ],
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             expand=True,
+            spacing=20
         )
