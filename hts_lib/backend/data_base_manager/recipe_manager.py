@@ -98,8 +98,9 @@ class RecipeManager:
                 print(f"Associated ingredient {id_ingredient} with product {idProduct}")
 
             elif response.status_code == 400:
-                recipe_ids.append(id_ingredient)
-                print(f"Allready associated {id_ingredient} with product {idProduct}")
+                recipe_search_response = RecipeManager.find_detail_product_ingredient(idProduct, id_ingredient)
+                recipe_data = recipe_search_response.json()
+                recipe_ids.append(recipe_data['data']['idRecipe'])
 
             else:    
                 print(f"Error: {response.status_code} while associating ingredient {id_ingredient}")
@@ -120,7 +121,7 @@ class RecipeManager:
                         and response.json() to access the response data.
         """
         
-        response = httpx.get(f"http://localhost:8087/user-management/recipe/deleteByProduct/?idProduct={idProduct}&idIngredient={idIngredient}")
+        response = httpx.delete(f"http://localhost:8087/user-management/recipe/deleteByProduct/?idProduct={idProduct}&idIngredient={idIngredient}")
         
         return response
     
@@ -138,5 +139,22 @@ class RecipeManager:
                         and response.json() to access the response data.
         """
         response = httpx.get(f"http://localhost:8087/user-management/recipe/list?page=1&size=10&orderBy&orderType&id={idProduct}")
+
+        return response
+    
+    @staticmethod
+    def find_detail_product_ingredient(idProduct, idIngredient):
+        """
+        Searches for the ingredients related to a product.
+
+        Args:
+        idProduct (int):     The number of the product beeing associated.
+
+        Returns:
+        httpx.Response: The HTTP response object returned by the API request.
+                        Use response.status_code to check for success,
+                        and response.json() to access the response data.
+        """
+        response = httpx.get(f"http://localhost:8087/user-management/recipe/detailRecipeByProduct?idProduct={idProduct}&idIngredient={idIngredient}")
 
         return response

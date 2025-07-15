@@ -1,4 +1,4 @@
-from frontend.src.add_product_table.table_ui.ingredient_manager  import IngredientManager
+from frontend.src.add_product_table.table_ui.ingredient_row_manager  import IngredientRowManager
 
 
 class DataFiller:
@@ -13,14 +13,14 @@ class DataFiller:
     @staticmethod
     def fill_rows_from_data(
         ingredient_data: dict[str, float],
-        ingredient_manager: "IngredientManager"
+        ingredient_manager: "IngredientRowManager"
     ) -> None:
         """
         Receive a dictionary with ingredients and percentages, and fill in the lines in the UI.
 
         Args:
             ingredient_data (dict[str, float]): Dictionary with name and percentage of ingredients.
-            ingredient_manager (IngredientManager): Instance of the ingredient manager.
+            ingredient_manager (IngredientRowManager): Instance of the ingredient manager.
         """
 
         ingredient_manager.clear_ingredient_rows()
