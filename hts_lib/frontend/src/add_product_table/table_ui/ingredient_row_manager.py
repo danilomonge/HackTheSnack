@@ -1,10 +1,12 @@
 import flet as ft
 from frontend.src.add_product_table.logic.input_validator import InputValidator
 from frontend.src.add_product_table.logic.percentage_adjuster import PercentageAdjuster
+from backend.data_base_manager.ingredient_manager import IngredientManager
+from backend.translation import Translation
 from frontend.src.styles import Styles
 from frontend.src.create_result_table.result_table_ui import RecipeResultUI
 
-class IngredientManager:
+class IngredientRowManager:
     """
     Manages ingredient rows in a table.
 
@@ -24,6 +26,7 @@ class IngredientManager:
             product_name (ft.TextField): The field for the product name.
         """
         self.ingredients = []
+        self.deleted_ingredient_ids = []
         self.quantity_table = quantity_table
         self.product_name = product_name
         self.page = page
@@ -143,7 +146,7 @@ class IngredientManager:
         percent_section = self.percent_section(percent_input)
 
         row = self.ingredient_row(
-            name_input, percent_section, lambda: self.remove_ingredient_row(row)
+            name_input, percent_section, lambda: self.remove_ingredient_row(row, name_input)
         )
 
         self.ingredients.append(row)
@@ -157,13 +160,23 @@ class IngredientManager:
         if self.on_user_input_change: 
             self.on_user_input_change(None)
 
-    def remove_ingredient_row(self, row: ft.Container):
+    def remove_ingredient_row(self, row: ft.Container, name_input: ft.TextField):
         """
         Removes a row from both the ingredient list and the UI.
 
         Args:
             row (ft.Container): The ingredient row to remove.
         """
+        ingredient_name = name_input.value
+
+        ingredient_response = IngredientManager.find_ingredient(ingredient_name)
+        ingredient_data = ingredient_response.json()
+        ingredient_id = Translation.get_ingredient_id_by_name(ingredient_data)
+        
+        if ingredient_id is not None:
+            if ingredient_id not in self.deleted_ingredient_ids:
+                self.deleted_ingredient_ids.append(ingredient_id)
+
         self.ingredients.remove(row)
         self.quantity_table.controls.remove(row)
         self.quantity_table.update()
