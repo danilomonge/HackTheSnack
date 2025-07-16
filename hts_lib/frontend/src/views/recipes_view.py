@@ -15,13 +15,20 @@ class RecipesView:
         self.recipes_row = ft.Row(
             controls=[],
             wrap=True, 
-            spacing=20,  
-            width=660,
+            spacing=20,
+            alignment=ft.MainAxisAlignment.START, 
         )
+        
         self.recipes_container = ft.Column(
-            controls=[self.recipes_row],
+            controls=[
+                ft.Container(
+                    content=self.recipes_row,
+                    alignment=ft.alignment.center  
+                )
+            ],
             expand=True,
             scroll=ft.ScrollMode.ALWAYS,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
     def load_recipes(self):
@@ -105,8 +112,8 @@ class RecipesView:
                     border_radius=Styles.BORDER_RADIUS,
                     padding=10,
                     margin=5,
-                    width=190,
-                    height=180,
+                    width=250,
+                    height=200,
                 ),
                 on_tap=self.create_recipe_handler(title)
             )
