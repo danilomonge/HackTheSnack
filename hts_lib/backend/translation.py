@@ -152,3 +152,52 @@ class Translation:
             }
             for name, data in latest_evaluations.items()
         }
+    
+    @staticmethod
+    def get_all_evaluations(product_id) -> dict[str, dict[str, dict[str, float]]]:
+        """
+        Retrieves all evaluations for a given product ID, grouped by date.
+
+        Args:
+            product_id (int): The ID of the product to retrieve evaluations for.
+
+        Returns:
+            dict[str, dict[str, dict[str, float]]]: A dict where:
+                - key is the evaluation date (str)
+                - value is a dict of ingredient names to their statistics:
+                    {
+                        "2025-01-15": {
+                            "Tomato": {"mean": 12.5, "variation": 1.2},
+                            "Cheese": {"mean": 5.0, "variation": 0.8},
+                            ...
+                        },
+                        "2025-01-10": {
+                            ...
+                        }
+                    }
+        """
+        evaluation_response = EvaluationManager.find_evaluation_product_ingredient(product_id, 0)
+        evaluation_data = evaluation_response.json()
+        
+        evaluations_by_date = {}
+        for entry in evaluation_data.get("data", []):
+            # Get the date and format it to YYYY-MM-DD
+            date_str = entry["evaluationDate"]
+            try:
+                date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f%z")
+                formatted_date = date.strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+
+            # Initialize the date dict if it doesn't exist
+            if formatted_date not in evaluations_by_date:
+                evaluations_by_date[formatted_date] = {}
+
+            # Add the ingredient data to that date
+            ingredient_name = entry["ingredientName"]
+            evaluations_by_date[formatted_date][ingredient_name] = {
+                "mean": round(entry["ingredientMeanPercentage"], 2),
+                "variation": round(entry["ingredientStdPercentage"], 2)
+            }
+
+        return evaluations_by_date
