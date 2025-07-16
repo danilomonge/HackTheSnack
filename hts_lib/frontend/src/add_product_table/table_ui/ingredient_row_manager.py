@@ -1,9 +1,12 @@
 import flet as ft
 from frontend.src.add_product_table.logic.input_validator import InputValidator
 from frontend.src.add_product_table.logic.percentage_adjuster import PercentageAdjuster
+from backend.data_base_manager.ingredient_manager import IngredientManager
+from backend.translation import Translation
 from frontend.src.styles import Styles
+from frontend.src.create_result_table.result_table_ui import RecipeResultUI
 
-class IngredientManager:
+class IngredientRowManager:
     """
     Manages ingredient rows in a table.
 
@@ -23,6 +26,7 @@ class IngredientManager:
             product_name (ft.TextField): The field for the product name.
         """
         self.ingredients = []
+        self.deleted_ingredient_ids = []
         self.quantity_table = quantity_table
         self.product_name = product_name
         self.page = page
@@ -58,7 +62,7 @@ class IngredientManager:
             hint_text="00.00",
             width=120,
             suffix_text="%",
-            suffix_style=ft.TextStyle(color=Styles.TEXT_COLOR),
+            suffix_style=ft.TextStyle(),
             keyboard_type=ft.KeyboardType.NUMBER,
             on_change=InputValidator.fix_input_while_typing(last_valid, page, self.on_user_input_change),
             data={"last_valid": last_valid},
@@ -142,7 +146,7 @@ class IngredientManager:
         percent_section = self.percent_section(percent_input)
 
         row = self.ingredient_row(
-            name_input, percent_section, lambda: self.remove_ingredient_row(row)
+            name_input, percent_section, lambda: self.remove_ingredient_row(row, name_input)
         )
 
         self.ingredients.append(row)
@@ -156,13 +160,23 @@ class IngredientManager:
         if self.on_user_input_change: 
             self.on_user_input_change(None)
 
-    def remove_ingredient_row(self, row: ft.Container):
+    def remove_ingredient_row(self, row: ft.Container, name_input: ft.TextField):
         """
         Removes a row from both the ingredient list and the UI.
 
         Args:
             row (ft.Container): The ingredient row to remove.
         """
+        ingredient_name = name_input.value
+
+        ingredient_response = IngredientManager.find_ingredient(ingredient_name)
+        ingredient_data = ingredient_response.json()
+        ingredient_id = Translation.get_ingredient_id_by_name(ingredient_data)
+        
+        if ingredient_id is not None:
+            if ingredient_id not in self.deleted_ingredient_ids:
+                self.deleted_ingredient_ids.append(ingredient_id)
+
         self.ingredients.remove(row)
         self.quantity_table.controls.remove(row)
         self.quantity_table.update()
@@ -173,29 +187,26 @@ class IngredientManager:
     def clear_all(self):
         """
         Clears all ingredient rows and the product name from the table and resets the list.
+        Also removes any generated recipe from the results section.
         """
+        
+        # Clear ingredients and product name
         self.ingredients.clear()
-        self.product_name.value = "" 
+        self.product_name.value = ""
         self.quantity_table.controls.clear()
-
-        recipe_to_remove = []
-
-        if hasattr(self.page, 'controls'):
-            recipe_to_remove = [
-                control for control in self.page.controls #type: ignore
-                if isinstance(control, ft.Container) and 
-                any(isinstance(text, ft.Text) and text.value == "Generated Recipe" 
-                    for text in getattr(control.content, 'controls', []))
-            ]
-        for recipe in recipe_to_remove:
-            self.page.controls.remove(recipe) # type: ignore
-
-        if self.on_user_input_change:  # NEW
+        
+        # Clear the generated recipe using the new static method
+        RecipeResultUI.clear_current_result(self.page)
+        
+        # Trigger user input change callback
+        if self.on_user_input_change:
             self.on_user_input_change(None)
-
+        
+        # Update the UI
         self.quantity_table.update()
         self.product_name.update()
         self.page.update()
+
     
     def clear_ingredient_rows(self):
         """

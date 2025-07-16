@@ -1,12 +1,12 @@
 import flet as ft
-from frontend.src.add_product_table.table_ui.ingredient_manager import IngredientManager
+from frontend.src.add_product_table.table_ui.ingredient_row_manager import IngredientRowManager
 from frontend.src.add_product_table.logic.input_validator import InputValidator
 from frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 from frontend.src.product_submit_handler import ProductSubmitHandler
 from frontend.src.styles import Styles
 from frontend.src.product_action_handler import ProductActionHandler
 from frontend.src.add_product_table.table_ui.autofill_confirmation_window import AutofillConfirmationWindow
-from backend.data_base_manager.product_manager import ProductManager
+from backend.data_base_manager.recipe_manager import RecipeManager
 
 
 class ProductTableUI:
@@ -44,25 +44,24 @@ class ProductTableUI:
         self.product_name = ft.TextField(
             label="Product Name",
             hint_text="e.g. Fruit Yogurt",
-            width=400,
             **style
         )
         self.product_name.on_change = self.on_user_input_change
 
-        self.ingredient_manager = IngredientManager(
+        self.ingredient_manager = IngredientRowManager(
             self.ingredient_rows,
             self.product_name,
             self.page,
             on_user_input_change = self.on_user_input_change
         )
 
-        self.search_button = Styles.primary_button(
+        self.search_button = Styles.build_button(
                                     text="Search",
                                     on_click=self.on_find_product_click,
                                     icon=ft.Icons.SEARCH,
                                 )
         
-        self.save_button = Styles.primary_button(
+        self.save_button = Styles.build_button(
             text="Save",
             on_click=self.on_save_recipe_click,
             icon=ft.Icons.CREATE,
@@ -70,6 +69,8 @@ class ProductTableUI:
         self.save_button.disabled = True
 
         self.feedback = ft.Text(value="", color=Styles.RED_COLOR, size=12, weight=ft.FontWeight.BOLD)
+
+        self.loading_indicator = ft.ProgressBar(visible=False, color=Styles.LOADINGBAR_COLOR, bgcolor= Styles.LOADINGBAR_BACKGROUNDCOLOR)
 
         self.autofill_dialog_handler = AutofillConfirmationWindow(
             self.page,
@@ -130,18 +131,25 @@ class ProductTableUI:
 
         Delegates validation, feedback and recipe generation to ProductSubmitHandler.
         """
+        self.loading_indicator.visible = True
+        self.page.update()
+
         result = ProductSubmitHandler.handle_submit(
             self.product_name,
             self.ingredient_manager.ingredients,
             self.feedback,
             self.page,
-            self.store_submission_results
+            self.store_submission_results,
+            self.loading_indicator
         )
+
+        self.loading_indicator.visible = False
+        self.page.update()
 
         if result:  # Only if submit was successful
             self.is_submitted = True
             self.update_save_button_state(enabled=True)
-            self.page.update()
+            
 
         return result
     
@@ -152,6 +160,9 @@ class ProductTableUI:
         Stores recipe and evaluation information in the database
         """
         self.update_save_button_state(enabled=False)
+        delete_ingredients = self.ingredient_manager.deleted_ingredient_ids
+        ProductActionHandler.handle_delete_ingredients(self.product_id, delete_ingredients)
+        self.ingredient_manager.deleted_ingredient_ids.clear()
         
         return ProductActionHandler.handle_save_new_recipe(self.product_name, 
                                                         self.result_dict, 
@@ -196,9 +207,7 @@ class ProductTableUI:
             content=ft.Column(
                 [
                     ft.Container(
-                        Styles.build_subtitle(
-                            "Enter product name"
-                        ),
+                        Styles.build_subtitle("Enter product name"),
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
@@ -235,15 +244,29 @@ class ProductTableUI:
             content=ft.Column(
                 [
                     Styles.build_explanation(
-                        "List the ingredients from most to least used.",
+                        "List the ingredients from most to least used. Only include a percentage if known; otherwise, leave it blank or use 0%.",
+                    ),
+                    ft.Divider(height=6, color="transparent"),
+                    Styles.build_explanation(
+                        "In total all ingredients must add up to 100%. An empty ingredient row needs to be lower or equal to the ingredient above and higher or equal to the ingredient below it. Therefore there must be enough space left for the undefined percentages, so that in total the recipe has 100%."
+                    ),
+                    ft.Divider(height=6, color="transparent"),
+                    Styles.build_explanation(
+                        "Error 101: The ingredients below an empty row must not total more than 50%. Please reduce the values below the empty ingredient."
                     ),
                     Styles.build_explanation(
-                        "Only include a percentage if known; otherwise, leave it blank or use 0%."
+                        "Error 102: There is not enough space left for the empty fields based on the values that follow them. Please lower the values that come after empty fields."
+                    ),
+                    Styles.build_explanation(
+                        "Error 103: The total is already 100%, but there are still empty ingredient values. Please reduce one or more percentages."
+                    ),
+                    Styles.build_explanation(
+                        "Error 104: This is an invalid position for empty or zero ingredients. Try changing their order or erasing them."
                     ),
                 ],
                 spacing=5,
-                alignment=ft.MainAxisAlignment.CENTER,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.START,
+                horizontal_alignment=ft.CrossAxisAlignment.START,
             ),
             alignment=ft.alignment.center,
             padding=ft.padding.symmetric(vertical=6, horizontal=10),
@@ -304,18 +327,18 @@ class ProductTableUI:
         return ft.Container(
             content=ft.Row(
                 [
-                    Styles.primary_button(
+                    Styles.build_button(
                         "Add Ingredient",
                         icon=ft.Icons.ADD,
                         on_click=lambda e: self.on_add_click(),
                     ),
 
-                    Styles.primary_button(
+                    Styles.build_button(
                         "Submit Product",
                         icon=ft.Icons.ANALYTICS,
                         on_click=lambda e: self.on_submit_click(),
                     ),
-                    Styles.primary_button(
+                    Styles.build_button(
                         "Clear All",
                         icon=ft.Icons.CLEAR,
                         on_click=lambda e: (self.on_clearall_click(), self.on_add_click()),
@@ -334,27 +357,30 @@ class ProductTableUI:
         Returns:
             ft.Container: The complete UI layout ready to be added to the page.
         """
-        # Input section stays the same, just wrapped in a container
+
         input_section = ft.Container(
             content=ft.Column(
                 [
                     Styles.build_title("Analyze a product"),
                     self.build_name_input(),
-                    Styles.primary_button("Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO), 
+                    Styles.build_button("Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO), 
                     self.instruction_container,
                     self.build_table_header(),
                     self.ingredient_rows,
                     self.feedback,
                     self.build_table_buttons(),
+                    ft.Container(
+                        content=self.loading_indicator,
+                        alignment=ft.alignment.center,
+                        padding=10,
+                    ),
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
             ),
             width=700,  
         )
-
-        # Container for results that will be filled later
-        # In ProductTableUI.__init__, create a placeholder
+        
         self.results_section = ft.Container(
             content=ft.Column(
                 [
@@ -364,6 +390,7 @@ class ProductTableUI:
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
+                height=850,
             ),
             width=700,
             padding=ft.padding.only(top=0, left=20, right=20, bottom=20),
@@ -374,11 +401,11 @@ class ProductTableUI:
                 [
                     ft.Container(
                         content=input_section,
-                        col={"sm": 12, "md": 6, "lg": 6},  # Full width on small, half on medium+
+                        col={"sm": 12, "md": 12, "lg": 12, "xl":6}, 
                     ),
                     ft.Container(
                         content=self.results_section,
-                        col={"sm": 12, "md": 6, "lg": 6},  # Full width on small, half on medium+
+                        col={"sm": 12, "md": 12, "lg": 12, "xl":6},
                     ),
                 ],
                 vertical_alignment=ft.CrossAxisAlignment.START,
@@ -388,5 +415,5 @@ class ProductTableUI:
             padding=20,
             bgcolor=Styles.BACKGROUND_COLOR,
         )
-    
-    
+
+

@@ -36,7 +36,8 @@ class ProductSubmitHandler:
         ingredient_rows,
         feedback_text,
         page,
-        store_values_callback
+        store_values_callback,
+        loading_indicator
     ) -> tuple[str, dict[str, float | None]] | None:
         """
         Validates the input and returns the product data if valid.
