@@ -202,46 +202,6 @@ class Translation:
 
         return evaluations_by_date
     
-    @staticmethod
-    def collect_product_list() -> list[str]:
-        """
-        Sends a Product GET request, parses a result JSON from a find_product_list service 
-        and returns a list with all product names.
-        Returns:
-            product_list: List of all product names in the database
-        """
-        product_list = []
-        response = ProductManager.find_product_list("")
-        product_data = response.json()
-
-        for result in product_data.get("data", []):
-            product_name = result.get("name")
-
-            if product_name is not None:
-                product_list.append(product_name)
-
-        return product_list
-    
-    @staticmethod
-    def collect_product_dict() -> dict[str, int]:
-        """
-        Sends a Product GET request, parses a result JSON from a find_product_list service 
-        and returns a list with all product names.
-        Returns:
-            product_dictt: Dictt of all product names matched to their ids in the database
-        """
-        product_dict = {}
-        response = ProductManager.find_product_list("")
-        product_data = response.json()
-
-        for result in product_data.get("data", []):
-            product_name = result.get("name")
-            product_id = result.get("id")
-
-            if product_name is not None and product_id is not None:
-                product_dict[product_name] = product_id
-
-        return product_dict
 
 
     @staticmethod
