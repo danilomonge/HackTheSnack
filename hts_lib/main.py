@@ -13,6 +13,8 @@ from frontend.src.navbar import NavigationBar
 from frontend.src.views.about_view import AboutView
 from frontend.src.views.home_view import HomeView
 from frontend.src.views.recipes_view import RecipesView
+from frontend.src.views.statistics_view import StatisticsView
+
 
 
 def main(page: ft.Page):
@@ -35,6 +37,7 @@ def main(page: ft.Page):
     about_view = AboutView(page)
     home_view = HomeView(page)
     recipes_view = RecipesView(page)
+    statistics_view = StatisticsView(page)
 
     def route_change(e: ft.RouteChangeEvent):
         """
@@ -83,6 +86,16 @@ def main(page: ft.Page):
                     ],
                 )
             )
+        elif page.route == "/statistics":
+            page.views.append(
+                ft.View(
+                    "/statistics",
+                    [
+                        navbar.build(),
+                        statistics_view.build(),
+                    ],
+                )
+            )
         else:
             page.views.append(
                 ft.View(
@@ -93,9 +106,9 @@ def main(page: ft.Page):
                     ],
                 )
             )
-        
+
         page.update()
-    
+
     page.on_route_change = route_change
     page.go("/")  
 

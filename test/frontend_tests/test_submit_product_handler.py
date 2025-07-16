@@ -54,6 +54,12 @@ def test_handle_submit():
     """
     
     handler_module.RecipeManager = FakeRecipeManager
+    
+    # Fake callback and loading indicator
+    def fake_store_values_callback(a, b, c, result_dict=None):
+        print(f"(Fake Callback) Result: {result_dict}")
+
+    fake_loading_indicator = object()
 
     # Case 1: valid input → should print success message
     name_input = testField("Pasta Box")
@@ -92,14 +98,14 @@ def test_handle_submit():
     msg = testText()
     page = testPage()
 
-    handler_module.ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page)  # type: ignore[arg-type]
+    handler_module.ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page, fake_store_values_callback, fake_loading_indicator)  # type: ignore[arg-type]
     assert msg.value == "✅ Product is valid. Recipe generated!"
     assert msg.color == "#67CD6B"
     assert page.updated  # type: ignore[arg-type]
 
     # Case 2: empty product name → should print error message
     name_input = testField("   ")
-    handler_module.ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page)  # type: ignore[arg-type]
+    handler_module.ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page, fake_store_values_callback, fake_loading_indicator)  # type: ignore[arg-type]
     assert msg.value == "⚠️ Please enter a product name."
     assert msg.color == "red"
 
@@ -121,7 +127,7 @@ def test_handle_submit():
         )
     )
     name_input = testField("Energy Bar")
-    handler_module.ProductSubmitHandler.handle_submit(name_input, [invalid_row, row2], msg, page)  # type: ignore[arg-type]
+    handler_module.ProductSubmitHandler.handle_submit(name_input, [invalid_row, row2], msg, page, fake_store_values_callback, fake_loading_indicator)  # type: ignore[arg-type]
     assert "missing a name" in msg.value
 
     # Case 4: total percentage > 100 → should print error message
@@ -158,5 +164,5 @@ def test_handle_submit():
         )
     )
     name_input = testField("Cheese Sandwich")
-    handler_module.ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page)  # type: ignore[arg-type]
+    handler_module.ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page, fake_store_values_callback, fake_loading_indicator)  # type: ignore[arg-type]
     assert "must not exceed 100%" in msg.value

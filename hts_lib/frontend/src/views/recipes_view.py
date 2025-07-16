@@ -1,7 +1,7 @@
 import flet as ft
 import random
 from backend.translation import Translation
-from styles import Styles
+from frontend.src.styles import Styles
 
 
 class RecipesView:

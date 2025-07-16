@@ -121,7 +121,7 @@ class RecipeManager:
                         and response.json() to access the response data.
         """
         
-        response = httpx.get(f"http://localhost:8087/user-management/recipe/deleteByProduct/?idProduct={idProduct}&idIngredient={idIngredient}")
+        response = httpx.delete(f"http://localhost:8087/user-management/recipe/deleteByProduct/?idProduct={idProduct}&idIngredient={idIngredient}")
         
         return response
     

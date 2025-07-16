@@ -8,10 +8,14 @@ class Styles:
     - Provides utility functions for creating styled buttons and inputs
     """
 
+    LOADINGBAR_COLOR = "#a3b188"
+    LOADINGBAR_BACKGROUNDCOLOR = "#f7f9f0" 
+    HOVER_COLOR = "#DEE5CA" 
+
 
     NAVBAR_COLOR = "#a3b188"
     NAVBAR_ACTIVE_COLOR = "#2b321f"
-    NAVBAR_HOVER_COLOR = "#9AA87E"
+    NAVBAR_HOVER_COLOR = "#8D9B72"
     NAVBAR_TEXT_COLOR = "#FFFFFF"
 
     INPUT_FILL_COLOR = "#f7f9f0" 
@@ -25,13 +29,23 @@ class Styles:
     BACKGROUND_COLOR = "#FFFFFF"
     TEXT_COLOR = "#2b321f"
     EXPLANATION_FONT_COLOR = "#2b321f"
-    EXPLANATION_FONT_SIZE = 16
+    EXPLANATION_FONT_SIZE = 14
+
+    ICON_COLOR = "#a3b188"
+    SEARCH_ICON_COLOR = "#2b321f"
+    CHART_TEXT_SIZE = 13
 
     BUTTON_FILL_COLOR = "#2b321f"
-    BUTTON_FILL_DISABLED_COLOR = "#979D8E"
+    BUTTON_FILL_DISABLED_COLOR = "#CBD4BB"
     BUTTON_TEXT_COLOR = "#FFFFFF"
+    BUTTON_FILL_DISABLED_COLOR = "#CBD4BB"
 
     BOX_COLOR = "#F0F4E3" 
+    
+    CHART_BACKGROUND_COLOR = "#f7f9f0" 
+    CHART_TEXT_PERC_AND_TIME_COLOR = "#979D8E"
+    CHART_GRID_COORDINATE_LINES_COLOR = "#979D8E"
+    
 
     RECIPE_CONTAINER_COLOR = "#a3b188"
 
@@ -46,11 +60,12 @@ class Styles:
     SUBTITLE_SIZE = 23
     BOX_SIZE = 18
     ICON_SIZE = 20
+    CHART_TEXT_SIZE = 16
 
     BORDER_RADIUS = 10
 
     @staticmethod
-    def primary_button(text, icon=None, on_click=None):
+    def build_button(text, icon=None, on_click=None):
         return ft.ElevatedButton(text+" ", icon=icon, on_click=on_click, color=Styles.BUTTON_TEXT_COLOR,bgcolor=Styles.BUTTON_FILL_COLOR,)
 
     ICON_BUTTON_SIZE = 20
@@ -62,6 +77,7 @@ class Styles:
                              on_click=on_click,
                              icon_color=color,
                              icon_size=Styles.ICON_BUTTON_SIZE,
+                             hover_color= Styles.HOVER_COLOR,
                              tooltip=tooltip)
 
     @staticmethod
@@ -139,5 +155,45 @@ class Styles:
             text,
             size=Styles.EXPLANATION_FONT_SIZE,
             color=Styles.EXPLANATION_FONT_COLOR,
+            text_align=ft.TextAlign.LEFT,
+        )
+        
+    @staticmethod
+    def build_explanation_subtitle(text: str):
+        """
+        Creates a bold subtitle text with the same style as explanations.
+        
+        Args:
+            text (str): The subtitle text to display.
+            
+        Returns:
+            ft.Text: A styled text element.
+        """
+        return ft.Text(
+            text,
+            size=Styles.EXPLANATION_FONT_SIZE,
+            weight=ft.FontWeight.BOLD,
+            color=Styles.EXPLANATION_FONT_COLOR,
+            text_align=ft.TextAlign.LEFT,
+        )
+    
+
+    @staticmethod
+    def build_description(text: str):
+        """
+        Creates an description text with specific styling.
+
+        Args:
+            text (str): The description text to display.
+
+        Returns:
+            ft.Text: A styled text element.
+        """
+        return ft.Text(
+            text,
+            size=Styles.EXPLANATION_FONT_SIZE,
+            weight=ft.FontWeight.BOLD,
+            color=Styles.EXPLANATION_FONT_COLOR,
             text_align=ft.TextAlign.CENTER,
+            font_family= "Arial",
         )
