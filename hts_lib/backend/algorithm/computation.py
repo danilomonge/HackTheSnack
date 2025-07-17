@@ -268,7 +268,7 @@ class Computation:
         """
 
         x0 = Computation._find_initial_point(
-            A, a, B, b, eps=1e-6
+            A, a, B, b, eps=1e-8
         )  # adding some slack to ensure we are _within_ the feasible region, not just on the boundary
         # not doing this will cause trouble down the line for the MCMC method, which will get stuck in a corner
 
