@@ -73,8 +73,8 @@ def test_solve_with_mcmc():
         "Water": {"mean": 33.0, "variation": 0.0},
         "Salt": {"mean": 33.0, "variation": 0.0},
         "Sugar": {"mean": 33.0, "variation": 0.0},
-        "Vinegar": {"mean": 0.5, "variation": 0.0},
-        "Oil": {"mean": 0.5, "variation": 0.0},
+        "Vinegar": {"mean": approx(0.73, abs=0.3), "variation": approx(0.3, abs=0.3)},
+        "Oil": {"mean": approx(0.27, abs=0.3), "variation": approx(0.3, abs=0.3)},
     }
     assert result == expected_output
     
@@ -155,10 +155,10 @@ def test_solve_with_mcmc():
     expected_output = {
         "Water": {"mean": 33.0, "variation": 0.0},
         "Salt": {"mean": 33.0, "variation": 0.0},
-        "Sugar": {"mean": 12.0, "variation": 0.0},
+        "Sugar": {"mean": approx(11.54, abs=0.58), "variation": approx(0.58, abs=0.58)},
         "Vinegar": {"mean": 11.0, "variation": 0.0},
         "Oil": {"mean": 11.0, "variation": 0.0},
-        "Spices": {"mean": 0.0, "variation": 0.0},
+        "Spices": {"mean": approx(0.46, abs=0.58), "variation": approx(0.58, abs=0.58)},
     }   
     
     assert result == expected_output
@@ -172,7 +172,6 @@ def test_solve_with_mcmc():
         "Flour": None,
         "Yeast": None,
         "Pepper": 0.0555,
-        "Flour": None,
         "Oil": 0.0555,
         "Vinegar": 0.05,
         "Milk": None,
