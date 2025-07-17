@@ -1,4 +1,5 @@
 import flet as ft
+from hts_lib.frontend.src.styles import Styles
 
 class AutofillConfirmationWindow:
     def __init__(self, page: ft.Page, on_confirm, on_cancel=None):
@@ -11,8 +12,20 @@ class AutofillConfirmationWindow:
             title=ft.Text("Product found!"),
             content=ft.Text("Do you want to autofill the ingredient table?"),
             actions=[
-                ft.TextButton("Yes", on_click=self._handle_confirm),
-                ft.TextButton("No", on_click=self._handle_cancel)
+                ft.TextButton(
+                    "Yes",
+                    on_click=self._handle_confirm,
+                    style=ft.ButtonStyle(
+                        color=Styles.ICON_COLOR,
+                    )
+                ),
+                ft.TextButton(
+                    "No",
+                    on_click=self._handle_cancel,
+                    style=ft.ButtonStyle(
+                        color=Styles.ICON_COLOR,
+                    )
+                )
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
