@@ -67,7 +67,7 @@ class Computation:
         Q, S, Ut = np.linalg.svd(np.eye(D) - ut.T @ ut)
 
         S[S < 1e-12] = 0  # set numerically zero to actually zero
-        Q[np.abs(Q) < 1e-26] = 0  # do the same for the directions
+        Q[np.abs(Q) < 1e-16] = 0  # do the same for the directions
         R = Q[:, S != 0]  # only keep directions with nonzero singular value
         S = np.sqrt(S[S != 0])
 
@@ -268,7 +268,7 @@ class Computation:
         """
 
         x0 = Computation._find_initial_point(
-            A, a, B, b, eps=1e-6
+            A, a, B, b, eps=1e-8
         )  # adding some slack to ensure we are _within_ the feasible region, not just on the boundary
         # not doing this will cause trouble down the line for the MCMC method, which will get stuck in a corner
 
@@ -299,7 +299,13 @@ class Computation:
         xi = x0
 
         for i in tqdm(range(num_iter - 1)):
-            xi = Computation._project_and_sample(xi, sample(), A, a)
+            # sample a random direction that respects equality constraints
+            s = sample()
+            _, upper, lower, _ = Computation._constrain_reduction(xi, s, A, a)
+            # only move if the direction allows non-zero movement (to avoid NaNs and overflows)
+            if upper - lower > 1e-8:
+                xi = Computation._point_construction(xi, upper, lower, s)
+            # store current sample (even if identical to previous)
             samples[i + 1, :] = xi
 
         return samples[0::thinning, :]
