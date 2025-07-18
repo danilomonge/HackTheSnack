@@ -1,7 +1,5 @@
 import sys
 
-sys.dont_write_bytecode = True
-
 
 def prepare_constraints_dict(input_dict):
     """

@@ -1,7 +1,6 @@
 import sys
 import os
 
-sys.dont_write_bytecode = True
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from hts_lib.frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder

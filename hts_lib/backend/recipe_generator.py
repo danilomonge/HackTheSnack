@@ -1,7 +1,4 @@
 import sys
-
-sys.dont_write_bytecode = True
-
 import numpy as np
 
 from .input.constraints_preparation import prepare_constraints_dict
