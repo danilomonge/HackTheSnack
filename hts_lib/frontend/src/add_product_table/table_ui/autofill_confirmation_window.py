@@ -1,5 +1,5 @@
 import flet as ft
-from hts_lib.frontend.src.styles import Styles
+from frontend.src.styles import Styles
 
 class AutofillConfirmationWindow:
     def __init__(self, page: ft.Page, on_confirm, on_cancel=None):
