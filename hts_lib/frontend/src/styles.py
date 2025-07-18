@@ -47,6 +47,8 @@ class Styles:
     CHART_GRID_COORDINATE_LINES_COLOR = "#979D8E"
     
 
+    RECIPE_CONTAINER_COLOR = "#a3b188"
+
 
     FEEDBACK_FONT_SIZE = 16
     # Red -> error and delete button
