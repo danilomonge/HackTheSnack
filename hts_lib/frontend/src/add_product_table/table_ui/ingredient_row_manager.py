@@ -151,6 +151,7 @@ class IngredientRowManager:
 
         self.ingredients.append(row)
         self.quantity_table.controls.append(row)
+        
         try:
             self.quantity_table.update()
         except AssertionError:
@@ -165,7 +166,6 @@ class IngredientRowManager:
 
         Args:
             row (ft.Container): The ingredient row to remove.
-            name_input (ft.TextField): The input field for the ingredient name.
         """
         ingredient_name = name_input.value
 
