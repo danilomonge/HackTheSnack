@@ -107,6 +107,7 @@ class AboutView:
                     ft.Container(
                         content=ft.Column(
                             controls=[
+                                Styles.build_button("Github Repository", ft.Icons.OPEN_IN_NEW, lambda e: self.open_github("https://github.com/danilomonge/HackTheSnack")),
                                 Styles.build_explanation_subtitle("A smart app to explore, create, and save recipes"),
                                 Styles.build_explanation(
                                     "This app uses the Slice Sampling algorithm, an efficient technique within the Markov Chain Monte Carlo (MCMC) framework, "
