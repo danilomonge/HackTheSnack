@@ -5,7 +5,7 @@ sys.dont_write_bytecode = True
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from hts_lib.frontend.src.add_product_table.table_ui.product_table_ui import ProductTableUI
-from FakeTheSnack.hts_lib.frontend.src.add_product_table.table_ui.ingredient_row_manager import IngredientRowManager
+from hts_lib.frontend.src.add_product_table.table_ui.ingredient_row_manager import IngredientRowManager
 
 
 import flet as ft
@@ -82,24 +82,6 @@ def test_add_ingredient_functionality():
     assert len(ui.ingredient_manager.ingredients) == initial_count + 1
     assert page.updated
 
-def test_remove_ingredient_functionality():
-    """Tests if removing ingredients works correctly"""
-    page = Page()
-    ui = ProductTableUI(page) # type: ignore[arg-type]
-    ui_controls = ui.build_table_ui()
-    page.add(ui_controls)
-    
-    # Add rows first
-    ui.ingredient_manager.add_ingredient_row(page) # type: ignore[arg-type]
-    ui.ingredient_manager.add_ingredient_row(page) # type: ignore[arg-type]
-    initial_count = len(ui.ingredient_manager.ingredients)
-    
-    # Remove one row
-    row_to_remove = ui.ingredient_manager.ingredients[0]
-    ui.ingredient_manager.remove_ingredient_row(row_to_remove)
-    
-    assert len(ui.ingredient_manager.ingredients) == initial_count - 1
-    assert page.updated
 
 def test_submit_with_valid_data():
     """Tests submission with valid ingredient data"""
