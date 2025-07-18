@@ -151,11 +151,11 @@ class IngredientRowManager:
 
         self.ingredients.append(row)
         self.quantity_table.controls.append(row)
-        #self.quantity_table.update()
+        
         try:
             self.quantity_table.update()
         except AssertionError:
-            pass  # Ignoriere den Fehler vorerst
+            pass 
 
         if self.on_user_input_change: 
             self.on_user_input_change(None)
@@ -181,7 +181,7 @@ class IngredientRowManager:
         self.quantity_table.controls.remove(row)
         self.quantity_table.update()
 
-        if self.on_user_input_change:  # NEW
+        if self.on_user_input_change: 
             self.on_user_input_change(None)
 
     def clear_all(self):
