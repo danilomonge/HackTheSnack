@@ -2,7 +2,6 @@ import sys
 import os
 import pytest
 
-sys.dont_write_bytecode = True
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 from hts_lib.frontend.src.handle_nutritional_info import translate_to_english, get_nutrition_usda

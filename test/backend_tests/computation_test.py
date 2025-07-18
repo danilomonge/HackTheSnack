@@ -1,9 +1,7 @@
 import sys
 import os
-sys.dont_write_bytecode = True
 import numpy as np
 
-sys.dont_write_bytecode = True
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from hts_lib.backend.algorithm.computation import Computation
