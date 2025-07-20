@@ -166,22 +166,30 @@ class IngredientRowManager:
 
         Args:
             row (ft.Container): The ingredient row to remove.
+            name_input (ft.TextField): The text field containing the ingredient name.
         """
         ingredient_name = name_input.value
 
-        ingredient_response = IngredientManager.find_ingredient(ingredient_name)
-        ingredient_data = ingredient_response.json()
-        ingredient_id = Translation.get_ingredient_id_by_name(ingredient_data)
-        
-        if ingredient_id is not None:
-            if ingredient_id not in self.deleted_ingredient_ids:
-                self.deleted_ingredient_ids.append(ingredient_id)
+        try:
+            if ingredient_name: 
+                ingredient_response = IngredientManager.find_ingredient(ingredient_name)
+                ingredient_data = ingredient_response.json()
+                
+                if isinstance(ingredient_data, dict) and 'data' in ingredient_data:
+                    ingredient_id = Translation.get_ingredient_id_by_name(ingredient_data)
+                    if ingredient_id is not None and ingredient_id not in self.deleted_ingredient_ids:
+                        self.deleted_ingredient_ids.append(ingredient_id)
+        except Exception as e:
+            print(f"Error processing ingredient: {e}")
 
-        self.ingredients.remove(row)
-        self.quantity_table.controls.remove(row)
+        if row in self.ingredients:
+            self.ingredients.remove(row)
+        if row in self.quantity_table.controls:
+            self.quantity_table.controls.remove(row)
+            
         self.quantity_table.update()
 
-        if self.on_user_input_change: 
+        if self.on_user_input_change:
             self.on_user_input_change(None)
 
     def clear_all(self):
