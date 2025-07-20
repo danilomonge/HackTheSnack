@@ -30,7 +30,7 @@ class Constraints:
         a = np.zeros(number_of_ingredients + number_of_ingredients - 1)
 
         A[0:number_of_ingredients, 0:number_of_ingredients] = -np.eye(number_of_ingredients)
-        a[0:number_of_ingredients] = 0
+        a[0:number_of_ingredients] = -0.0001
 
         for i in range(number_of_ingredients - 1):
             A[number_of_ingredients + i, i + 1] = 1
