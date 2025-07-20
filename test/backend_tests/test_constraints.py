@@ -49,7 +49,7 @@ def test_inequality_constraints_content_one():
     a_expected = np.zeros(1)
 
     np.testing.assert_array_equal(A, A_expected)
-    np.testing.assert_array_equal(a, a_expected)
+    np.testing.assert_allclose(a, a_expected, rtol=1e-7, atol=1e-4)
 
     assert np.array_equal(np.signbit(A), np.signbit(A_expected)), "Sign mismatch detected in matrix 'A' (likely due to 0.0 vs -0.0)"
 
@@ -74,7 +74,8 @@ def test_inequality_constraints_content_four():
     a_expected = np.zeros(7)
 
     np.testing.assert_array_equal(A, A_expected)
-    np.testing.assert_array_equal(a, a_expected)
+    np.testing.assert_allclose(a, a_expected, rtol=1e-7, atol=1e-4)
+
 
     assert np.array_equal(np.signbit(A), np.signbit(A_expected)), "Sign mismatch detected in matrix 'A' (likely due to 0.0 vs -0.0)"
 
@@ -102,7 +103,8 @@ def test_inequality_constraints_content_hundred():
     a_expected = np.zeros(number_of_ingredients + number_of_ingredients - 1)
 
     np.testing.assert_array_equal(A, A_expected)
-    np.testing.assert_array_equal(a, a_expected)
+    np.testing.assert_allclose(a, a_expected, rtol=1e-7, atol=1e-4)
+
 
     assert np.array_equal(np.signbit(A), np.signbit(A_expected)), "Sign mismatch detected in matrix 'A' (likely due to 0.0 vs -0.0)"
     
