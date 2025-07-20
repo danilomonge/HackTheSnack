@@ -47,6 +47,7 @@ class ProductActionHandler:
             if not product_name:
                 feedback_text.value = "⚠️ Please enter a product name to search."
                 feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+                feedback_text.text_align = ft.TextAlign.CENTER
                 page.update()
                 return
             
@@ -56,17 +57,22 @@ class ProductActionHandler:
                 feedback_text.value = "✅ Product found."
                 feedback_text.color = Styles.GREEN_COLOR
                 feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+                feedback_text.text_align = ft.TextAlign.CENTER
             elif response.status_code == 404:
                 feedback_text.value = "❌ Product not found."
                 feedback_text.color = Styles.RED_COLOR
                 feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+                feedback_text.text_align = ft.TextAlign.CENTER
             else:
                 feedback_text.value = f"❌ Error {response.status_code}: {response.text}"
                 feedback_text.color = Styles.RED_COLOR
                 feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+                feedback_text.text_align = ft.TextAlign.CENTER
         except Exception as ex:
-            feedback_text.value = f"⚠️ Exception: {ex}"
+            feedback_text.value = ProductActionHandler.get_user_friendly_error_message(ex)
+            feedback_text.color = Styles.RED_COLOR
             feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+            feedback_text.text_align = ft.TextAlign.CENTER
 
         page.update()
 
@@ -89,6 +95,7 @@ class ProductActionHandler:
             if not product_name:
                 feedback_text.value = "⚠️ Please enter a product name to search."
                 feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+                feedback_text.text_align = ft.TextAlign.CENTER
                 page.update()
                 return
         
@@ -102,11 +109,14 @@ class ProductActionHandler:
                 feedback_text.value = "❌ Product not found."
                 feedback_text.color = Styles.RED_COLOR
                 feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+                feedback_text.text_align = ft.TextAlign.CENTER
                 page.update()
                 return False
         except Exception as ex:
-            feedback_text.value = f"⚠️ Exception: {ex}"
+            feedback_text.value = ProductActionHandler.get_user_friendly_error_message(ex)
+            feedback_text.color = Styles.RED_COLOR
             feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+            feedback_text.text_align = ft.TextAlign.CENTER
 
         page.update()
 
@@ -129,6 +139,7 @@ class ProductActionHandler:
             if not product_name:
                 feedback_text.value = "⚠️ Please enter a product name to create."
                 feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+                feedback_text.text_align = ft.TextAlign.CENTER
                 page.update()
                 return
             
@@ -139,13 +150,17 @@ class ProductActionHandler:
                 feedback_text.value = "✅ Product created successfully!"
                 feedback_text.color = Styles.GREEN_COLOR
                 feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+                feedback_text.text_align = ft.TextAlign.CENTER
             else:
                 feedback_text.value = f"❌ Error {response.status_code}: {response.text}"
                 feedback_text.color = Styles.RED_COLOR
                 feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+                feedback_text.text_align = ft.TextAlign.CENTER
         except Exception as ex:
-            feedback_text.value = f"⚠️ Exception: {ex}"
+            feedback_text.value = ProductActionHandler.get_user_friendly_error_message(ex)
+            feedback_text.color = Styles.RED_COLOR
             feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+            feedback_text.text_align = ft.TextAlign.CENTER
 
         page.update()
 
@@ -182,8 +197,10 @@ class ProductActionHandler:
                 DataFiller.fill_rows_from_data(recipe_dict, ingredient_manager)
             
         except Exception as ex:
-            feedback_text.value = f"⚠️ Exception: {ex}"
+            feedback_text.value = ProductActionHandler.get_user_friendly_error_message(ex)
+            feedback_text.color = Styles.RED_COLOR
             feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+            feedback_text.text_align = ft.TextAlign.CENTER
         
         page.update()
 
@@ -203,7 +220,7 @@ class ProductActionHandler:
                                 result_dict=result_dict)
 
         except Exception as ex:
-            print(f"⚠️ Exception: {ex}")
+            print(ProductActionHandler.get_user_friendly_error_message(ex))
 
     @staticmethod
     def handle_save_existing_recipe(product_id,
@@ -217,13 +234,25 @@ class ProductActionHandler:
             EvaluationManager.create_evaluation(product_id, ingredient_ids, recipe_ids, result_dict)
             
         except Exception as ex:
-            print(f"⚠️ Exception: {ex}")
+            print(ProductActionHandler.get_user_friendly_error_message(ex))
 
     @staticmethod
     def handle_delete_ingredients(product_id: int, ingredient_list: list[int]):
         
         for ingredient in ingredient_list:
             RecipeManager.delete_product_ingredient(product_id, ingredient)
+            
+    
+    @staticmethod
+    def get_user_friendly_error_message(ex: Exception) -> str:
+        """
+        Displays an error message when unable to connect to the database that is understandable to the user.
+        """
+        if "Connection refused" in str(ex) or "connection" in str(ex).lower():
+            return "⚠️ Could not connect to the database.\nPlease check your internet connection or try again later."
+        return f"⚠️ An unexpected error occurred. Details: {str(ex)}"
+            
+
 
         
 

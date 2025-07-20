@@ -48,9 +48,18 @@ class AboutView:
                 controls=[
                     Styles.build_title("About Hack The Snack"),
                     ft.Container(
-                        Styles.build_explanation(
-                            "We are a group of four students currently studying at the University of Tübingen. This semester we decided to take part in a team project, which is how this app came to be. \n" \
-                            "The app helps you analyze and generate recipes based on ingredient lists of products of your choice. It is designed to assist you in recreating your favorite food products at home."
+                        content=ft.Column(
+                            controls=[
+                                Styles.build_explanation_subtitle("Introduction"),
+                                ft.Divider(height=1, color="transparent"),
+                                Styles.build_explanation(
+                                    "We are a group of four students currently studying at the University of Tübingen. This semester we decided to take part in a team project, which is how this app came to be.\n"
+                                    "The app helps you analyze and generate recipes based on ingredient lists of products of your choice. It is designed to assist you in recreating your favorite food products at home."
+                                ),
+                            ],
+                            spacing=5,
+                            alignment=ft.MainAxisAlignment.START,
+                            horizontal_alignment=ft.CrossAxisAlignment.START,
                         ),
                         padding=20,
                         width=800,
