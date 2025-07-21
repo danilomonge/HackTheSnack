@@ -49,7 +49,7 @@ class RecipeGenerator:
         B, b = Constraints.build_equality_constraints(fixed_values, num_ingredients)
 
         mean_result, std_dev_result = Computation.compute_result(
-            A, a, B, b, num_iter=int(1e4), thinning=int(1e4)
+            A, a, B, b, num_iter=int(5e4), thinning=int(1e3)
         )
 
         if mean_result is None or std_dev_result is None:

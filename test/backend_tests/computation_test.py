@@ -87,7 +87,7 @@ def test_compute_result():
 
     """
 
-    mean, std = Computation.compute_result(A, a, B, b)
+    mean, std = Computation.compute_result(A, a, B, b,num_iter=int(4e4), thinning=int(1e3))
 
     assert np.all(np.isfinite(mean, std))        # values exist                   # type: ignore[arg-type]
     assert not np.all(np.isnan(mean, std))       # values are not NAN             # type: ignore[arg-type]
@@ -105,7 +105,7 @@ def test_compute_result_for_one_ingredient():
     B = np.array([[1]])
     b = np.array([1])
 
-    mean, std = Computation.compute_result(A, a, B, b)
+    mean, std = Computation.compute_result(A, a, B, b, num_iter=int(4e4), thinning=int(1e3))
 
 
     assert mean == np.array([100])
