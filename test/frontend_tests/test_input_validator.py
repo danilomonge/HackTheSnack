@@ -502,112 +502,6 @@ def test_check_total_if_filled():
     assert not page.updated
 
 
-def test_check_below_empty_not_over_50():
-    """
-    Tests the _check_below_empty_not_over_50 function from InputValidator.
-    """
-
-    class TestField:
-        def __init__(self, value):
-            self.value = value
-
-    class TestRow:
-        def __init__(self, name_value, perc_value):
-            self.content = type("Content", (), {})()
-            self.content.controls = [ # type: ignore[arg-type]
-                type("NameContainer", (), {"content": TestField(name_value)})(),
-                type("PercContainer", (), {
-                    "content": type("InnerRow", (), {
-                        "controls": [None, TestField(perc_value)]
-                    })()
-                })()
-            ]
-
-    class TestText:
-        def __init__(self):
-            self.value = ""
-            self.color = ""
-
-    class TestPage:
-        def __init__(self):
-            self.updated = False
-
-        def update(self):
-            self.updated = True
-
-    # Case 1: no empty quantity fields → always valid
-    message = TestText()
-    page = TestPage()
-    rows = [TestRow("A", "30"), TestRow("B", "40")]
-    result = InputValidator._check_below_empty_not_over_50(rows, message, page) # type: ignore[arg-type]
-    assert result is True
-    assert not page.updated
-
-    # Case 2: empty quantity field followed by subtotal ≤ 50 → valid
-    message = TestText()
-    page = TestPage()
-    rows = [TestRow("AA", ""), TestRow("X", "25"), TestRow("Y", "25")]
-    result = InputValidator._check_below_empty_not_over_50(rows, message, page) # type: ignore[arg-type]
-    assert result is True
-    assert not page.updated
-
-    # Case 3: empty quantity field followed by subtotal > 50 → invalid
-    message = TestText()
-    page = TestPage()
-    rows = [TestRow("W", ""), TestRow("X", "30"), TestRow("Y", "25"), TestRow("Z", "10")]
-    result = InputValidator._check_below_empty_not_over_50(rows, message, page) # type: ignore[arg-type]
-    assert result is False
-    assert "⚠️ Error 101:" in message.value
-    assert message.color == "red"
-    assert page.updated
-
-    # Case 4: multiple empty quantity fields, each followed by subtotal ≤ 50 → valid
-    message = TestText()
-    page = TestPage()
-    rows = [
-        TestRow("Z", ""), TestRow("A", "20"), TestRow("B", "25"),
-        TestRow("M", ""), TestRow("C", "10")
-    ]
-    result = InputValidator._check_below_empty_not_over_50(rows, message, page) # type: ignore[arg-type]
-    assert result is True
-    assert not page.updated
-
-    # Case 5: multiple empty quantity fields, one followed by subtotal > 50 → invalid
-    message = TestText()
-    page = TestPage()
-    rows = [
-        TestRow("D", ""), TestRow("A", "20"),
-        TestRow("P", ""), TestRow("B", "30"), TestRow("C", "30")
-    ]
-    result = InputValidator._check_below_empty_not_over_50(rows, message, page) # type: ignore[arg-type]
-    assert result is False
-    assert page.updated
-
-    # Case 6: all rows are empty quantity fields → no subtotal → valid
-    message = TestText()
-    page = TestPage()
-    rows = [TestRow("KK", ""), TestRow("PP", ""), TestRow("LL", "")]
-    result = InputValidator._check_below_empty_not_over_50(rows, message, page) # type: ignore[arg-type]
-    assert result is True
-    assert not page.updated
-
-    # Case 7: invalid percentage values (text, empty strings) → treated as 0.0 → still valid
-    message = TestText()
-    page = TestPage()
-    rows = [TestRow("L", ""), TestRow("X", "abc"), TestRow("Y", ""), TestRow("Z", "30")]
-    result = InputValidator._check_below_empty_not_over_50(rows, message, page) # type: ignore[arg-type]
-    assert result is True
-    assert not page.updated
-
-    # Case 8: empty list of rows → nothing to check → valid
-    message = TestText()
-    page = TestPage()
-    rows = []
-    result = InputValidator._check_below_empty_not_over_50(rows, message, page) # type: ignore[arg-type]
-    assert result is True
-    assert not page.updated
-
-
 def test_check_remaining_space_is_enough():
     """
     Tests the _check_remaining_space_is_enough function from InputValidator.
@@ -663,7 +557,7 @@ def test_check_remaining_space_is_enough():
     rows = [TestRow("90"), TestRow(""), TestRow("20")]  # remaining = 10, needed = 20
     result = InputValidator._check_remaining_space_is_enough(rows, message, page) # type: ignore[arg-type]
     assert result is False
-    assert message.value.startswith("⚠️ Error 102:")
+    assert message.value.startswith("⚠️ Error 101:")
     assert message.color == "red"
     assert page.updated
 
@@ -746,7 +640,7 @@ def test_check_no_empty_if_total_is_100():
     rows = [TestRow("70"), TestRow("30"), TestRow("")]
     result = InputValidator._check_no_empty_if_total_is_100(rows, message, page) # type: ignore[arg-type]
     assert result is False
-    assert message.value.startswith("⚠️ Error 103")
+    assert message.value.startswith("⚠️ Error 102")
     assert page.updated
 
     # Case 3: total < 100, with empty fields → valid

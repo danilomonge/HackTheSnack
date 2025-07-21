@@ -190,39 +190,6 @@ class InputValidator:
             return False
         return True
 
-    @staticmethod
-    def _check_below_empty_not_over_50(
-        rows: list[ft.Container], message_text: ft.Text, page: ft.Page
-    ) -> bool:
-        """
-        Ensures subtotal below a row with empty or invalid percentage does not exceed 50%.
-        """
-
-        found_empty = False
-        subtotal = 0.0
-
-        for row in rows:
-            perc_field = row.content.controls[1].content.controls[1]  # type: ignore
-
-            raw_value = (perc_field.value or "").strip()
-
-            try:
-                value = float(raw_value)
-            except ValueError:
-                value = None
-
-            if value is None or raw_value == "":
-                found_empty = True
-                subtotal = 0.0
-            elif found_empty:
-                subtotal += value
-                if subtotal > 50.0:
-                    message_text.value = "⚠️ Error 101: Please check your inputs again or read the instructions."
-                    message_text.color = "red"
-                    page.update()
-                    return False
-
-        return True
 
     @staticmethod
     def _check_remaining_space_is_enough(
@@ -266,7 +233,7 @@ class InputValidator:
         remaining = 100.0 - defined_total
 
         if total_needed_space > remaining:
-            message_text.value = "⚠️ Error 102: Please check your inputs again or read the instructions."
+            message_text.value = "⚠️ Error 101: Please check your inputs again or read the instructions."
             message_text.color = "red"
             page.update()
             return False
@@ -299,7 +266,7 @@ class InputValidator:
             total += value
 
         if has_empty and abs(total - 100.0) < 1e-6:
-            message_text.value = "⚠️ Error 103: Please check your inputs again or read the instructions."
+            message_text.value = "⚠️ Error 102: Please check your inputs again or read the instructions."
             message_text.color = "red"
             page.update()
             return False
@@ -389,7 +356,7 @@ class InputValidator:
                 and simulated[i - 1] is not None
                 and fill_value > round(simulated[i - 1], 5)
             ):
-                message_text.value = "⚠️ Error 104: Please check your inputs again or read the instructions."
+                message_text.value = "⚠️ Error 103: Please check your inputs again or read the instructions."
                 message_text.color = "red"
                 page.update()
                 return False
@@ -430,7 +397,6 @@ class InputValidator:
             lambda: InputValidator._check_total_not_exceed_100(total, message_text, page),
             lambda: InputValidator._check_percentage_order(percentages, message_text, page),
             lambda: InputValidator._check_total_if_filled(percentages, total, message_text, page),
-            lambda: InputValidator._check_below_empty_not_over_50(ingredient_rows, message_text, page),
             lambda: InputValidator._check_remaining_space_is_enough(ingredient_rows, message_text, page),
             lambda: InputValidator._check_no_empty_if_total_is_100(ingredient_rows, message_text, page),
             lambda: InputValidator._check_duplicate_ingredient_names(ingredient_rows, message_text, page),
