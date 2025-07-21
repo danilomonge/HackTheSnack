@@ -71,7 +71,7 @@ class RecipesView:
                 self.recipe_overlay.open = False
                 self.page.update()
             except Exception as ex:
-                print(f"Fehler beim Schließen: {ex}")
+                print(f"Error while closing: {ex}")
 
     def update_recipe_containers(self):
         """Update the recipe containers based on the filtered titles"""
