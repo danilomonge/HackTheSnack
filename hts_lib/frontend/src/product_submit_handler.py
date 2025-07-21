@@ -57,24 +57,30 @@ class ProductSubmitHandler:
         ):
             return None
 
-        # If valid, update UI feedback
-        feedback_text.value = "✅ Product is valid. Recipe generated!"
-        feedback_text.color = Styles.GREEN_COLOR
-        feedback_text.size = Styles.FEEDBACK_FONT_SIZE
-        page.update()
-        
         # Extract product name and ingredient dictionary
         product_name = (product_name_field.value or "").strip()
         ingredient_dict = IngredientDataBuilder.build_data_from_rows(ingredient_rows)
         
         # Generate the recipe using the RecipeGenerator from the backend
         result_dict = RecipeGenerator.generate_recipe(ingredient_dict)
+
+        # Set feedback message depending on result
+        if result_dict:
+            feedback_text.value = "✅ Product is valid. Recipe generated!"
+            feedback_text.color = Styles.GREEN_COLOR
+        else:
+            feedback_text.value = "❌ Unable to generate recipe with this input. Please try different values."
+            feedback_text.color = Styles.RED_COLOR
+
+        feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+        page.update()
         
-        #load results in frontend 
+        # Load results in frontend
         store_values_callback(None, None, None, result_dict = result_dict)
 
         # Display the recipe result
         RecipeResultUI.display_recipe_result(page, result_dict)
 
-        return result_dict # type: ignore
+        return result_dict  # type: ignore
+
 
