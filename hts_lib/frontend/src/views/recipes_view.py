@@ -33,9 +33,60 @@ class RecipesView:
 
     def load_recipes(self):
         """Load recipes from backend"""
-        self.recipe_titles = Translation.collect_product_dict()
+        try:
+            self.recipe_titles = Translation.collect_product_dict()
+            if not self.recipe_titles:
+                self.recipe_titles = {}
+                self.show_connection_error()
+        except Exception as e:
+            print(f"Error loading recipes: {e}")
+            self.recipe_titles = {}
+            self.show_connection_error()
+        
         self.filtered_titles = list(self.recipe_titles.keys())
         self.update_recipe_containers()
+
+    def show_connection_error(self):
+        """Shows an error message when database connection fails"""
+        self.recipes_row.controls.clear()
+        self.recipes_row.controls.append(
+            ft.Container(
+                content=ft.Column(
+                    controls=[
+                        ft.Icon(
+                            name=ft.Icons.ERROR_OUTLINE,
+                            size=40,
+                            color=Styles.RED_COLOR
+                        ),
+                        ft.Text(
+                            "Cannot connect to database",
+                            size=16,
+                            color=Styles.TEXT_COLOR,
+                            weight=ft.FontWeight.BOLD,
+                            text_align=ft.TextAlign.CENTER
+                        ),
+                        ft.Text(
+                            "Please check your connection and try again",
+                            size=14,
+                            color=Styles.TEXT_COLOR,
+                            text_align=ft.TextAlign.CENTER
+                        ),
+                        ft.ElevatedButton(
+                            "Retry",
+                            on_click=lambda _: self.load_recipes(),
+                            bgcolor=Styles.BOX_COLOR,
+                            color=Styles.TEXT_COLOR
+                        )
+                    ],
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=10
+                ),
+                padding=20,
+                bgcolor=Styles.RECIPE_CONTAINER_COLOR,
+                border_radius=Styles.BORDER_RADIUS
+            )
+        )
+        self.page.update()
 
     def filter_recipes(self, query):
         """
@@ -303,34 +354,71 @@ class RecipesView:
             recipe_id (int): The ID of the recipe to open.
             selected_version (str, optional): The version date to select. Defaults to None.
         """
-        recipe_title = self.get_recipe_title_by_id(recipe_id)
-        versions_data = Translation.get_all_evaluations(recipe_id) or {}
+        try:
+            recipe_title = self.get_recipe_title_by_id(recipe_id)
+            versions_data = {}
+            recipe_data = {}
 
-        sorted_versions = sorted(versions_data.keys(), reverse=True)
-        if not sorted_versions:
-            recipe_data = Translation.get_last_evaluation(recipe_id)
-            version_selector = None
-        else:
-            if not selected_version or selected_version not in versions_data:
-                selected_version = sorted_versions[0]
-            recipe_data = versions_data[selected_version]
-            version_selector = self.create_version_selector(recipe_id, sorted_versions, selected_version)
+            try:
+                versions_data = Translation.get_all_evaluations(recipe_id) or {}
+            except Exception as e:
+                print(f"Error loading versions: {e}")
 
-        ingredients_controls = self.create_ingredients_list(recipe_data)
-        overlay_content = self.build_overlay_content(recipe_title, ingredients_controls, version_selector)
+            sorted_versions = sorted(versions_data.keys(), reverse=True)
+            if not sorted_versions:
+                try:
+                    recipe_data = Translation.get_last_evaluation(recipe_id) or {}
+                except Exception as e:
+                    print(f"Error loading last evaluation: {e}")
+                version_selector = None
+            else:
+                if not selected_version or selected_version not in versions_data:
+                    selected_version = sorted_versions[0]
+                recipe_data = versions_data[selected_version]
+                version_selector = self.create_version_selector(recipe_id, sorted_versions, selected_version)
 
-        if self.recipe_overlay:
-            self.close_overlay()
+            ingredients_controls = self.create_ingredients_list(recipe_data)
+            overlay_content = self.build_overlay_content(recipe_title, ingredients_controls, version_selector)
 
-        self.recipe_overlay = ft.AlertDialog(
-            modal=True,
-            content=overlay_content,
-            bgcolor=Styles.BOX_COLOR,
-            content_padding=0
-        )
+            if self.recipe_overlay:
+                self.close_overlay()
 
-        self.page.overlay.append(self.recipe_overlay)
-        self.recipe_overlay.open = True
+            self.recipe_overlay = ft.AlertDialog(
+                modal=True,
+                content=overlay_content,
+                bgcolor=Styles.BOX_COLOR,
+                content_padding=0
+            )
+
+            self.page.overlay.append(self.recipe_overlay)
+            self.recipe_overlay.open = True
+            self.page.update()
+            
+        except Exception as e:
+            print(f"Error opening recipe overlay: {e}")
+            # Show error dialog
+            error_dialog = ft.AlertDialog(
+                modal=True,
+                title=ft.Text("Error", color=Styles.TEXT_COLOR),
+                content=ft.Text(
+                    "Could not load recipe details. Please try again later.",
+                    color=Styles.TEXT_COLOR
+                ),
+                actions=[
+                    ft.TextButton(
+                        "OK",
+                        on_click=lambda _: self.close_error_dialog(error_dialog)
+                    )
+                ],
+                bgcolor=Styles.BOX_COLOR
+            )
+            self.page.overlay.append(error_dialog)
+            error_dialog.open = True
+            self.page.update()
+
+    def close_error_dialog(self, dialog):
+        """Closes the error dialog"""
+        dialog.open = False
         self.page.update()
 
     def create_recipe_handler(self, title):
