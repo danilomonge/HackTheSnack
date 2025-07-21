@@ -251,7 +251,7 @@ class Computation:
 
 
     @staticmethod
-    def _MCMC(A, a, B, b, num_iter=int(1e7), thinning=int(int(1e5) / 100)):
+    def _MCMC(A, a, B, b, num_iter, thinning):
         """
         Runs the MCMC sampling algorithm under linear constraints.
 
@@ -267,12 +267,17 @@ class Computation:
             np.ndarray: Sampled feasible points after thinning.
         """
 
+        # ① Try with eps=1e-3 first
         x0 = Computation._find_initial_point(
-            A, a, B, b, eps=1e-8
+            A, a, B, b, eps=1e-3
         )  # adding some slack to ensure we are _within_ the feasible region, not just on the boundary
         # not doing this will cause trouble down the line for the MCMC method, which will get stuck in a corner
-
-        # If that fails, check if there’s one valid solution on the boundary
+        
+        # ② If that fails, retry with eps=1e-8
+        if x0 is None:
+            x0 = Computation._find_initial_point(A, a, B, b, eps=1e-8)
+            
+        # ③ If still no solution, try checking if there’s one valid solution on the boundary
         # In that case, check if it is the only valid solution (no direction to move in)
         if x0 is None:
             boundary_solution = Computation._handle_only_one_possible_initial_point(
@@ -311,7 +316,7 @@ class Computation:
         return samples[0::thinning, :]
 
     @staticmethod
-    def compute_result(A, a, B, b, num_iter=int(1e5), thinning=int(1e4)):
+    def compute_result(A, a, B, b, num_iter, thinning):
         """
         Runs the MCMC sampling algorithm and calculates the mean and var for each ingredient.
 
@@ -325,7 +330,7 @@ class Computation:
             - mean_sample (np.ndarray): Mean of the sample.
             - std_sample (np.ndarray): Standard deviation the sample.
         """
-        SAMPLES = Computation._MCMC(A, a, B, b, num_iter, thinning=int(int(1e5) / 100))
+        SAMPLES = Computation._MCMC(A, a, B, b, num_iter, thinning)
         if SAMPLES is None:  # adress None values
             print("⚠️ MCMC aborted: No valid samples.")
             return None, None
