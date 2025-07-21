@@ -262,7 +262,7 @@ class RecipeResultUI:
                 ft.Container(
                     width=16, height=16, bgcolor=color, border_radius=8, margin=ft.margin.only(right=8)
                 ),
-                ft.Text(f"{ingredient}: {mean:.1f}%", color=Styles.TEXT_COLOR, size=14),
+                ft.Text(f"{ingredient}: {mean:.2f}%", color=Styles.TEXT_COLOR, size=14),
             ], vertical_alignment=ft.CrossAxisAlignment.CENTER, spacing=6)
         )
 
