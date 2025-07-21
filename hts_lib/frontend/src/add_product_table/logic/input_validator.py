@@ -298,70 +298,7 @@ class InputValidator:
             seen.add(name)
 
         return True
-
-    @staticmethod
-    def _check_empty_position_valid(
-        rows: list[ft.Container], message_text: ft.Text, page: ft.Page
-    ) -> bool:
-        """
-        Checks if each empty or zero field can be filled without breaking the descending order constraint.
-
-        For each None or 0 field:
-        - Other empty/zero fields are filled with the next valid value below.
-        - The current one gets the remaining value: 100 - sum of the rest.
-        - It must not be greater than the field directly above it.
-        """
-
-        # Extract all percentage values from the rows, converts them to float and handles empty/zero as None
-        original = []
-        for row in rows:
-            perc_field = row.content.controls[1].content.controls[1]  # type: ignore
-            try:
-                value = float((perc_field.value or "").strip())
-                if value == 0:
-                    original.append(None)  # Treat 0 as empty
-                else:
-                    original.append(value)
-            except:
-                original.append(None)
-
-        # Skips already filled fields and processes only those that are None
-        for i, val in enumerate(original):
-            if val is not None:
-                continue
-
-            # Creates a copy of the original list to simulate filling
-            simulated = original[:]
-
-            # Fill all empty fields except the one with index i with their next valid value
-            for j in range(len(simulated)):
-                if j == i or simulated[j] is not None:
-                    continue
-                next_valid = next((x for x in simulated[j + 1:] if x is not None), None)
-                # If no valid value is found, use a small default value
-                simulated[j] = next_valid if next_valid is not None else 0.01
-
-
-            # Calculates the fill value for the current empty field by substracting 100 - the sum of all others
-            others_sum = sum(
-                v for j, v in enumerate(simulated) if j != i and v is not None
-            )
-            fill_value = round(100 - others_sum, 5)
-            original[i] = fill_value
-            simulated[i] = fill_value
-
-            # Compares the fill value with the previous field to ensure it does not exceed it
-            if (
-                i > 0
-                and simulated[i - 1] is not None
-                and fill_value > round(simulated[i - 1], 5)
-            ):
-                message_text.value = "⚠️ Error 103: Please check your inputs again or read the instructions."
-                message_text.color = "red"
-                page.update()
-                return False
-
-        return True
+    
 
     @staticmethod
     def validate_all_inputs(
@@ -400,7 +337,6 @@ class InputValidator:
             lambda: InputValidator._check_remaining_space_is_enough(ingredient_rows, message_text, page),
             lambda: InputValidator._check_no_empty_if_total_is_100(ingredient_rows, message_text, page),
             lambda: InputValidator._check_duplicate_ingredient_names(ingredient_rows, message_text, page),
-            lambda: InputValidator._check_empty_position_valid(ingredient_rows, message_text, page),
         ]
 
         for check in checks:
