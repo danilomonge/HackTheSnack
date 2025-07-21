@@ -267,11 +267,6 @@ class ProductTableUI:
                 Styles.build_explanation(
                     "The total is already 100%, but there are still empty ingredient values. Please reduce one or more percentages."
                 ),
-                ft.Divider(height=4, color="transparent"),
-                Styles.build_explanation_subtitle("- Error 103:"),
-                Styles.build_explanation(
-                    "This is an invalid position for empty or zero ingredients. Try changing their order or erasing them."
-                ),
             ],
             spacing=5,
             alignment=ft.MainAxisAlignment.START,

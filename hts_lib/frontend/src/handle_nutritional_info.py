@@ -147,8 +147,8 @@ class NutritionalInfoHandler:
         else:
             self.dialog.content = ft.Container(
                 width=360,
-                height=430,
-                padding=10,
+                height=420,
+                padding=8,
                 content=ft.Column(
                     controls=[
                         ft.Text(
@@ -193,7 +193,7 @@ class NutritionalInfoHandler:
                                 ft.Text(f"Sodium: {(data['sodium'] / 1000):.2f} g"),
                             ]
                         ),
-                        ft.Divider(height=10, color="transparent"),
+                        ft.Divider(height=8, color="transparent"),
                         ft.Text(
                             f"In the given product (per 100g), {ingredient_name.lower()} contributes approximately:",
                             weight=ft.FontWeight.BOLD,
@@ -229,7 +229,13 @@ class NutritionalInfoHandler:
                                 ),
                             ]
                         ),
-                        ft.Divider(height=10, color="transparent"),
+                        ft.Row(
+                            [
+                                ft.Icon(name="science", color=Styles.ICON_COLOR, size=18),
+                                ft.Text(f"Sodium: {(data['sodium'] / 1000 * amount / 100):.2f} g"),
+                            ]
+                        ),
+                        ft.Divider(height=8, color="transparent"),
                         ft.Text(
                             f"Warning: We do not guarantee the accuracy of this data.",
                             size=10,
