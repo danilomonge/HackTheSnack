@@ -11,7 +11,7 @@ class HomeView:
         content = ft.Column(
             controls=[
                 ft.Image(
-                src="hts_lib/assets/Title.png",
+                src="/assets/Title.png",
                 width=700,
                 fit=ft.ImageFit.CONTAIN,  ),
                 ft.Container(
@@ -48,6 +48,7 @@ class HomeView:
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=25,
+            expand=True,
             scroll=ft.ScrollMode.AUTO,
         )
 
@@ -58,7 +59,7 @@ class HomeView:
                 ft.Stack(
                     controls=[
                         ft.Image(
-                            src="hts_lib/assets/bg_test.png",
+                            src="/assets/bg_test.png",
                             width=float("inf"),
                             height=float("inf"),
                             fit=ft.ImageFit.COVER,
