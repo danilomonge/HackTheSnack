@@ -248,13 +248,22 @@ class ProductActionHandler:
         """
         Displays an error message when unable to connect to the database that is understandable to the user.
         """
-        if "Connection refused" in str(ex) or "connection" in str(ex).lower():
-            return "⚠️ Could not connect to the database.\nPlease check your internet connection or try again later."
-        return f"⚠️ An unexpected error occurred. Details: {str(ex)}"
+        error_message = str(ex).lower()
+        if (
+            "connection refused" in error_message
+            or "connection" in error_message
+            or "timeout" in error_message
+            or "temporarily unavailable" in error_message
+            or "network" in error_message
+        ):
+            return (
+                "⚠️ Search is unavailable right now because the database service is offline.\n"
+                "Please try again in a moment."
+            )
+        return "⚠️ Something went wrong while contacting the database. Please try again."
             
 
 
         
 
     
-
