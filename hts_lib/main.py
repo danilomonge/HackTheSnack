@@ -5,14 +5,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, BASE_DIR)
 
 import flet as ft
-from frontend.src.add_product_table.table_ui.product_table_ui import ProductTableUI
 from frontend.src.navbar import NavigationBar
-from frontend.src.views.about_view import AboutView
-from frontend.src.views.home_view import HomeView
-from frontend.src.views.recipes_view import RecipesView
-from frontend.src.views.statistics_view import StatisticsView
-
-
 
 def main(page: ft.Page):
     """
@@ -31,11 +24,33 @@ def main(page: ft.Page):
     page.expand = True
 
     navbar = NavigationBar(page)
-    generator_view = ProductTableUI(page)
-    about_view = AboutView(page)
-    home_view = HomeView(page)
-    recipes_view = RecipesView(page)
-    statistics_view = StatisticsView(page)
+
+    def build_unavailable_view(route: str, title: str, message: str) -> ft.View:
+        return ft.View(
+            route,
+            [
+                navbar.build(),
+                ft.Container(
+                    expand=True,
+                    alignment=ft.alignment.center,
+                    padding=40,
+                    content=ft.Column(
+                        [
+                            ft.Text(title, size=28, weight=ft.FontWeight.BOLD),
+                            ft.Text(
+                                message,
+                                size=16,
+                                text_align=ft.TextAlign.CENTER,
+                                width=600,
+                            ),
+                        ],
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        alignment=ft.MainAxisAlignment.CENTER,
+                        spacing=16,
+                    ),
+                ),
+            ],
+        )
 
     def route_change(e: ft.RouteChangeEvent):
         """
@@ -49,61 +64,122 @@ def main(page: ft.Page):
         time.sleep(0.01)  # 10ms delay
         
         if page.route == "/about":
-            page.views.append(
-                ft.View(
-                    "/about",
-                    [
-                        navbar.build(),
-                        about_view.build(),
-                    ],
-                )
-            )
-        elif page.route == "/generator":
-            page.views.append(
-                ft.View(
-                    "/generator",
-                    [
-                        navbar.build(),
-                        ft.Column([
-                            generator_view.build_table_ui(),
+            try:
+                from frontend.src.views.about_view import AboutView
+
+                about_view = AboutView(page)
+                page.views.append(
+                    ft.View(
+                        "/about",
+                        [
+                            navbar.build(),
+                            about_view.build(),
                         ],
-                        scroll=ft.ScrollMode.AUTO,
-                        expand=True,
-                        )
-                    ],
+                    )
                 )
-            )
-            generator_view.ingredient_manager.initialize_with_empty_row()
+            except Exception as ex:
+                page.views.append(
+                    build_unavailable_view(
+                        "/about",
+                        "About us",
+                        f"This section is temporarily unavailable in the web build.\n\n{ex}",
+                    )
+                )
+        elif page.route == "/generator":
+            try:
+                from frontend.src.add_product_table.table_ui.product_table_ui import ProductTableUI
+
+                generator_view = ProductTableUI(page)
+                page.views.append(
+                    ft.View(
+                        "/generator",
+                        [
+                            navbar.build(),
+                            ft.Column(
+                                [
+                                    generator_view.build_table_ui(),
+                                ],
+                                scroll=ft.ScrollMode.AUTO,
+                                expand=True,
+                            ),
+                        ],
+                    )
+                )
+                generator_view.ingredient_manager.initialize_with_empty_row()
+            except Exception as ex:
+                page.views.append(
+                    build_unavailable_view(
+                        "/generator",
+                        "Recipe generator",
+                        f"This section is not ready in the web build yet.\n\n{ex}",
+                    )
+                )
         elif page.route == "/recipes":
-            page.views.append(
-                ft.View(
-                    "/recipes",
-                    [
-                        navbar.build(),
-                        recipes_view.build(),
-                    ],
+            try:
+                from frontend.src.views.recipes_view import RecipesView
+
+                recipes_view = RecipesView(page)
+                page.views.append(
+                    ft.View(
+                        "/recipes",
+                        [
+                            navbar.build(),
+                            recipes_view.build(),
+                        ],
+                    )
                 )
-            )
+            except Exception as ex:
+                page.views.append(
+                    build_unavailable_view(
+                        "/recipes",
+                        "My recipes",
+                        f"This section is temporarily unavailable in the web build.\n\n{ex}",
+                    )
+                )
         elif page.route == "/statistics":
-            page.views.append(
-                ft.View(
-                    "/statistics",
-                    [
-                        navbar.build(),
-                        statistics_view.build(),
-                    ],
+            try:
+                from frontend.src.views.statistics_view import StatisticsView
+
+                statistics_view = StatisticsView(page)
+                page.views.append(
+                    ft.View(
+                        "/statistics",
+                        [
+                            navbar.build(),
+                            statistics_view.build(),
+                        ],
+                    )
                 )
-            )
+            except Exception as ex:
+                page.views.append(
+                    build_unavailable_view(
+                        "/statistics",
+                        "Statistics",
+                        f"This section is temporarily unavailable in the web build.\n\n{ex}",
+                    )
+                )
         else:
-            page.views.append(
-                ft.View(
-                    "/home",
-                    [
-                        navbar.build(),
-                        *home_view.build().controls
-                    ],
+            try:
+                from frontend.src.views.home_view import HomeView
+
+                home_view = HomeView(page)
+                page.views.append(
+                    ft.View(
+                        "/home",
+                        [
+                            navbar.build(),
+                            *home_view.build().controls,
+                        ],
+                    )
                 )
-            )
+            except Exception as ex:
+                page.views.append(
+                    build_unavailable_view(
+                        "/home",
+                        "HackTheSnack",
+                        f"The home page could not be loaded.\n\n{ex}",
+                    )
+                )
 
         page.update()
 
