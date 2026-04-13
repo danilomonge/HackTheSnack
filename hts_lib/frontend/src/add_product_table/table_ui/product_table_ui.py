@@ -1,12 +1,8 @@
 import flet as ft
 from frontend.src.add_product_table.table_ui.ingredient_row_manager import IngredientRowManager
-from frontend.src.add_product_table.logic.input_validator import InputValidator
-from frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 from frontend.src.product_submit_handler import ProductSubmitHandler
 from frontend.src.styles import Styles
-from frontend.src.product_action_handler import ProductActionHandler
 from frontend.src.add_product_table.table_ui.autofill_confirmation_window import AutofillConfirmationWindow
-from backend.data_base_manager.recipe_manager import RecipeManager
 
 
 class ProductTableUI:
@@ -29,6 +25,7 @@ class ProductTableUI:
             page (ft.Page): The Flet page used to build and update the UI.
         """
         self.page = page
+        self.is_web = bool(getattr(page, "web", False))
         self.ingredient_rows = ft.Column()
         self.result_text = ft.Text(value="", color=Styles.GREEN_COLOR, size=12, weight=ft.FontWeight.BOLD)
         self.product_id = 0
@@ -72,21 +69,27 @@ class ProductTableUI:
 
         self.loading_indicator = ft.ProgressBar(visible=False, color=Styles.LOADINGBAR_COLOR, bgcolor= Styles.LOADINGBAR_BACKGROUNDCOLOR)
 
-        self.autofill_dialog_handler = AutofillConfirmationWindow(
-            self.page,
-            on_confirm = ProductActionHandler.handle_search_and_fill(
-            self.product_name,
-            self.feedback,
-            self.page,
-            self.ingredient_manager,
-            self.store_submission_results
-        )
-        )
+        if self.is_web:
+            self.search_button.disabled = True
+            self.search_button.tooltip = "Search is unavailable in the GitHub Pages web build"
+            self.save_button.tooltip = "Save is unavailable in the GitHub Pages web build"
+            self.result_text.value = (
+                "Web mode: recipe generation works locally here, but search/save features need the backend service."
+            )
+            self.result_text.color = Styles.TEXT_COLOR
         
     def on_find_product_click(self, e):
         """
         Handles the find Product button click by calling ProductCreator.
         """
+        if self.is_web:
+            self.feedback.value = "⚠️ Search is unavailable in the web deployment because it depends on the backend service."
+            self.feedback.color = Styles.RED_COLOR
+            self.page.update()
+            return
+
+        from frontend.src.product_action_handler import ProductActionHandler
+
         found = ProductActionHandler.check_if_product_exists(
             self.product_name,
             self.feedback,
@@ -148,7 +151,10 @@ class ProductTableUI:
 
         if result:  # Only if submit was successful
             self.is_submitted = True
-            self.update_save_button_state(enabled=True)
+            if not self.is_web:
+                self.update_save_button_state(enabled=True)
+            else:
+                self.update_save_button_state(enabled=False)
             
 
         return result
@@ -159,6 +165,14 @@ class ProductTableUI:
 
         Stores recipe and evaluation information in the database
         """
+        if self.is_web:
+            self.feedback.value = "⚠️ Save is unavailable in the web deployment because it depends on the backend service."
+            self.feedback.color = Styles.RED_COLOR
+            self.page.update()
+            return None
+
+        from frontend.src.product_action_handler import ProductActionHandler
+
         self.update_save_button_state(enabled=False)
         delete_ingredients = self.ingredient_manager.deleted_ingredient_ids
         ProductActionHandler.handle_delete_ingredients(self.product_id, delete_ingredients)
@@ -190,6 +204,13 @@ class ProductTableUI:
         self.page.update()
 
     def update_save_button_state(self, enabled: bool):
+        if self.is_web:
+            self.save_button.disabled = True
+            self.save_button.bgcolor = Styles.BUTTON_FILL_DISABLED_COLOR
+            self.save_button.color = ft.Colors.GREY_600
+            self.save_button.tooltip = "Save is unavailable in the GitHub Pages web build"
+            return
+
         self.save_button.disabled = not enabled
         self.save_button.bgcolor = Styles.BUTTON_FILL_COLOR if enabled else Styles.BUTTON_FILL_DISABLED_COLOR
         self.save_button.color = ft.Colors.WHITE if enabled else ft.Colors.GREY_600
@@ -419,5 +440,4 @@ class ProductTableUI:
             padding=20,
             bgcolor=Styles.BACKGROUND_COLOR,
         )
-
 
