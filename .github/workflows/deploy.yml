@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: 🚀 HackTheSnack · Web Deploy
 
 on:
   push:
@@ -32,11 +32,11 @@ jobs:
 
       - name: Build web app
         working-directory: ./hts_lib
-        run: flet build web --flutter-build-args "--base-href=/HackTheSnack/"
+        run: flet build web
 
-      - name: Fix base href (fallback)
+      - name: Fix base href for GitHub Pages
         run: |
-          sed -i 's|<base href="/">|<base href="/HackTheSnack/">|g' ./hts_lib/build/web/index.html || true
+          sed -i 's|<base href="/">|<base href="/HackTheSnack/">|g' ./hts_lib/build/web/index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
