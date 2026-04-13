@@ -269,6 +269,9 @@ class ProductTableUI:
                 Styles.build_explanation(
                     "List the ingredients from most to least used. Only include a percentage if known; otherwise, leave it blank or use 0%."
                 ),
+                Styles.build_explanation(
+                    "If there is only one ingredient, it may be 100%. If there are multiple ingredients, each filled value must stay at or below 99.99%."
+                ),
                 ft.Divider(height=6, color="transparent"),
                 Styles.build_explanation(
                     "The total of all ingredients must add up to 100%. Empty ingredient rows must be lower or equal to the value above, and higher or equal to the value below."
@@ -440,4 +443,3 @@ class ProductTableUI:
             padding=20,
             bgcolor=Styles.BACKGROUND_COLOR,
         )
-

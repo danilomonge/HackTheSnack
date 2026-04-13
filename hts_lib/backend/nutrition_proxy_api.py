@@ -1,29 +1,22 @@
 import os
-import sys
 
 import httpx
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-sys.path.insert(0, BASE_DIR)
-
-if sys.platform != "emscripten":
-    from Secure_env.env_enc_decipher import SecureEnvLoader
-
-    SecureEnvLoader.load_env()
-
 SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 DEEPL_URL = "https://api-free.deepl.com/v2/translate"
+USDA_API_KEY = os.getenv("USDA_API_KEY")
+DEEPL_API_KEY = os.getenv("DEEPL_API_KEY")
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "")
 
 
 def _allowed_origins():
     """
     Builds the CORS allowlist from an environment variable.
     """
-    raw_value = os.environ.get("ALLOWED_ORIGINS", "*")
-    return [origin.strip() for origin in raw_value.split(",") if origin.strip()]
+    return [origin.strip() for origin in ALLOWED_ORIGINS.split(",") if origin.strip()]
 
 
 app = FastAPI(title="HackTheSnack Nutrition Proxy")
@@ -46,14 +39,13 @@ def _translate_to_english(text, source_lang="DE", target_lang="EN"):
     """
     Uses the DeepL API with a server-side secret.
     """
-    deepl_key = os.environ.get("DEEPL_API_KEY")
-    if not deepl_key:
+    if not DEEPL_API_KEY:
         return text
 
     response = httpx.post(
         DEEPL_URL,
         data={
-            "auth_key": deepl_key,
+            "auth_key": DEEPL_API_KEY,
             "text": text,
             "source_lang": source_lang,
             "target_lang": target_lang,
@@ -69,8 +61,7 @@ def _lookup_usda(ingredient_name):
     """
     Uses the USDA API with a server-side secret.
     """
-    usda_key = os.environ.get("USDA_API_KEY")
-    if not usda_key:
+    if not USDA_API_KEY:
         raise HTTPException(status_code=503, detail="USDA_API_KEY is not configured on the proxy.")
 
     searched = ingredient_name.strip().lower()
@@ -81,7 +72,7 @@ def _lookup_usda(ingredient_name):
         SEARCH_URL,
         params={
             "query": ingredient_name,
-            "api_key": usda_key,
+            "api_key": USDA_API_KEY,
             "pageSize": 5,
             "dataType": ["Branded", "Branded Foods"],
         },
