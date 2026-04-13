@@ -102,6 +102,7 @@ def main(page: ft.Page):
                                 ],
                                 scroll=ft.ScrollMode.AUTO,
                                 expand=True,
+                                horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
                             ),
                         ],
                     )
