@@ -30,11 +30,19 @@ jobs:
       - name: Install Flet
         run: pip install flet==0.28.3
 
-      - name: Inject public runtime config
+      - name: Write runtime web config
+        env:
+          NUTRITION_PROXY_URL_VAR: ${{ vars.NUTRITION_PROXY_URL }}
+          NUTRITION_PROXY_URL_SECRET: ${{ secrets.NUTRITION_PROXY_URL }}
         run: |
-          cat > ./hts_lib/assets/runtime-config.json <<EOF
-          {"nutrition_proxy_url":"${{ vars.NUTRITION_PROXY_URL }}"}
+          PROXY_URL="${NUTRITION_PROXY_URL_VAR:-$NUTRITION_PROXY_URL_SECRET}"
+          if [ -n "$PROXY_URL" ]; then
+            cat > ./hts_lib/assets/runtime-config.json <<EOF
+          {
+            "nutrition_proxy_url": "$PROXY_URL"
+          }
           EOF
+          fi
 
       - name: Build web app
         working-directory: ./hts_lib

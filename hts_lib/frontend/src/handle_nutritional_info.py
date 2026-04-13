@@ -1,6 +1,7 @@
+import json
 import os
 import sys
-from functools import lru_cache
+from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import flet as ft
 import httpx
@@ -18,70 +19,76 @@ if not IS_WEB:
     # Load environment variables securely to access API keys in native runs.
     SecureEnvLoader.load_env()
 
-# Get API keys from environment variables
 usda_key = os.environ.get("USDA_API_KEY")
 deepl_key = os.environ.get("DEEPL_API_KEY")
 
-# Route URLs for USDA and DeepL APIs
 SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 DEEPL_URL = "https://api-free.deepl.com/v2/translate"
-RUNTIME_CONFIG_URL = "assets/runtime-config.json"
+RUNTIME_CONFIG_PATH = os.path.join(BASE_DIR, "assets", "runtime-config.json")
 
 
-def _normalize_proxy_base_url(url):
-    """
-    Normalizes a proxy base URL by trimming spaces and trailing slashes.
-    """
-    if not url:
-        return None
-    normalized = url.strip().rstrip("/")
-    return normalized or None
+def _normalize_url(value):
+    if not value:
+        return ""
+    return str(value).strip().rstrip("/")
 
 
-@lru_cache(maxsize=1)
-def get_nutrition_proxy_url():
-    """
-    Resolves the public proxy URL used by the web build.
-
-    The proxy URL is safe to expose because it is only an endpoint, not a secret.
-    Secrets stay on the proxy server.
-    """
-    direct_env_value = _normalize_proxy_base_url(os.environ.get("NUTRITION_PROXY_URL"))
-    if direct_env_value:
-        return direct_env_value
-
-    if not IS_WEB:
+def _build_same_origin_asset_url(page: ft.Page, asset_name: str) -> str | None:
+    page_url = getattr(page, "url", None)
+    if not page_url:
         return None
 
+    parsed = urlsplit(page_url)
+    path = parsed.path or "/"
+    if not path.endswith("/"):
+        path = path.rsplit("/", 1)[0] + "/"
+
+    base_url = urlunsplit((parsed.scheme, parsed.netloc, path, "", ""))
+    return urljoin(base_url, asset_name)
+
+
+def _load_runtime_config(page: ft.Page | None = None) -> dict:
+    env_proxy_url = _normalize_url(os.environ.get("NUTRITION_PROXY_URL"))
+    if env_proxy_url:
+        return {"nutrition_proxy_url": env_proxy_url}
+
+    if page is not None and IS_WEB:
+        config_url = _build_same_origin_asset_url(page, "runtime-config.json")
+        if config_url:
+            response = httpx.get(config_url, timeout=10.0)
+            response.raise_for_status()
+            return response.json()
+
+    if os.path.exists(RUNTIME_CONFIG_PATH):
+        with open(RUNTIME_CONFIG_PATH, "r", encoding="utf-8") as config_file:
+            return json.load(config_file)
+
+    return {}
+
+
+def get_nutrition_proxy_url(page: ft.Page | None = None) -> str:
     try:
-        response = httpx.get(RUNTIME_CONFIG_URL, timeout=5.0)
-        response.raise_for_status()
-        config = response.json()
+        runtime_config = _load_runtime_config(page)
     except Exception:
-        return None
+        return ""
 
-    return _normalize_proxy_base_url(config.get("nutrition_proxy_url"))
-
-
-def is_nutrition_lookup_available():
-    """
-    Returns whether nutrition lookups are available in the current runtime.
-    """
-    if IS_WEB:
-        return get_nutrition_proxy_url() is not None
-    return bool(usda_key)
+    return _normalize_url(runtime_config.get("nutrition_proxy_url"))
 
 
-def _translate_via_proxy(text):
-    """
-    Translates text using the external proxy service.
-    """
-    proxy_url = get_nutrition_proxy_url()
+def _proxy_endpoint(proxy_url: str, route_name: str) -> str:
+    proxy_url = _normalize_url(proxy_url)
+    if proxy_url.endswith(f"/api/{route_name}"):
+        return proxy_url
+    return f"{proxy_url}/api/{route_name}"
+
+
+def _translate_via_proxy(text: str, page: ft.Page | None = None) -> str:
+    proxy_url = get_nutrition_proxy_url(page)
     if not proxy_url:
         return text
 
     response = httpx.post(
-        f"{proxy_url}/api/translate",
+        _proxy_endpoint(proxy_url, "translate"),
         json={"text": text, "source_lang": "DE", "target_lang": "EN"},
         timeout=10.0,
     )
@@ -90,34 +97,44 @@ def _translate_via_proxy(text):
     return payload.get("text", text)
 
 
-def _get_nutrition_via_proxy(ingredient_name):
-    """
-    Fetches nutrition data using the external proxy service.
-    """
-    proxy_url = get_nutrition_proxy_url()
+def _get_nutrition_via_proxy(page: ft.Page | None, ingredient_name: str):
+    proxy_url = get_nutrition_proxy_url(page)
     if not proxy_url:
         return None
 
     response = httpx.get(
-        f"{proxy_url}/api/nutrition",
+        _proxy_endpoint(proxy_url, "nutrition"),
         params={"ingredient": ingredient_name},
-        timeout=10.0,
+        timeout=15.0,
     )
     response.raise_for_status()
+
     payload = response.json()
-    return payload.get("data")
+    data = payload.get("data") if isinstance(payload, dict) else None
+
+    if not isinstance(data, dict):
+        return None
+
+    return {
+        "name": data.get("name", ingredient_name),
+        "kcal": float(data.get("kcal", 0) or 0),
+        "carbs": float(data.get("carbs", 0) or 0),
+        "fat": float(data.get("fat", 0) or 0),
+        "protein": float(data.get("protein", 0) or 0),
+        "sodium": float(data.get("sodium", 0) or 0),
+        "per": data.get("per", "100g"),
+    }
 
 
-def translate_to_english(text):
+def translate_to_english(text: str, page: ft.Page | None = None):
     """
-    Translates a given text from German to English using the DeepL API.
-    Args:
-        text (str): The text to translate.
-    Returns:
-        str: The translated text.
+    Translates a given text from German to English.
     """
     if IS_WEB:
-        return _translate_via_proxy(text)
+        try:
+            return _translate_via_proxy(text, page)
+        except Exception:
+            return text
 
     if not deepl_key:
         return text
@@ -134,27 +151,21 @@ def translate_to_english(text):
     return result["translations"][0]["text"]
 
 
-def get_nutrition_usda(ingredient_name):
+def get_nutrition_usda(ingredient_name: str, page: ft.Page | None = None):
     """
-    Fetches nutritional information for a given ingredient from the USDA API.
-    Args:
-        ingredient_name (str): The name of the ingredient to search for.
-    Returns:
-        dict: A dictionary containing nutritional values or None if not found.
+    Fetches nutritional information for a given ingredient.
     """
     if IS_WEB:
-        return _get_nutrition_via_proxy(ingredient_name)
+        return _get_nutrition_via_proxy(page, ingredient_name)
 
     if not usda_key:
         return None
 
-    # Use the stripped and lowercased ingredient name for searching
     searched = ingredient_name.strip().lower()
-    
+
     if len(ingredient_name.strip()) < 3:
-        # Don't search for very short names that are likely not valid
         return None
-    
+
     params = {
         "query": ingredient_name,
         "api_key": usda_key,
@@ -165,16 +176,12 @@ def get_nutrition_usda(ingredient_name):
     res.raise_for_status()
     data = res.json()
 
-    # if the response is empty or no foods are found, return None
     if "foods" not in data or not data["foods"]:
         print(f"⚠️ No reliable data found for: {ingredient_name} (likely processed)")
         return None
 
-    # Check for an exact match in the food descriptions (avoiding similar names with unreliable data)
     for food in data["foods"]:
-        # Convert the food description to lowercase and strip whitespace
         name = food["description"].strip().lower()
-        # If the name matches the searched ingredient, return its nutritional values
         if name == searched:
             nutrients = {n["nutrientName"]: n["value"] for n in food["foodNutrients"]}
             return {
@@ -187,10 +194,8 @@ def get_nutrition_usda(ingredient_name):
                 "per": "100g",
             }
 
-    # If no exact match was found
     print(f"❌ No exact match for: '{ingredient_name}'")
     return None
-
 
 
 class NutritionalInfoHandler:
@@ -199,164 +204,154 @@ class NutritionalInfoHandler:
     """
 
     def __init__(self, page: ft.Page):
-        """
-        Initializes the NutritionalInfoHandler with a Flet page instance.
-        """
         self.page = page
         self.dialog = ft.AlertDialog(
             modal=True,
             title=ft.Text("Nutrition Info", size=16, weight=ft.FontWeight.BOLD),
-            actions=[ft.TextButton("OK", 
-                                   on_click=self.close_dialog,
-                                   style=ft.ButtonStyle(
-                                       color=Styles.ICON_COLOR,),)],
+            actions=[
+                ft.TextButton(
+                    "OK",
+                    on_click=self.close_dialog,
+                    style=ft.ButtonStyle(color=Styles.ICON_COLOR),
+                )
+            ],
         )
         self.page.overlay.append(self.dialog)
         self.page.update()
 
     def show_nutritional_info(self, ingredient_name: str, amount: float):
-        """
-        Displays nutritional information for a given ingredient in a dialog.
-        """
         self.dialog.title = ft.Text(
-            f"{ingredient_name} — Estimated Nutrition Info 🌱 ", size=15, weight=ft.FontWeight.BOLD
+            f"{ingredient_name} — Estimated Nutrition Info 🌱 ",
+            size=15,
+            weight=ft.FontWeight.BOLD,
         )
-        if IS_WEB and not is_nutrition_lookup_available():
-            self.dialog.content = ft.Text(
-                "Nutrition lookup is not configured for the web build yet. "
-                "Add a secure proxy URL in assets/runtime-config.json or via the NUTRITION_PROXY_URL build variable."
-            )
-            self.dialog.open = True
-            self.page.update()
-            return
-
         self.dialog.content = ft.Text("⏳ Fetching data...")
         self.dialog.open = True
         self.page.update()
 
-        # Step 1: Try translating the ingredient name
         try:
-            translated = translate_to_english(ingredient_name)
+            translated = translate_to_english(ingredient_name, self.page)
         except Exception:
-            translated = ingredient_name  # fallback to original
+            translated = ingredient_name
 
-        # Step 2: Try fetching nutritional data from USDA
         try:
-            data = get_nutrition_usda(translated)
+            data = get_nutrition_usda(translated, self.page)
         except Exception:
             data = None
 
-        # Step 3: Display result or fallback message if the data is not available
         if not data:
-            self.dialog.content = ft.Text(
-                f"😕 Sorry, we couldn't find any information for '{ingredient_name}'."
-            )
-
+            if IS_WEB and not get_nutrition_proxy_url(self.page):
+                self.dialog.content = ft.Text(
+                    "Nutrition lookup is not configured for the web build yet. "
+                    "Add a secure proxy URL in assets/runtime-config.json "
+                    "or via the NUTRITION_PROXY_URL build variable."
+                )
+            else:
+                self.dialog.content = ft.Text(
+                    f"😕 Sorry, we couldn't find any information for '{ingredient_name}'."
+                )
         else:
-            self.dialog.content = ft.Container(
-                width=360,
-                height=420,
-                padding=8,
-                content=ft.Column(
-                    controls=[
-                        ft.Text(
-                            f"Proportion of {ingredient_name.lower()} in the product: {amount:.2f}%",
-                            size=14,
-                            weight=ft.FontWeight.BOLD,
-                            color=Styles.ICON_COLOR,
-                        ),
-                        ft.Divider(height=6, color="transparent"),
-                        ft.Text(
-                            f"In 100g of pure {ingredient_name.lower()}, the estimated nutritional values are:",
-                            weight=ft.FontWeight.BOLD,
-                            size=14,
-                        ),
-                        ft.Row(
-                            [
-                                ft.Icon(name="local_fire_department", color=Styles.ICON_COLOR, size=18),
-                                ft.Text(f"Energy: {data['kcal']:.2f} kcal"),
-                            ]
-                        ),
-                        ft.Row(
-                            [
-                                ft.Icon(name="lunch_dining", color=Styles.ICON_COLOR, size=18),
-                                ft.Text(f"Fat: {data['fat']:.2f} g"),
-                            ]
-                        ),
-                        ft.Row(
-                            [
-                                ft.Icon(name="ramen_dining", color=Styles.ICON_COLOR, size=18),
-                                ft.Text(f"Carbohydrates: {data['carbs']:.2f} g"),
-                            ]
-                        ),
-                        ft.Row(
-                            [
-                                ft.Icon(name="egg", color=Styles.ICON_COLOR, size=18),
-                                ft.Text(f"Protein: {data['protein']:.2f} g"),
-                            ]
-                        ),
-                        ft.Row(
-                            [
-                                ft.Icon(name="science", color=Styles.ICON_COLOR, size=18),
-                                ft.Text(f"Sodium: {(data['sodium'] / 1000):.2f} g"),
-                            ]
-                        ),
-                        ft.Divider(height=8, color="transparent"),
-                        ft.Text(
-                            f"In the given product (per 100g), {ingredient_name.lower()} contributes approximately:",
-                            weight=ft.FontWeight.BOLD,
-                            size=14,
-                        ),
-                        ft.Row(
-                            [
-                                ft.Icon(name="local_fire_department", color=Styles.ICON_COLOR, size=18),
-                                ft.Text(
-                                    f"Energy: {(data['kcal'] * amount / 100):.2f} kcal"
-                                ),
-                            ]
-                        ),
-                        ft.Row(
-                            [
-                                ft.Icon(name="lunch_dining", color=Styles.ICON_COLOR, size=18),
-                                ft.Text(f"Fat: {(data['fat'] * amount / 100):.2f} g"),
-                            ]
-                        ),
-                        ft.Row(
-                            [
-                                ft.Icon(name="ramen_dining", color=Styles.ICON_COLOR, size=18),
-                                ft.Text(
-                                    f"Carbohydrates: {(data['carbs'] * amount / 100):.2f} g"
-                                ),
-                            ]
-                        ),
-                        ft.Row(
-                            [
-                                ft.Icon(name="egg", color=Styles.ICON_COLOR, size=18),
-                                ft.Text(
-                                    f"Protein: {(data['protein'] * amount / 100):.2f} g",
-                                ),
-                            ]
-                        ),
-                        ft.Row(
-                            [
-                                ft.Icon(name="science", color=Styles.ICON_COLOR, size=18),
-                                ft.Text(f"Sodium: {(data['sodium'] / 1000 * amount / 100):.2f} g"),
-                            ]
-                        ),
-                        ft.Divider(height=8, color="transparent"),
-                        ft.Text(
-                            f"Warning: We do not guarantee the accuracy of this data.",
-                            size=10,
-                            weight=ft.FontWeight.BOLD,
-                            color=Styles.ICON_COLOR,
-                        ),
-                    ],
-                    spacing=6,
-                ),
-            )
+            self._render_nutrition_result(ingredient_name, amount, data)
 
         self.page.update()
 
     def close_dialog(self, e=None):
         self.dialog.open = False
         self.page.update()
+
+    def _render_nutrition_result(self, ingredient_name: str, amount: float, data: dict):
+        self.dialog.content = ft.Container(
+            width=360,
+            height=420,
+            padding=8,
+            content=ft.Column(
+                controls=[
+                    ft.Text(
+                        f"Proportion of {ingredient_name.lower()} in the product: {amount:.2f}%",
+                        size=14,
+                        weight=ft.FontWeight.BOLD,
+                        color=Styles.ICON_COLOR,
+                    ),
+                    ft.Divider(height=6, color="transparent"),
+                    ft.Text(
+                        f"In 100g of pure {ingredient_name.lower()}, the estimated nutritional values are:",
+                        weight=ft.FontWeight.BOLD,
+                        size=14,
+                    ),
+                    ft.Row(
+                        [
+                            ft.Icon(name="local_fire_department", color=Styles.ICON_COLOR, size=18),
+                            ft.Text(f"Energy: {data['kcal']:.2f} kcal"),
+                        ]
+                    ),
+                    ft.Row(
+                        [
+                            ft.Icon(name="lunch_dining", color=Styles.ICON_COLOR, size=18),
+                            ft.Text(f"Fat: {data['fat']:.2f} g"),
+                        ]
+                    ),
+                    ft.Row(
+                        [
+                            ft.Icon(name="ramen_dining", color=Styles.ICON_COLOR, size=18),
+                            ft.Text(f"Carbohydrates: {data['carbs']:.2f} g"),
+                        ]
+                    ),
+                    ft.Row(
+                        [
+                            ft.Icon(name="egg", color=Styles.ICON_COLOR, size=18),
+                            ft.Text(f"Protein: {data['protein']:.2f} g"),
+                        ]
+                    ),
+                    ft.Row(
+                        [
+                            ft.Icon(name="science", color=Styles.ICON_COLOR, size=18),
+                            ft.Text(f"Sodium: {(data['sodium'] / 1000):.2f} g"),
+                        ]
+                    ),
+                    ft.Divider(height=8, color="transparent"),
+                    ft.Text(
+                        f"In the given product (per 100g), {ingredient_name.lower()} contributes approximately:",
+                        weight=ft.FontWeight.BOLD,
+                        size=14,
+                    ),
+                    ft.Row(
+                        [
+                            ft.Icon(name="local_fire_department", color=Styles.ICON_COLOR, size=18),
+                            ft.Text(f"Energy: {(data['kcal'] * amount / 100):.2f} kcal"),
+                        ]
+                    ),
+                    ft.Row(
+                        [
+                            ft.Icon(name="lunch_dining", color=Styles.ICON_COLOR, size=18),
+                            ft.Text(f"Fat: {(data['fat'] * amount / 100):.2f} g"),
+                        ]
+                    ),
+                    ft.Row(
+                        [
+                            ft.Icon(name="ramen_dining", color=Styles.ICON_COLOR, size=18),
+                            ft.Text(f"Carbohydrates: {(data['carbs'] * amount / 100):.2f} g"),
+                        ]
+                    ),
+                    ft.Row(
+                        [
+                            ft.Icon(name="egg", color=Styles.ICON_COLOR, size=18),
+                            ft.Text(f"Protein: {(data['protein'] * amount / 100):.2f} g"),
+                        ]
+                    ),
+                    ft.Row(
+                        [
+                            ft.Icon(name="science", color=Styles.ICON_COLOR, size=18),
+                            ft.Text(f"Sodium: {(data['sodium'] / 1000 * amount / 100):.2f} g"),
+                        ]
+                    ),
+                    ft.Divider(height=8, color="transparent"),
+                    ft.Text(
+                        "Warning: We do not guarantee the accuracy of this data.",
+                        size=10,
+                        weight=ft.FontWeight.BOLD,
+                        color=Styles.ICON_COLOR,
+                    ),
+                ],
+                spacing=6,
+            ),
+        )
