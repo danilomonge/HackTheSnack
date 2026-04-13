@@ -188,4 +188,4 @@ def main(page: ft.Page):
     page.on_route_change = route_change
     page.go("/")  
 
-ft.app(target=main, assets_dir="assets")
+ft.app(target=main, assets_dir=os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets"))
