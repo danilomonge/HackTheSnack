@@ -116,14 +116,14 @@ def test_fix_input_while_typing():
     assert last_valid[0] == "100"
     assert page.updated
 
-    # Case 2: digits only, 2 or fewer → value is normalized to two decimals
+    # Case 2: digits only, 2 or fewer → natural integer typing is preserved
     last_valid = [""]
     page = TestPage()
     event = TestEvent("12")
     handler = InputValidator.fix_input_while_typing(last_valid, page) # type: ignore[arg-type]
     handler(event)
-    assert event.control.value == "12.00"
-    assert last_valid[0] == "12.00"
+    assert event.control.value == "12"
+    assert last_valid[0] == "12"
     assert page.updated
 
     # Case 3: digits with a dot → write only the first 3 before the dot and the first 2 after
