@@ -289,6 +289,7 @@ class RecipeResultUI:
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            scroll=ft.ScrollMode.AUTO,
         ),
         alignment=ft.alignment.center,
      )

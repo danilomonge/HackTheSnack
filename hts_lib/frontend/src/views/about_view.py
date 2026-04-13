@@ -75,34 +75,31 @@ class AboutView:
                     ),
                     ft.Container(
                         content=ft.Image(
-                            src="/assets/Group-1.JPG",
+                            src="Group-1.JPG",
                             fit=ft.ImageFit.CONTAIN,
                         ),
                         width=800,
                         alignment=ft.alignment.center,
                     ),
-                    ft.Row(
-                        controls=[
-                            self.team_member("Emilio", "Cognitive Science", "/assets/Emilio.JPG", "https://github.com/ERibelles12", "ERibelles12"),
-                            self.team_member("Danilo", "Medical Informatics",
-                                            "/assets/Danilo.JPG", "https://github.com/danilomonge", "danilomonge"),
-                        ],
-                        alignment=ft.MainAxisAlignment.CENTER,
-                        scroll=ft.ScrollMode.AUTO,
-                    ),
-                    ft.Row(
-                        controls=[
-                            self.team_member("Jana", "Media Informatics",
-                                            "/assets/Jana.JPG", "https://github.com/jd-janadanner", "jd-janadanner"),
-                            self.team_member("Katja", "Cognitive Science",
-                                            "/assets/Katja.JPG", "https://github.com/katja-gf", "katja-gf"),
-                        ],
-                        alignment=ft.MainAxisAlignment.CENTER,
-                        scroll=ft.ScrollMode.AUTO,
+                    ft.Container(
+                        content=ft.Row(
+                            controls=[
+                                self.team_member("Emilio", "Cognitive Science", "Emilio.JPG", "https://github.com/ERibelles12", "ERibelles12"),
+                                self.team_member("Danilo", "Medical Informatics", "Danilo.JPG", "https://github.com/danilomonge", "danilomonge"),
+                                self.team_member("Jana", "Media Informatics", "Jana.JPG", "https://github.com/jd-janadanner", "jd-janadanner"),
+                                self.team_member("Katja", "Cognitive Science", "Katja.JPG", "https://github.com/katja-gf", "katja-gf"),
+                            ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            wrap=True,
+                            spacing=20,
+                            run_spacing=20,
+                        ),
+                        width=820,
+                        alignment=ft.alignment.center,
                     ),
                     ft.Container(
                         content=ft.Image(
-                            src="/assets/Group-2.JPG",
+                            src="Group-2.JPG",
                             fit=ft.ImageFit.CONTAIN,
                         ),
                         width=800,
