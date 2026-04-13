@@ -135,27 +135,26 @@ class RecipeGenerator:
         """
         try:
             from .algorithm.computation import Computation
+            num_ingredients = len(ingredient_input)
+            fixed_values = prepare_constraints_dict(ingredient_input)
+
+            A, a = Constraints.build_inequality_constraints(num_ingredients)
+            B, b = Constraints.build_equality_constraints(fixed_values, num_ingredients)
+
+            mean_result, std_dev_result = Computation.compute_result(
+                A, a, B, b, num_iter=int(5e4), thinning=int(1e3)
+            )
+
+            if mean_result is None or std_dev_result is None:
+                print("⚠️ MCMC failed or returned no valid samples.")
+                return None
+
+            return RecipeGenerator.build_output_dict(
+                ingredient_input, mean_result, std_dev_result
+            )
         except Exception as ex:
             print(f"⚠️ Sampling backend is unavailable in this runtime ({ex}). Using deterministic fallback.")
             return RecipeGenerator.solve_with_fallback(ingredient_input)
-
-        num_ingredients = len(ingredient_input)
-        fixed_values = prepare_constraints_dict(ingredient_input)
-
-        A, a = Constraints.build_inequality_constraints(num_ingredients)
-        B, b = Constraints.build_equality_constraints(fixed_values, num_ingredients)
-
-        mean_result, std_dev_result = Computation.compute_result(
-            A, a, B, b, num_iter=int(5e4), thinning=int(1e3)
-        )
-
-        if mean_result is None or std_dev_result is None:
-            print("⚠️ MCMC failed or returned no valid samples.")
-            return None
-
-        return RecipeGenerator.build_output_dict(
-            ingredient_input, mean_result, std_dev_result
-        )
 
     @staticmethod
     def build_output_dict(
