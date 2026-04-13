@@ -337,7 +337,7 @@ class ProductTableUI:
         Args:
             e (ft.ControlEvent): The event triggered by the button click.
         """
-        container = self.instruction_container  
+        container = self.instruction_container
         container.visible = not container.visible
         e.control.text = "Hide Instructions" if container.visible else "Show Instructions"
         self.page.update()
@@ -355,12 +355,12 @@ class ProductTableUI:
                 [
                     ft.Container(
                         ft.Text("Ingredient", weight=ft.FontWeight.BOLD, size=18, color=Styles.TABLE_HEADER_FONT_COLOR),
-                        width=200,
+                        width=220,
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
                         ft.Text("Percentage", weight=ft.FontWeight.BOLD, size=18, color=Styles.TABLE_HEADER_FONT_COLOR),
-                        width=120,
+                        width=230,
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(width=40),
@@ -420,14 +420,17 @@ class ProductTableUI:
                 [
                     Styles.build_title("Analyze a product"),
                     self.build_name_input(),
-                    Styles.build_button("Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO),
+                    Styles.build_button("📖 Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO),
                     self.instruction_container,
                     ft.Row(
                         [
-                            ft.Column([
-                                self.build_table_header(),
-                                self.ingredient_rows,
-                            ])
+                            ft.Container(
+                                content=ft.Column([
+                                    self.build_table_header(),
+                                    self.ingredient_rows,
+                                ]),
+                                width=530,
+                            )
                         ],
                         scroll=ft.ScrollMode.AUTO,
                     ),
