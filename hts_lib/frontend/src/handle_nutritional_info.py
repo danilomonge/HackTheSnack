@@ -1,5 +1,6 @@
 import os
 import sys
+from functools import lru_cache
 
 import flet as ft
 import httpx
@@ -24,6 +25,87 @@ deepl_key = os.environ.get("DEEPL_API_KEY")
 # Route URLs for USDA and DeepL APIs
 SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 DEEPL_URL = "https://api-free.deepl.com/v2/translate"
+RUNTIME_CONFIG_URL = "assets/runtime-config.json"
+
+
+def _normalize_proxy_base_url(url):
+    """
+    Normalizes a proxy base URL by trimming spaces and trailing slashes.
+    """
+    if not url:
+        return None
+    normalized = url.strip().rstrip("/")
+    return normalized or None
+
+
+@lru_cache(maxsize=1)
+def get_nutrition_proxy_url():
+    """
+    Resolves the public proxy URL used by the web build.
+
+    The proxy URL is safe to expose because it is only an endpoint, not a secret.
+    Secrets stay on the proxy server.
+    """
+    direct_env_value = _normalize_proxy_base_url(os.environ.get("NUTRITION_PROXY_URL"))
+    if direct_env_value:
+        return direct_env_value
+
+    if not IS_WEB:
+        return None
+
+    try:
+        response = httpx.get(RUNTIME_CONFIG_URL, timeout=5.0)
+        response.raise_for_status()
+        config = response.json()
+    except Exception:
+        return None
+
+    return _normalize_proxy_base_url(config.get("nutrition_proxy_url"))
+
+
+def is_nutrition_lookup_available():
+    """
+    Returns whether nutrition lookups are available in the current runtime.
+    """
+    if IS_WEB:
+        return get_nutrition_proxy_url() is not None
+    return bool(usda_key)
+
+
+def _translate_via_proxy(text):
+    """
+    Translates text using the external proxy service.
+    """
+    proxy_url = get_nutrition_proxy_url()
+    if not proxy_url:
+        return text
+
+    response = httpx.post(
+        f"{proxy_url}/api/translate",
+        json={"text": text, "source_lang": "DE", "target_lang": "EN"},
+        timeout=10.0,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    return payload.get("text", text)
+
+
+def _get_nutrition_via_proxy(ingredient_name):
+    """
+    Fetches nutrition data using the external proxy service.
+    """
+    proxy_url = get_nutrition_proxy_url()
+    if not proxy_url:
+        return None
+
+    response = httpx.get(
+        f"{proxy_url}/api/nutrition",
+        params={"ingredient": ingredient_name},
+        timeout=10.0,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    return payload.get("data")
 
 
 def translate_to_english(text):
@@ -34,6 +116,9 @@ def translate_to_english(text):
     Returns:
         str: The translated text.
     """
+    if IS_WEB:
+        return _translate_via_proxy(text)
+
     if not deepl_key:
         return text
 
@@ -57,6 +142,9 @@ def get_nutrition_usda(ingredient_name):
     Returns:
         dict: A dictionary containing nutritional values or None if not found.
     """
+    if IS_WEB:
+        return _get_nutrition_via_proxy(ingredient_name)
+
     if not usda_key:
         return None
 
@@ -133,9 +221,10 @@ class NutritionalInfoHandler:
         self.dialog.title = ft.Text(
             f"{ingredient_name} — Estimated Nutrition Info 🌱 ", size=15, weight=ft.FontWeight.BOLD
         )
-        if IS_WEB:
+        if IS_WEB and not is_nutrition_lookup_available():
             self.dialog.content = ft.Text(
-                "Nutrition lookup is not available in the GitHub Pages version yet."
+                "Nutrition lookup is not configured for the web build yet. "
+                "Add a secure proxy URL in assets/runtime-config.json or via the NUTRITION_PROXY_URL build variable."
             )
             self.dialog.open = True
             self.page.update()
