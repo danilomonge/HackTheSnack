@@ -444,26 +444,28 @@ class ProductTableUI:
                 spacing=10,
             ),
         )
-        self.results_section = ft.Container(
-            content=ft.Column(
-                [
-                    Styles.build_title("Generated Recipe"),
-                    ft.Row(
-                        [
-                            ft.ProgressRing(width=16, height=16, stroke_width=2, color=Styles.TEXT_COLOR),
-                            ft.Text("Recipe will appear here after analysis...",
-                                color=Styles.TEXT_COLOR, italic=True),
-                        ],
-                        alignment=ft.MainAxisAlignment.CENTER,
-                    )
-                ],
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=10,
-                height=850,
-                scroll=ft.ScrollMode.AUTO,
-            ),
-            padding=ft.padding.only(top=0, left=20, right=20, bottom=20),
-            scroll=ft.ScrollMode.AUTO,
+        self.results_section = ft.Column(
+            [
+                Styles.build_title("Generated Recipe"),
+                ft.Column(
+                    [
+                        ft.Row(
+                            [
+                                ft.ProgressRing(width=16, height=16, stroke_width=2, color=Styles.TEXT_COLOR),
+                                ft.Text("Recipe will appear here after analysis...",
+                                    color=Styles.TEXT_COLOR, italic=True),
+                            ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                        )
+                    ],
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=10,
+                    height=850,
+                    scroll=ft.ScrollMode.AUTO,
+                ),
+            ],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=10,
         )
 
         return ft.Container(
