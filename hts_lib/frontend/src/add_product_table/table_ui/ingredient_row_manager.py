@@ -63,7 +63,7 @@ class IngredientRowManager:
             suffix_style=ft.TextStyle(),
             keyboard_type=ft.KeyboardType.NUMBER,
             on_change=InputValidator.fix_input_while_typing(last_valid, page, self.on_user_input_change),
-            data={"last_valid": last_valid},
+            data={"last_valid": last_valid, "rows": self.ingredients, "row": None},
             **style
         )
 
@@ -147,6 +147,8 @@ class IngredientRowManager:
             name_input, percent_section, lambda: self.remove_ingredient_row(row, name_input)
         )
 
+        percent_input.data["row"] = row  # type: ignore[index]
+
         self.ingredients.append(row)
         self.quantity_table.controls.append(row)
         
@@ -229,4 +231,3 @@ class IngredientRowManager:
         """
         if len(self.quantity_table.controls) == 0:
             self.add_ingredient_row(self.page)
-

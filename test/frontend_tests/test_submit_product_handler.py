@@ -165,3 +165,63 @@ def test_handle_submit():
     name_input = testField("Cheese Sandwich")
     handler_module.ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page, fake_store_values_callback, fake_loading_indicator)  # type: ignore[arg-type]
     assert "must not exceed 100%" in msg.value
+
+    # Case 5: first ingredient too small for the number of rows → should show validation error
+    row1 = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Water")),
+                ft.Container(
+                    content=ft.Row(
+                        controls=[
+                            ft.IconButton(),
+                            ft.TextField(value="10"),
+                            ft.IconButton(),
+                        ]
+                    )
+                ),
+            ]
+        )
+    )
+    row2 = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Salt")),
+                ft.Container(
+                    content=ft.Row(
+                        controls=[
+                            ft.IconButton(),
+                            ft.TextField(value=""),
+                            ft.IconButton(),
+                        ]
+                    )
+                ),
+            ]
+        )
+    )
+    row3 = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Sugar")),
+                ft.Container(
+                    content=ft.Row(
+                        controls=[
+                            ft.IconButton(),
+                            ft.TextField(value=""),
+                            ft.IconButton(),
+                        ]
+                    )
+                ),
+            ]
+        )
+    )
+    name_input = testField("Impossible Recipe")
+    handler_module.ProductSubmitHandler.handle_submit(
+        name_input,
+        [row1, row2, row3],
+        msg,
+        page,
+        fake_store_values_callback,
+        fake_loading_indicator,
+    )  # type: ignore[arg-type]
+    assert "first ingredient is too small" in msg.value

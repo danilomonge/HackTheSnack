@@ -135,8 +135,8 @@ class RecipeGenerator:
         """
         try:
             from .algorithm.computation import Computation
-        except ModuleNotFoundError:
-            print("⚠️ SciPy is unavailable in this runtime. Using deterministic fallback.")
+        except Exception as ex:
+            print(f"⚠️ Sampling backend is unavailable in this runtime ({ex}). Using deterministic fallback.")
             return RecipeGenerator.solve_with_fallback(ingredient_input)
 
         num_ingredients = len(ingredient_input)

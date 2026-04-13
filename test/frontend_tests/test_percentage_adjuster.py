@@ -69,3 +69,47 @@ def test_increase_or_decrease_percentage():
     PercentageAdjuster.increase_or_decrease_percentage(field, 2.0)
     assert field.value == "0.00"
     assert field.data["last_valid"][0] == "0.00"  # type: ignore[arg-type]
+
+
+def test_increase_or_decrease_percentage_respects_dynamic_limits():
+    upper_field = MockTextField("40.00")
+    lower_field = MockTextField("39.50")
+
+    upper_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Sugar")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), upper_field, ft.IconButton()])),
+            ]
+        )
+    )
+    lower_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Salt")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), lower_field, ft.IconButton()])),
+            ]
+        )
+    )
+
+    rows = [upper_row, lower_row]
+    upper_field.data = {"last_valid": ["40.00"], "rows": rows, "row": upper_row}
+    lower_field.data = {"last_valid": ["39.50"], "rows": rows, "row": lower_row}
+
+    PercentageAdjuster.increase_or_decrease_percentage(lower_field, 1.0)
+    assert lower_field.value == "40.00"
+
+    only_field = MockTextField("99.50")
+    only_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Only")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), only_field, ft.IconButton()])),
+            ]
+        )
+    )
+    only_rows = [only_row]
+    only_field.data = {"last_valid": ["99.50"], "rows": only_rows, "row": only_row}
+
+    PercentageAdjuster.increase_or_decrease_percentage(only_field, 1.0)
+    assert only_field.value == "100.00"
