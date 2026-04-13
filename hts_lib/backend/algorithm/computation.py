@@ -1,7 +1,12 @@
 import numpy as np
 from numpy.random import rand, randn
-from tqdm.auto import tqdm
 from scipy.optimize import linprog
+
+try:
+    from tqdm.auto import tqdm
+except ModuleNotFoundError:
+    def tqdm(iterable, *args, **kwargs):
+        return iterable
 
 
 class Computation:
