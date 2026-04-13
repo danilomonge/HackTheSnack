@@ -1,10 +1,13 @@
 import sys
 import os
+import httpx
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from hts_lib.frontend.src.add_product_table.table_ui.product_table_ui import ProductTableUI
 from hts_lib.frontend.src.add_product_table.table_ui.ingredient_row_manager import IngredientRowManager
+from hts_lib.backend.data_base_manager.product_manager import ProductManager
+from hts_lib.frontend.src.product_action_handler import ProductActionHandler
 
 
 import flet as ft
@@ -99,5 +102,33 @@ def test_submit_with_valid_data():
     
     ui.on_submit_click()
     assert ui.feedback.value == "✅ Product is valid. Recipe generated!"
+
+def test_search_button_disabled_when_backend_offline(monkeypatch):
+    page = Page()
+    monkeypatch.setattr(ProductManager, "is_backend_available", staticmethod(lambda timeout=1.5: False))
+
+    ui = ProductTableUI(page) # type: ignore[arg-type]
+
+    assert ui.search_button.disabled is True
+    assert "offline" in ui.search_button.tooltip.lower()
+    assert ui.save_button.disabled is True
+
+def test_search_click_shows_friendly_message_when_backend_offline(monkeypatch):
+    page = Page()
+    monkeypatch.setattr(ProductManager, "is_backend_available", staticmethod(lambda timeout=1.5: False))
+
+    ui = ProductTableUI(page) # type: ignore[arg-type]
+    ui.product_name.value = "queso"
+    ui.on_find_product_click(None)
+
+    assert "search and save are unavailable right now" in ui.feedback.value.lower()
+    assert page.updated
+
+def test_user_friendly_error_message_for_connection_failure():
+    message = ProductActionHandler.get_user_friendly_error_message(
+        httpx.ConnectError("Connection refused")
+    )
+
+    assert "offline" in message.lower()
 
     
