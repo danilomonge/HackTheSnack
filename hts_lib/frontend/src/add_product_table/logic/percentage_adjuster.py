@@ -1,4 +1,5 @@
 import flet as ft
+from .input_validator import InputValidator
 
 class PercentageAdjuster:
     """
@@ -23,9 +24,20 @@ class PercentageAdjuster:
             input_field (ft.TextField): The text field to update.
             step (float): The value to add or subtract (e.g. +1.0 or -1.0).
         """
+        rows = []
+        current_row = None
+        input_data = getattr(input_field, "data", None)
+        if isinstance(input_data, dict):
+            rows = input_data.get("rows") or []
+            current_row = input_data.get("row")
+
         try:
             current_value = float(input_field.value) #type: ignore (caught below)
-            updated_value = max(0.0, min(99.99, current_value + step))
+            updated_value = InputValidator.clamp_percentage_value(
+                rows,
+                current_row,
+                current_value + step,
+            )
         except:
             updated_value = 0.0
 
@@ -33,4 +45,3 @@ class PercentageAdjuster:
         input_field.value = new_value_str
         input_field.data["last_valid"][0] = new_value_str #type: ignore
         input_field.update()
-

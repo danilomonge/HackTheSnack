@@ -1,6 +1,6 @@
+import json
 import os
 import sys
-import json
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import flet as ft
@@ -19,15 +19,18 @@ if not IS_WEB:
     # Load environment variables securely to access API keys in native runs.
     SecureEnvLoader.load_env()
 
-# Get API keys from environment variables
 usda_key = os.environ.get("USDA_API_KEY")
 deepl_key = os.environ.get("DEEPL_API_KEY")
 
-# Route URLs for USDA and DeepL APIs
 SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 DEEPL_URL = "https://api-free.deepl.com/v2/translate"
 RUNTIME_CONFIG_PATH = os.path.join(BASE_DIR, "assets", "runtime-config.json")
-DEFAULT_NUTRITION_PROXY_URL = os.environ.get("NUTRITION_PROXY_URL", "").strip()
+
+
+def _normalize_url(value):
+    if not value:
+        return ""
+    return str(value).strip().rstrip("/")
 
 
 def _build_same_origin_asset_url(page: ft.Page, asset_name: str) -> str | None:
@@ -45,6 +48,10 @@ def _build_same_origin_asset_url(page: ft.Page, asset_name: str) -> str | None:
 
 
 def _load_runtime_config(page: ft.Page | None = None) -> dict:
+    env_proxy_url = _normalize_url(os.environ.get("NUTRITION_PROXY_URL"))
+    if env_proxy_url:
+        return {"nutrition_proxy_url": env_proxy_url}
+
     if page is not None and IS_WEB:
         config_url = _build_same_origin_asset_url(page, "runtime-config.json")
         if config_url:
@@ -60,102 +67,43 @@ def _load_runtime_config(page: ft.Page | None = None) -> dict:
 
 
 def get_nutrition_proxy_url(page: ft.Page | None = None) -> str:
-    if DEFAULT_NUTRITION_PROXY_URL:
-        return DEFAULT_NUTRITION_PROXY_URL
-
     try:
         runtime_config = _load_runtime_config(page)
     except Exception:
         return ""
 
-    return str(runtime_config.get("nutrition_proxy_url", "")).strip()
+    return _normalize_url(runtime_config.get("nutrition_proxy_url"))
 
 
-def translate_to_english(text):
-    """
-    Translates a given text from German to English using the DeepL API.
-    Args:
-        text (str): The text to translate.
-    Returns:
-        str: The translated text.
-    """
-    if not deepl_key:
+def _proxy_endpoint(proxy_url: str, route_name: str) -> str:
+    proxy_url = _normalize_url(proxy_url)
+    if proxy_url.endswith(f"/api/{route_name}"):
+        return proxy_url
+    return f"{proxy_url}/api/{route_name}"
+
+
+def _translate_via_proxy(text: str, page: ft.Page | None = None) -> str:
+    proxy_url = get_nutrition_proxy_url(page)
+    if not proxy_url:
         return text
 
-    params = {
-        "auth_key": deepl_key,
-        "text": text,
-        "source_lang": "DE",
-        "target_lang": "EN",
-    }
-    response = httpx.post(DEEPL_URL, data=params, timeout=10.0)
+    response = httpx.post(
+        _proxy_endpoint(proxy_url, "translate"),
+        json={"text": text, "source_lang": "DE", "target_lang": "EN"},
+        timeout=10.0,
+    )
     response.raise_for_status()
-    result = response.json()
-    return result["translations"][0]["text"]
+    payload = response.json()
+    return payload.get("text", text)
 
 
-def get_nutrition_usda(ingredient_name):
-    """
-    Fetches nutritional information for a given ingredient from the USDA API.
-    Args:
-        ingredient_name (str): The name of the ingredient to search for.
-    Returns:
-        dict: A dictionary containing nutritional values or None if not found.
-    """
-    if not usda_key:
-        return None
-
-    # Use the stripped and lowercased ingredient name for searching
-    searched = ingredient_name.strip().lower()
-    
-    if len(ingredient_name.strip()) < 3:
-        # Don't search for very short names that are likely not valid
-        return None
-    
-    params = {
-        "query": ingredient_name,
-        "api_key": usda_key,
-        "pageSize": 5,
-        "dataType": ["Branded", "Branded Foods"],
-    }
-    res = httpx.get(SEARCH_URL, params=params, timeout=10.0)
-    res.raise_for_status()
-    data = res.json()
-
-    # if the response is empty or no foods are found, return None
-    if "foods" not in data or not data["foods"]:
-        print(f"⚠️ No reliable data found for: {ingredient_name} (likely processed)")
-        return None
-
-    # Check for an exact match in the food descriptions (avoiding similar names with unreliable data)
-    for food in data["foods"]:
-        # Convert the food description to lowercase and strip whitespace
-        name = food["description"].strip().lower()
-        # If the name matches the searched ingredient, return its nutritional values
-        if name == searched:
-            nutrients = {n["nutrientName"]: n["value"] for n in food["foodNutrients"]}
-            return {
-                "name": food["description"],
-                "kcal": nutrients.get("Energy", 0),
-                "carbs": nutrients.get("Carbohydrate, by difference", 0),
-                "fat": nutrients.get("Total lipid (fat)", 0),
-                "protein": nutrients.get("Protein", 0),
-                "sodium": nutrients.get("Sodium, Na", 0),
-                "per": "100g",
-            }
-
-    # If no exact match was found
-    print(f"❌ No exact match for: '{ingredient_name}'")
-    return None
-
-
-def get_nutrition_from_proxy(page: ft.Page, ingredient_name: str):
+def _get_nutrition_via_proxy(page: ft.Page | None, ingredient_name: str):
     proxy_url = get_nutrition_proxy_url(page)
     if not proxy_url:
         return None
 
     response = httpx.get(
-        proxy_url,
+        _proxy_endpoint(proxy_url, "nutrition"),
         params={"ingredient": ingredient_name},
         timeout=15.0,
     )
@@ -178,6 +126,77 @@ def get_nutrition_from_proxy(page: ft.Page, ingredient_name: str):
     }
 
 
+def translate_to_english(text: str, page: ft.Page | None = None):
+    """
+    Translates a given text from German to English.
+    """
+    if IS_WEB:
+        try:
+            return _translate_via_proxy(text, page)
+        except Exception:
+            return text
+
+    if not deepl_key:
+        return text
+
+    params = {
+        "auth_key": deepl_key,
+        "text": text,
+        "source_lang": "DE",
+        "target_lang": "EN",
+    }
+    response = httpx.post(DEEPL_URL, data=params, timeout=10.0)
+    response.raise_for_status()
+    result = response.json()
+    return result["translations"][0]["text"]
+
+
+def get_nutrition_usda(ingredient_name: str, page: ft.Page | None = None):
+    """
+    Fetches nutritional information for a given ingredient.
+    """
+    if IS_WEB:
+        return _get_nutrition_via_proxy(page, ingredient_name)
+
+    if not usda_key:
+        return None
+
+    searched = ingredient_name.strip().lower()
+
+    if len(ingredient_name.strip()) < 3:
+        return None
+
+    params = {
+        "query": ingredient_name,
+        "api_key": usda_key,
+        "pageSize": 5,
+        "dataType": ["Branded", "Branded Foods"],
+    }
+    res = httpx.get(SEARCH_URL, params=params, timeout=10.0)
+    res.raise_for_status()
+    data = res.json()
+
+    if "foods" not in data or not data["foods"]:
+        print(f"⚠️ No reliable data found for: {ingredient_name} (likely processed)")
+        return None
+
+    for food in data["foods"]:
+        name = food["description"].strip().lower()
+        if name == searched:
+            nutrients = {n["nutrientName"]: n["value"] for n in food["foodNutrients"]}
+            return {
+                "name": food["description"],
+                "kcal": nutrients.get("Energy", 0),
+                "carbs": nutrients.get("Carbohydrate, by difference", 0),
+                "fat": nutrients.get("Total lipid (fat)", 0),
+                "protein": nutrients.get("Protein", 0),
+                "sodium": nutrients.get("Sodium, Na", 0),
+                "per": "100g",
+            }
+
+    print(f"❌ No exact match for: '{ingredient_name}'")
+    return None
+
 
 class NutritionalInfoHandler:
     """
@@ -185,79 +204,52 @@ class NutritionalInfoHandler:
     """
 
     def __init__(self, page: ft.Page):
-        """
-        Initializes the NutritionalInfoHandler with a Flet page instance.
-        """
         self.page = page
         self.dialog = ft.AlertDialog(
             modal=True,
             title=ft.Text("Nutrition Info", size=16, weight=ft.FontWeight.BOLD),
-            actions=[ft.TextButton("OK", 
-                                   on_click=self.close_dialog,
-                                   style=ft.ButtonStyle(
-                                       color=Styles.ICON_COLOR,),)],
+            actions=[
+                ft.TextButton(
+                    "OK",
+                    on_click=self.close_dialog,
+                    style=ft.ButtonStyle(color=Styles.ICON_COLOR),
+                )
+            ],
         )
         self.page.overlay.append(self.dialog)
         self.page.update()
 
     def show_nutritional_info(self, ingredient_name: str, amount: float):
-        """
-        Displays nutritional information for a given ingredient in a dialog.
-        """
         self.dialog.title = ft.Text(
-            f"{ingredient_name} — Estimated Nutrition Info 🌱 ", size=15, weight=ft.FontWeight.BOLD
+            f"{ingredient_name} — Estimated Nutrition Info 🌱 ",
+            size=15,
+            weight=ft.FontWeight.BOLD,
         )
-        if IS_WEB:
-            self.dialog.open = True
-            self.dialog.content = ft.Text("⏳ Fetching data...")
-            self.page.update()
-
-            try:
-                data = get_nutrition_from_proxy(self.page, ingredient_name)
-            except Exception:
-                data = None
-
-            if not data:
-                proxy_url = get_nutrition_proxy_url(self.page)
-                if proxy_url:
-                    self.dialog.content = ft.Text(
-                        f"😕 Sorry, we couldn't find any information for '{ingredient_name}'."
-                    )
-                else:
-                    self.dialog.content = ft.Text(
-                        "Nutrition lookup is not configured for the web build yet. "
-                        "Add a secure proxy URL in assets/runtime-config.json "
-                        "or via the NUTRITION_PROXY_URL build variable."
-                    )
-
-                self.page.update()
-                return
-            self._render_nutrition_result(ingredient_name, amount, data)
-            self.page.update()
-            return
-
         self.dialog.content = ft.Text("⏳ Fetching data...")
         self.dialog.open = True
         self.page.update()
 
-        # Step 1: Try translating the ingredient name
         try:
-            translated = translate_to_english(ingredient_name)
+            translated = translate_to_english(ingredient_name, self.page)
         except Exception:
-            translated = ingredient_name  # fallback to original
+            translated = ingredient_name
 
-        # Step 2: Try fetching nutritional data from USDA
         try:
-            data = get_nutrition_usda(translated)
+            data = get_nutrition_usda(translated, self.page)
         except Exception:
             data = None
 
-        # Step 3: Display result or fallback message if the data is not available
         if not data:
-            self.dialog.content = ft.Text(
-                f"😕 Sorry, we couldn't find any information for '{ingredient_name}'."
-            )
-
+            if IS_WEB and not get_nutrition_proxy_url(self.page):
+                self.dialog.content = ft.Text(
+                    "Nutrition lookup is not configured for the web build yet. "
+                    "Add a secure proxy URL in assets/runtime-config.json "
+                    "or via the NUTRITION_PROXY_URL build variable."
+                )
+            else:
+                self.dialog.content = ft.Text(
+                    f"😕 Sorry, we couldn't find any information for '{ingredient_name}'."
+                )
         else:
             self._render_nutrition_result(ingredient_name, amount, data)
 
@@ -325,9 +317,7 @@ class NutritionalInfoHandler:
                     ft.Row(
                         [
                             ft.Icon(name="local_fire_department", color=Styles.ICON_COLOR, size=18),
-                            ft.Text(
-                                f"Energy: {(data['kcal'] * amount / 100):.2f} kcal"
-                            ),
+                            ft.Text(f"Energy: {(data['kcal'] * amount / 100):.2f} kcal"),
                         ]
                     ),
                     ft.Row(
@@ -339,17 +329,13 @@ class NutritionalInfoHandler:
                     ft.Row(
                         [
                             ft.Icon(name="ramen_dining", color=Styles.ICON_COLOR, size=18),
-                            ft.Text(
-                                f"Carbohydrates: {(data['carbs'] * amount / 100):.2f} g"
-                            ),
+                            ft.Text(f"Carbohydrates: {(data['carbs'] * amount / 100):.2f} g"),
                         ]
                     ),
                     ft.Row(
                         [
                             ft.Icon(name="egg", color=Styles.ICON_COLOR, size=18),
-                            ft.Text(
-                                f"Protein: {(data['protein'] * amount / 100):.2f} g",
-                            ),
+                            ft.Text(f"Protein: {(data['protein'] * amount / 100):.2f} g"),
                         ]
                     ),
                     ft.Row(

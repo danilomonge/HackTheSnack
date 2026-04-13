@@ -1,4 +1,4 @@
-name: 🚀 HackTheSnack · Web Deploy
+name: Deploy Web to GitHub Pages
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -48,10 +48,11 @@ jobs:
         working-directory: ./hts_lib
         run: flet build web
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Publish to gh-pages
         if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./hts_lib/build/web
+          publish_branch: gh-pages
           enable_jekyll: false

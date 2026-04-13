@@ -5,15 +5,10 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, BASE_DIR)
 
 import flet as ft
-import httpx
-import json
 from frontend.src.add_product_table.logic.input_validator import InputValidator
 from frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 from frontend.src.create_result_table.result_table_ui import RecipeResultUI
 from frontend.src.styles import Styles
-from backend.recipe_generator import RecipeGenerator
-from backend.data_base_manager.recipe_manager import RecipeManager
-from backend.data_base_manager.evaluation_manager import EvaluationManager
 
 
 class ProductSubmitHandler:
@@ -60,9 +55,21 @@ class ProductSubmitHandler:
         # Extract product name and ingredient dictionary
         product_name = (product_name_field.value or "").strip()
         ingredient_dict = IngredientDataBuilder.build_data_from_rows(ingredient_rows)
-        
-        # Generate the recipe using the RecipeGenerator from the backend
-        result_dict = RecipeGenerator.generate_recipe(ingredient_dict)
+        try:
+            from backend.recipe_generator import RecipeGenerator
+
+            # Generate the recipe using the RecipeGenerator from the backend
+            result_dict = RecipeGenerator.generate_recipe(ingredient_dict)
+        except Exception as ex:
+            feedback_text.value = (
+                "⚠️ Recipe generation is temporarily unavailable. "
+                f"Details: {str(ex)}"
+            )
+            feedback_text.color = Styles.RED_COLOR
+            feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+            page.update()
+            RecipeResultUI.display_recipe_result(page, None)
+            return None
 
         # Set feedback message depending on result
         if result_dict:
@@ -82,5 +89,4 @@ class ProductSubmitHandler:
         RecipeResultUI.display_recipe_result(page, result_dict)
 
         return result_dict  # type: ignore
-
 

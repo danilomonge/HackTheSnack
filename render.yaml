@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: hackthesnack-nutrition-proxy
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements-proxy.txt
+    startCommand: uvicorn hts_lib.backend.nutrition_proxy_api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: USDA_API_KEY
+        sync: false
+      - key: DEEPL_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false

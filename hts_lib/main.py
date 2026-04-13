@@ -18,7 +18,8 @@ def main(page: ft.Page):
     - Adds one empty ingredient row by default
     """
     page.title = "Hack The Snack"
-    page.window.icon = "icon/icon.ico"
+    if not getattr(page, "web", False):
+        page.window.icon = "icon/icon.ico"
     page.scroll = ft.ScrollMode.AUTO
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.expand = True
