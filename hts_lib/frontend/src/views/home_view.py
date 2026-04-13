@@ -11,9 +11,10 @@ class HomeView:
         content = ft.Column(
             controls=[
                 ft.Image(
-                src="/assets/Title.png",
-                width=700,
-                fit=ft.ImageFit.CONTAIN,  ),
+                    src="Title.png",
+                    width=700,
+                    fit=ft.ImageFit.CONTAIN,
+                ),
                 ft.Container(
                     content=Styles.build_description(
                         "Recreate your favorite food products at home with the help of our food hacker \n - \n Crack it · Cook it · Love it"
@@ -40,15 +41,15 @@ class HomeView:
                             on_click=lambda e: self.page.go("/about"),
                             icon=ft.Icons.INFO,
                             ),
-                        
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
+                    wrap=True,
+                    run_spacing=12,
                 ),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=25,
-            expand=True,
             scroll=ft.ScrollMode.AUTO,
         )
 
@@ -56,22 +57,20 @@ class HomeView:
         return ft.View(
             route="/",
             controls=[
-                ft.Stack(
-                    controls=[
-                        ft.Image(
-                            src="/assets/bg_test.png",
-                            width=float("inf"),
-                            height=float("inf"),
-                            fit=ft.ImageFit.COVER,
-                        ),
-                        ft.Container(
-                            content=content,
-                            alignment=ft.alignment.center,
-                            padding=50,
-                            expand=True,
-                        )
-                    ],
-                    expand=True
-                )
-            ]
+                ft.Container(
+                    image=ft.DecorationImage(
+                        src="bg_test.png",
+                        fit=ft.ImageFit.COVER,
+                    ),
+                    content=ft.Container(
+                        content=content,
+                        alignment=ft.alignment.top_center,
+                        padding=50,
+                        width=float("inf"),
+                    ),
+                    width=float("inf"),
+                    expand=True,
+                ),
+            ],
+            scroll=ft.ScrollMode.AUTO,
         )

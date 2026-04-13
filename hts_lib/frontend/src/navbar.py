@@ -71,8 +71,10 @@ class NavigationBar:
                 alignment=ft.MainAxisAlignment.CENTER,
                 scroll=ft.ScrollMode.AUTO,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                wrap=False,
             ),
             bgcolor=Styles.NAVBAR_COLOR,
             padding=10,
+            height=70,
             width=float("inf"),
         )
