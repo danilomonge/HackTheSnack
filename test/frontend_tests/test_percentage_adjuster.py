@@ -34,11 +34,11 @@ def test_increase_or_decrease_percentage():
     assert field.data["last_valid"][0] == "26.00"  # type: ignore[arg-type]
     assert field.updated
 
-    # Case 2: valid input, step causes result to exceed 99.99 → stay at 99.99
+    # Case 2: without row context, the generic cap allows 100.00
     field = MockTextField("99.50")
     PercentageAdjuster.increase_or_decrease_percentage(field, 1.0)
-    assert field.value == "99.99"
-    assert field.data["last_valid"][0] == "99.99"  # type: ignore[arg-type]
+    assert field.value == "100.00"
+    assert field.data["last_valid"][0] == "100.00"  # type: ignore[arg-type]
 
     # Case 3: valid input, step causes result to drop below 0.00 → stay at 0.00
     field = MockTextField("0.50")

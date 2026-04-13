@@ -91,27 +91,26 @@ class InputValidator:
     @staticmethod
     def format_to_two_decimal(value: str, last_valid_ref: list[str]) -> str:
         """
-        Formats a number string to have up to 2 digits before and after the dot.
+        Formats a number string to have up to 3 digits before and 2 after the dot.
 
-        If the dot is missing, it adds one after the first two digits.
-        It also saves the final formatted value in last_valid_ref so it can be reused later.
+        It does not auto-insert a decimal separator. This keeps typing natural for
+        values like 10, 90, and 100 while still trimming invalid extra digits.
 
         Args:
         value (str): The cleaned number string (e.g. "1234", "12.345").
         last_valid_ref (list[str]): A one-item list used to store the latest valid input.
 
         Returns:
-        str: A formatted string like "12.34".
+        str: A formatted string like "100", "12.34", or "9.5".
         """
 
         if "." in value:
             int_part, dec_part = value.split(".")[:2]
-            int_part = int_part[:2]
+            int_part = int_part[:3]
             dec_part = dec_part[:2]
             value = int_part + "." + dec_part
         else:
-            if len(value) > 2:
-                value = value[:2] + "." + value[2:]
+            value = value[:3]
         last_valid_ref[0] = value
         return value
 
@@ -150,7 +149,13 @@ class InputValidator:
             try:
                 numeric_value = float(control.value)
                 numeric_value = cls.clamp_percentage_value(rows, current_row, numeric_value)
-                control.value = f"{numeric_value:.2f}"
+                if "." in control.value:
+                    control.value = f"{numeric_value:.2f}".rstrip("0").rstrip(".")
+                else:
+                    if numeric_value.is_integer():
+                        control.value = str(int(numeric_value))
+                    else:
+                        control.value = f"{numeric_value:.2f}".rstrip("0").rstrip(".")
                 last_valid[0] = control.value
             except Exception:
                 pass
