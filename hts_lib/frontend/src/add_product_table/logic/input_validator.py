@@ -14,6 +14,38 @@ class InputValidator:
     """
 
     @staticmethod
+    def _parse_percentage(value: str | None) -> float:
+        """
+        Parses a percentage string and returns 0.0 for invalid values.
+        """
+        try:
+            return float((value or "").strip())
+        except Exception:
+            return 0.0
+
+    @classmethod
+    def _sum_other_defined_percentages(
+        cls,
+        rows: list[ft.Container],
+        current_row: ft.Container | None,
+    ) -> float:
+        """
+        Sums all valid percentage values except the current row.
+        """
+        total = 0.0
+
+        for row in rows:
+            if row is current_row:
+                continue
+
+            perc_field = row.content.controls[1].content.controls[1]  # type: ignore
+            value = cls._parse_percentage(getattr(perc_field, "value", ""))
+            if value > 0.0:
+                total += value
+
+        return total
+
+    @staticmethod
     def get_max_percentage_for_row(
         rows: list[ft.Container],
         current_row: ft.Container | None,
@@ -33,15 +65,15 @@ class InputValidator:
         if current_row is None:
             return max_value
 
+        remaining_total = max(0.0, 100.0 - InputValidator._sum_other_defined_percentages(rows, current_row))
+        max_value = min(max_value, remaining_total)
+
         for row in rows:
             if row is current_row:
                 break
 
             perc_field = row.content.controls[1].content.controls[1]  # type: ignore
-            try:
-                above_value = float((perc_field.value or "").strip())
-            except Exception:
-                above_value = 0.0
+            above_value = InputValidator._parse_percentage(getattr(perc_field, "value", ""))
 
             if above_value > 0.0:
                 max_value = min(max_value, above_value)
@@ -138,6 +170,12 @@ class InputValidator:
             control.value = cls.format_to_two_decimal(
                 cls.clean_percentage_input(event.control.value), last_valid
             )
+
+            if control.value.endswith("."):
+                page.update()
+                if on_change_extra:
+                    on_change_extra(event)
+                return
 
             rows = []
             current_row = None
