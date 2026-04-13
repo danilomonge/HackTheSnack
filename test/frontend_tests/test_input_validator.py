@@ -116,7 +116,7 @@ def test_fix_input_while_typing():
     assert last_valid[0] == "100"
     assert page.updated
 
-    # Case 2: digits only, 2 or fewer → no dot is inserted
+    # Case 2: digits only, 2 or fewer → natural integer typing is preserved
     last_valid = [""]
     page = TestPage()
     event = TestEvent("12")
@@ -166,7 +166,17 @@ def test_fix_input_while_typing():
     assert last_valid[0] == "1.23"
     assert page.updated
 
-    # Case 7: only letters/symbols → cleaned to empty string
+    # Case 7: trailing dot is preserved while typing so decimals can be entered naturally
+    last_valid = [""]
+    page = TestPage()
+    event = TestEvent("33.")
+    handler = InputValidator.fix_input_while_typing(last_valid, page) # type: ignore[arg-type]
+    handler(event)
+    assert event.control.value == "33."
+    assert last_valid[0] == "33."
+    assert page.updated
+
+    # Case 8: only letters/symbols → cleaned to empty string
     last_valid = [""]
     page = TestPage()
     event = TestEvent("abc%$")
@@ -176,7 +186,7 @@ def test_fix_input_while_typing():
     assert last_valid[0] == ""
     assert page.updated
 
-    # Case 8: empty string → remains empty
+    # Case 9: empty string → remains empty
     last_valid = [""]
     page = TestPage()
     event = TestEvent("")
@@ -242,6 +252,44 @@ def test_fix_input_while_typing_respects_dynamic_max():
     handler = InputValidator.fix_input_while_typing(last_valid, page)  # type: ignore[arg-type]
     handler(event)
     assert event.control.value == "100"
+    assert last_valid[0] == "100"
+    assert page.updated
+
+
+def test_get_max_percentage_for_row_respects_remaining_total():
+    first_field = ft.TextField(value="80.00")
+    second_field = ft.TextField(value="10.00")
+    third_field = ft.TextField(value="5.00")
+
+    first_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Sugar")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), first_field, ft.IconButton()])),
+            ]
+        )
+    )
+    second_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Salt")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), second_field, ft.IconButton()])),
+            ]
+        )
+    )
+    third_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Pepper")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), third_field, ft.IconButton()])),
+            ]
+        )
+    )
+
+    rows = [first_row, second_row, third_row]
+
+    assert InputValidator.get_max_percentage_for_row(rows, second_row) == 15.0
+    assert InputValidator.get_max_percentage_for_row(rows, third_row) == 10.0
     
 
 def test_has_product_name():
@@ -308,6 +356,10 @@ def test_has_product_name():
 
 
 def test_check_first_percentage_is_large_enough():
+    class TestField:
+        def __init__(self, value):
+            self.value = value
+
     class TestText:
         def __init__(self):
             self.value = ""
