@@ -8,9 +8,9 @@ authors = [
 ]
 dependencies = [
   "flet==0.28.3",
-  "numpy==1.26.4",
-  "scipy==1.15.2",
-  "pandas==2.1.4",
+  "numpy==2.0.2",
+  "scipy==1.14.1",
+  "pandas==2.2.3",
   "httpx==0.28.1",
 ]
 
@@ -22,3 +22,5 @@ copyright = "Copyright (C) 2025 HackTheSnack"
 
 [tool.flet.web]
 pwa = true
+base_url = "/HackTheSnack/"
+route_url_strategy = "hash"
