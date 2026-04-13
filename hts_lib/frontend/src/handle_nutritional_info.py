@@ -1,18 +1,21 @@
-import flet as ft
-import requests
-from .styles import Styles
-import sys
 import os
+import sys
+
+import flet as ft
+import httpx
+
+from .styles import Styles
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, BASE_DIR)
 
-from Secure_env.env_enc_decipher import SecureEnvLoader
+IS_WEB = sys.platform == "emscripten"
 
-# Load environment variables securely to acces API keys
-SecureEnvLoader.load_env()
+if not IS_WEB:
+    from Secure_env.env_enc_decipher import SecureEnvLoader
 
-import os
+    # Load environment variables securely to access API keys in native runs.
+    SecureEnvLoader.load_env()
 
 # Get API keys from environment variables
 usda_key = os.environ.get("USDA_API_KEY")
@@ -31,13 +34,17 @@ def translate_to_english(text):
     Returns:
         str: The translated text.
     """
+    if not deepl_key:
+        return text
+
     params = {
         "auth_key": deepl_key,
         "text": text,
         "source_lang": "DE",
         "target_lang": "EN",
     }
-    response = requests.post(DEEPL_URL, data=params)
+    response = httpx.post(DEEPL_URL, data=params, timeout=10.0)
+    response.raise_for_status()
     result = response.json()
     return result["translations"][0]["text"]
 
@@ -50,6 +57,9 @@ def get_nutrition_usda(ingredient_name):
     Returns:
         dict: A dictionary containing nutritional values or None if not found.
     """
+    if not usda_key:
+        return None
+
     # Use the stripped and lowercased ingredient name for searching
     searched = ingredient_name.strip().lower()
     
@@ -63,7 +73,8 @@ def get_nutrition_usda(ingredient_name):
         "pageSize": 5,
         "dataType": ["Branded", "Branded Foods"],
     }
-    res = requests.get(SEARCH_URL, params=params)
+    res = httpx.get(SEARCH_URL, params=params, timeout=10.0)
+    res.raise_for_status()
     data = res.json()
 
     # if the response is empty or no foods are found, return None
@@ -122,6 +133,14 @@ class NutritionalInfoHandler:
         self.dialog.title = ft.Text(
             f"{ingredient_name} — Estimated Nutrition Info 🌱 ", size=15, weight=ft.FontWeight.BOLD
         )
+        if IS_WEB:
+            self.dialog.content = ft.Text(
+                "Nutrition lookup is not available in the GitHub Pages version yet."
+            )
+            self.dialog.open = True
+            self.page.update()
+            return
+
         self.dialog.content = ft.Text("⏳ Fetching data...")
         self.dialog.open = True
         self.page.update()
