@@ -41,7 +41,7 @@ class IngredientRowManager:
         Returns:
             ft.TextField: Configured text field for the ingredient name.
         """
-        return ft.TextField(label="Ingredient", width=200, on_change=self.on_user_input_change, **style)
+        return ft.TextField(label="Ingredient", width=210, on_change=self.on_user_input_change, **style)
 
     def percent_input(self, style, last_valid, page):
         """
@@ -58,7 +58,7 @@ class IngredientRowManager:
         return ft.TextField(
             label="Percentage",
             hint_text="00.00",
-            width=120,
+            width=130,
             suffix_text="%",
             suffix_style=ft.TextStyle(),
             keyboard_type=ft.KeyboardType.TEXT,
