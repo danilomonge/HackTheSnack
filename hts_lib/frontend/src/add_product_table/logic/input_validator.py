@@ -14,6 +14,86 @@ class InputValidator:
     """
 
     @staticmethod
+    def _parse_percentage(value: str | None) -> float:
+        """
+        Parses a percentage string and returns 0.0 for invalid values.
+        """
+        try:
+            return float((value or "").strip())
+        except Exception:
+            return 0.0
+
+    @classmethod
+    def _sum_other_defined_percentages(
+        cls,
+        rows: list[ft.Container],
+        current_row: ft.Container | None,
+    ) -> float:
+        """
+        Sums all valid percentage values except the current row.
+        """
+        total = 0.0
+
+        for row in rows:
+            if row is current_row:
+                continue
+
+            perc_field = row.content.controls[1].content.controls[1]  # type: ignore
+            value = cls._parse_percentage(getattr(perc_field, "value", ""))
+            if value > 0.0:
+                total += value
+
+        return total
+
+    @staticmethod
+    def get_max_percentage_for_row(
+        rows: list[ft.Container],
+        current_row: ft.Container | None,
+    ) -> float:
+        """
+        Returns the maximum allowed percentage for one row.
+
+        Rules:
+        - If there is only one ingredient row, the max is 100.00.
+        - With multiple rows, the max is 99.99.
+        - A lower row cannot exceed any filled row above it.
+        """
+        if len(rows) <= 1:
+            return 100.0
+
+        max_value = 99.99
+        if current_row is None:
+            return max_value
+
+        remaining_total = max(0.0, 100.0 - InputValidator._sum_other_defined_percentages(rows, current_row))
+        max_value = min(max_value, remaining_total)
+
+        for row in rows:
+            if row is current_row:
+                break
+
+            perc_field = row.content.controls[1].content.controls[1]  # type: ignore
+            above_value = InputValidator._parse_percentage(getattr(perc_field, "value", ""))
+
+            if above_value > 0.0:
+                max_value = min(max_value, above_value)
+
+        return max_value
+
+    @classmethod
+    def clamp_percentage_value(
+        cls,
+        rows: list[ft.Container],
+        current_row: ft.Container | None,
+        numeric_value: float,
+    ) -> float:
+        """
+        Clamps a percentage value to the allowed range for the current row.
+        """
+        max_value = cls.get_max_percentage_for_row(rows, current_row)
+        return max(0.0, min(max_value, numeric_value))
+
+    @staticmethod
     def clean_percentage_input(value: str) -> str:
         """
         Takes a user input string and filters it to keep only digits and one decimal point.
@@ -43,27 +123,26 @@ class InputValidator:
     @staticmethod
     def format_to_two_decimal(value: str, last_valid_ref: list[str]) -> str:
         """
-        Formats a number string to have up to 2 digits before and after the dot.
+        Formats a number string to have up to 3 digits before and 2 after the dot.
 
-        If the dot is missing, it adds one after the first two digits.
-        It also saves the final formatted value in last_valid_ref so it can be reused later.
+        It does not auto-insert a decimal separator. This keeps typing natural for
+        values like 10, 90, and 100 while still trimming invalid extra digits.
 
         Args:
         value (str): The cleaned number string (e.g. "1234", "12.345").
         last_valid_ref (list[str]): A one-item list used to store the latest valid input.
 
         Returns:
-        str: A formatted string like "12.34".
+        str: A formatted string like "100", "12.34", or "9.5".
         """
 
         if "." in value:
             int_part, dec_part = value.split(".")[:2]
-            int_part = int_part[:2]
+            int_part = int_part[:3]
             dec_part = dec_part[:2]
             value = int_part + "." + dec_part
         else:
-            if len(value) > 2:
-                value = value[:2] + "." + value[2:]
+            value = value[:3]
         last_valid_ref[0] = value
         return value
 
@@ -87,9 +166,38 @@ class InputValidator:
             function: To use as a TextField's on_change handler.
         """
         def handler(event):
-            event.control.value = cls.format_to_two_decimal(
+            control = event.control
+            control.value = cls.format_to_two_decimal(
                 cls.clean_percentage_input(event.control.value), last_valid
             )
+
+            if control.value.endswith("."):
+                page.update()
+                if on_change_extra:
+                    on_change_extra(event)
+                return
+
+            rows = []
+            current_row = None
+            control_data = getattr(control, "data", None)
+            if isinstance(control_data, dict):
+                rows = control_data.get("rows") or []
+                current_row = control_data.get("row")
+
+            try:
+                numeric_value = float(control.value)
+                numeric_value = cls.clamp_percentage_value(rows, current_row, numeric_value)
+                if "." in control.value:
+                    control.value = f"{numeric_value:.2f}".rstrip("0").rstrip(".")
+                else:
+                    if numeric_value.is_integer():
+                        control.value = str(int(numeric_value))
+                    else:
+                        control.value = f"{numeric_value:.2f}".rstrip("0").rstrip(".")
+                last_valid[0] = control.value
+            except Exception:
+                pass
+
             page.update()
             if on_change_extra:
                 on_change_extra(event)
@@ -188,6 +296,32 @@ class InputValidator:
             message_text.color = "red"
             page.update()
             return False
+        return True
+
+    @staticmethod
+    def _check_first_percentage_is_large_enough(
+        percentages: list[float], message_text: ft.Text, page: ft.Page
+    ) -> bool:
+        """
+        Ensures the first ingredient is large enough to allow a descending recipe.
+        """
+        if len(percentages) <= 1:
+            return True
+
+        first_value = percentages[0]
+        if first_value <= 0.0:
+            return True
+
+        minimum_required = round(100.0 / len(percentages), 2)
+        if first_value < minimum_required:
+            message_text.value = (
+                f"⚠️ The first ingredient is too small for a recipe with {len(percentages)} ingredients. "
+                f"It must be at least {minimum_required:.2f}%."
+            )
+            message_text.color = "red"
+            page.update()
+            return False
+
         return True
 
 
@@ -333,6 +467,7 @@ class InputValidator:
         checks = [
             lambda: InputValidator._check_total_not_exceed_100(total, message_text, page),
             lambda: InputValidator._check_percentage_order(percentages, message_text, page),
+            lambda: InputValidator._check_first_percentage_is_large_enough(percentages, message_text, page),
             lambda: InputValidator._check_total_if_filled(percentages, total, message_text, page),
             lambda: InputValidator._check_remaining_space_is_enough(ingredient_rows, message_text, page),
             lambda: InputValidator._check_no_empty_if_total_is_100(ingredient_rows, message_text, page),

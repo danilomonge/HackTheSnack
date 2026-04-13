@@ -45,22 +45,22 @@ def test_format_to_two_decimal():
     assert InputValidator.format_to_two_decimal("12.34", last_valid) == "12.34"
     assert last_valid[0] == "12.34"
 
-    # Case 2: input has too many digits before and after the dot → cut to 2 before and 2 after
+    # Case 2: input has too many digits before and after the dot → cut to 3 before and 2 after
     last_valid = [""]
-    assert InputValidator.format_to_two_decimal("1234.5678", last_valid) == "12.56"
-    assert last_valid[0] == "12.56"
+    assert InputValidator.format_to_two_decimal("1234.5678", last_valid) == "123.56"
+    assert last_valid[0] == "123.56"
 
     # Case 3: not enough digits before or after the dot → cut what’s extra but keep what’s there
     last_valid = [""]
-    assert InputValidator.format_to_two_decimal("123.4", last_valid) == "12.4"
-    assert last_valid[0] == "12.4"
+    assert InputValidator.format_to_two_decimal("123.4", last_valid) == "123.4"
+    assert last_valid[0] == "123.4"
 
-    # Case 4: no dot written, but more than 2 digits total → add dot after second digit
+    # Case 4: no dot written, but more than 3 digits total → trim to the first 3 digits
     last_valid = [""]
-    assert InputValidator.format_to_two_decimal("1234", last_valid) == "12.34"
-    assert last_valid[0] == "12.34"
+    assert InputValidator.format_to_two_decimal("1234", last_valid) == "123"
+    assert last_valid[0] == "123"
 
-    # Case 5: exactly 2 digits and no dot → leave it as is, no dot added
+    # Case 5: exactly 2 digits and no dot → leave it as is
     last_valid = [""]
     assert InputValidator.format_to_two_decimal("12", last_valid) == "12"
     assert last_valid[0] == "12"
@@ -106,17 +106,17 @@ def test_fix_input_while_typing():
         def update(self):
             self.updated = True
 
-    # Case 1: digits only, more than 2 digits → dot is inserted after 2 digits
+    # Case 1: digits only, up to 3 digits → keep natural integer typing, then clamp to 100
     last_valid = [""]
     page = TestPage()
     event = TestEvent("1234")
     handler = InputValidator.fix_input_while_typing(last_valid, page) # type: ignore[arg-type]
     handler(event)
-    assert event.control.value == "12.34"
-    assert last_valid[0] == "12.34"
+    assert event.control.value == "100"
+    assert last_valid[0] == "100"
     assert page.updated
 
-    # Case 2: digits only, 2 or fewer → no dot is inserted
+    # Case 2: digits only, 2 or fewer → natural integer typing is preserved
     last_valid = [""]
     page = TestPage()
     event = TestEvent("12")
@@ -126,14 +126,14 @@ def test_fix_input_while_typing():
     assert last_valid[0] == "12"
     assert page.updated
 
-    # Case 3: digits with a dot → write only the first 2 before the dot and the first 2 after
+    # Case 3: digits with a dot → write only the first 3 before the dot and the first 2 after
     last_valid = [""]
     page = TestPage()
     event = TestEvent("123.456")
     handler = InputValidator.fix_input_while_typing(last_valid, page) # type: ignore[arg-type]
     handler(event)
-    assert event.control.value == "12.45"
-    assert last_valid[0] == "12.45"
+    assert event.control.value == "100"
+    assert last_valid[0] == "100"
     assert page.updated
 
     # Case 4: digits with a comma → comma replaced by dot
@@ -166,7 +166,17 @@ def test_fix_input_while_typing():
     assert last_valid[0] == "1.23"
     assert page.updated
 
-    # Case 7: only letters/symbols → cleaned to empty string
+    # Case 7: trailing dot is preserved while typing so decimals can be entered naturally
+    last_valid = [""]
+    page = TestPage()
+    event = TestEvent("33.")
+    handler = InputValidator.fix_input_while_typing(last_valid, page) # type: ignore[arg-type]
+    handler(event)
+    assert event.control.value == "33."
+    assert last_valid[0] == "33."
+    assert page.updated
+
+    # Case 8: only letters/symbols → cleaned to empty string
     last_valid = [""]
     page = TestPage()
     event = TestEvent("abc%$")
@@ -176,7 +186,7 @@ def test_fix_input_while_typing():
     assert last_valid[0] == ""
     assert page.updated
 
-    # Case 8: empty string → remains empty
+    # Case 9: empty string → remains empty
     last_valid = [""]
     page = TestPage()
     event = TestEvent("")
@@ -185,6 +195,101 @@ def test_fix_input_while_typing():
     assert event.control.value == ""
     assert last_valid[0] == ""
     assert page.updated
+
+
+def test_fix_input_while_typing_respects_dynamic_max():
+    class TestControl:
+        def __init__(self, value, data=None):
+            self.value = value
+            self.data = data or {}
+
+    class TestEvent:
+        def __init__(self, control):
+            self.control = control
+
+    class TestPage:
+        def __init__(self):
+            self.updated = False
+
+        def update(self):
+            self.updated = True
+
+    upper_field = ft.TextField(value="40")
+    lower_field = ft.TextField(value="45")
+    upper_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Sugar")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), upper_field, ft.IconButton()])),
+            ]
+        )
+    )
+    lower_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Salt")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), lower_field, ft.IconButton()])),
+            ]
+        )
+    )
+    rows = [upper_row, lower_row]
+
+    page = TestPage()
+    last_valid = [""]
+    control = TestControl("45", data={"rows": rows, "row": lower_row})
+    event = TestEvent(control)
+    handler = InputValidator.fix_input_while_typing(last_valid, page)  # type: ignore[arg-type]
+    handler(event)
+
+    assert event.control.value == "40"
+    assert last_valid[0] == "40"
+    assert page.updated
+
+    page = TestPage()
+    last_valid = [""]
+    control = TestControl("100", data={"rows": [lower_row], "row": lower_row})
+    event = TestEvent(control)
+    handler = InputValidator.fix_input_while_typing(last_valid, page)  # type: ignore[arg-type]
+    handler(event)
+    assert event.control.value == "100"
+    assert last_valid[0] == "100"
+    assert page.updated
+
+
+def test_get_max_percentage_for_row_respects_remaining_total():
+    first_field = ft.TextField(value="80.00")
+    second_field = ft.TextField(value="10.00")
+    third_field = ft.TextField(value="5.00")
+
+    first_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Sugar")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), first_field, ft.IconButton()])),
+            ]
+        )
+    )
+    second_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Salt")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), second_field, ft.IconButton()])),
+            ]
+        )
+    )
+    third_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Pepper")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), third_field, ft.IconButton()])),
+            ]
+        )
+    )
+
+    rows = [first_row, second_row, third_row]
+
+    assert InputValidator.get_max_percentage_for_row(rows, second_row) == 15.0
+    assert InputValidator.get_max_percentage_for_row(rows, third_row) == 10.0
     
 
 def test_has_product_name():
@@ -234,6 +339,7 @@ def test_has_product_name():
     message = TestText()
     name_input = TestField("   \n\t  ")
     result = InputValidator._has_product_name(name_input, message, page) # type: ignore[arg-type]
+    assert result is False
     assert message.value == "⚠️ Please enter a product name."
     assert message.color == "red"
     assert page.updated
@@ -249,6 +355,32 @@ def test_has_product_name():
     assert page.updated
 
 
+def test_check_first_percentage_is_large_enough():
+    class TestField:
+        def __init__(self, value):
+            self.value = value
+
+    class TestText:
+        def __init__(self):
+            self.value = ""
+            self.color = ""
+
+    class TestPage:
+        def __init__(self):
+            self.updated = False
+
+        def update(self):
+            self.updated = True
+
+    message = TestText()
+    page = TestPage()
+    assert InputValidator._check_first_percentage_is_large_enough([40.0, 30.0, 30.0], message, page) is True  # type: ignore[arg-type]
+
+    message = TestText()
+    page = TestPage()
+    assert InputValidator._check_first_percentage_is_large_enough([10.0, 0.0, 0.0], message, page) is False  # type: ignore[arg-type]
+    assert "first ingredient is too small" in message.value
+    assert page.updated
 
 def test_validate_ingredient_names_and_values():
     """
