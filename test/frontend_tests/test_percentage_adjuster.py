@@ -99,6 +99,41 @@ def test_increase_or_decrease_percentage_respects_dynamic_limits():
     PercentageAdjuster.increase_or_decrease_percentage(lower_field, 1.0)
     assert lower_field.value == "40.00"
 
+    first_dynamic = MockTextField("75.00")
+    second_dynamic = MockTextField("10.00")
+    third_dynamic = MockTextField("5.00")
+
+    first_dynamic_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Sugar")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), first_dynamic, ft.IconButton()])),
+            ]
+        )
+    )
+    second_dynamic_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Salt")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), second_dynamic, ft.IconButton()])),
+            ]
+        )
+    )
+    third_dynamic_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Pepper")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), third_dynamic, ft.IconButton()])),
+            ]
+        )
+    )
+
+    dynamic_rows = [first_dynamic_row, second_dynamic_row, third_dynamic_row]
+    second_dynamic.data = {"last_valid": ["10.00"], "rows": dynamic_rows, "row": second_dynamic_row}
+
+    PercentageAdjuster.increase_or_decrease_percentage(second_dynamic, 20.0)
+    assert second_dynamic.value == "20.00"
+
     only_field = MockTextField("99.50")
     only_row = ft.Container(
         content=ft.Row(
