@@ -11,8 +11,8 @@ class HomeView:
         content = ft.Column(
             controls=[
                 ft.Image(
-                src="Title.png", 
-                width=700,  
+                src="hts_lib/assets/Title.png",
+                width=700,
                 fit=ft.ImageFit.CONTAIN,  ),
                 ft.Container(
                     content=Styles.build_description(
@@ -58,9 +58,9 @@ class HomeView:
                 ft.Stack(
                     controls=[
                         ft.Image(
-                            src="bg_test.png",
-                            width=float("inf"),  
-                            height=float("inf"),  
+                            src="hts_lib/assets/bg_test.png",
+                            width=float("inf"),
+                            height=float("inf"),
                             fit=ft.ImageFit.COVER,
                         ),
                         ft.Container(

@@ -355,12 +355,12 @@ class ProductTableUI:
                 [
                     ft.Container(
                         ft.Text("Ingredient", weight=ft.FontWeight.BOLD, size=18, color=Styles.TABLE_HEADER_FONT_COLOR),
-                        width=220,
+                        width=200,
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
                         ft.Text("Percentage", weight=ft.FontWeight.BOLD, size=18, color=Styles.TABLE_HEADER_FONT_COLOR),
-                        width=140,
+                        width=120,
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(width=40),
@@ -424,13 +424,10 @@ class ProductTableUI:
                     self.instruction_container,
                     ft.Row(
                         [
-                            ft.Container(
-                                content=ft.Column([
-                                    self.build_table_header(),
-                                    self.ingredient_rows,
-                                ]),
-                                width=440,
-                            )
+                            ft.Column([
+                                self.build_table_header(),
+                                self.ingredient_rows,
+                            ])
                         ],
                         scroll=ft.ScrollMode.AUTO,
                     ),
@@ -446,28 +443,20 @@ class ProductTableUI:
                 spacing=10,
             ),
         )
-        self.results_section = ft.Column(
-            [
-                Styles.build_title("Generated Recipe"),
-                ft.Column(
-                    [
-                        ft.Row(
-                            [
-                                ft.ProgressRing(width=16, height=16, stroke_width=2, color=Styles.TEXT_COLOR),
-                                ft.Text("Recipe will appear here after analysis...",
-                                    color=Styles.TEXT_COLOR, italic=True),
-                            ],
-                            alignment=ft.MainAxisAlignment.CENTER,
-                        )
-                    ],
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    spacing=10,
-                    height=850,
-                    scroll=ft.ScrollMode.AUTO,
-                ),
-            ],
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=10,
+        self.results_section = ft.Container(
+            content=ft.Column(
+                [
+                    Styles.build_title("Generated Recipe"),
+                    ft.Text("Recipe will appear here after analysis...",
+                        color=Styles.TEXT_COLOR, italic=True),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=10,
+                height=850,
+                scroll=ft.ScrollMode.AUTO,
+            ),
+            width=700,
+            padding=ft.padding.only(top=0, left=20, right=20, bottom=20),
         )
 
         return ft.Container(
