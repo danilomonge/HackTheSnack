@@ -6,6 +6,8 @@ class ProductManager:
     Handles API interactions for product-related actions.
 
     """
+    BASE_URL = "http://localhost:8087/user-management/product"
+
     @staticmethod
     def create_product(product_name):
         """
@@ -29,7 +31,7 @@ class ProductManager:
             }
         
         response = httpx.post(
-                "http://localhost:8087/user-management/product",
+                ProductManager.BASE_URL,
                 headers={"Content-Type": "application/json"},
                 content=json.dumps(data)
             )
@@ -49,7 +51,7 @@ class ProductManager:
                         Use response.status_code to check for success,
                         and response.json() to access the response data.
         """
-        response = httpx.get(f"http://localhost:8087/user-management/product/detail?name={product_name}")
+        response = httpx.get(f"{ProductManager.BASE_URL}/detail?name={product_name}")
 
         return response
     
@@ -65,7 +67,7 @@ class ProductManager:
             id_product (int): id of the product
 
         """
-        response = httpx.get(f"http://localhost:8087/user-management/product/detail?name={product_name}")
+        response = httpx.get(f"{ProductManager.BASE_URL}/detail?name={product_name}")
         
         if response.status_code == 200: 
             product_data = response.json()
@@ -88,7 +90,23 @@ class ProductManager:
                         Use response.status_code to check for success,
                         and response.json() to access the response data.
         """
-        response = httpx.get(f"http://localhost:8087/user-management/product/list?page=1&size=100&name={product_name}")
+        response = httpx.get(f"{ProductManager.BASE_URL}/list?page=1&size=100&name={product_name}")
 
         return response
 
+    @staticmethod
+    def is_backend_available(timeout: float = 1.5) -> bool:
+        """
+        Checks whether the backend service is reachable.
+
+        Returns:
+            bool: True when the product backend responds, False otherwise.
+        """
+        try:
+            response = httpx.get(
+                f"{ProductManager.BASE_URL}/list?page=1&size=1&name=",
+                timeout=timeout,
+            )
+            return response.status_code < 500
+        except httpx.HTTPError:
+            return False

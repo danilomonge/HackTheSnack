@@ -1,4 +1,5 @@
 import flet as ft
+from backend.data_base_manager.product_manager import ProductManager
 from frontend.src.add_product_table.table_ui.ingredient_row_manager import IngredientRowManager
 from frontend.src.product_submit_handler import ProductSubmitHandler
 from frontend.src.styles import Styles
@@ -26,6 +27,7 @@ class ProductTableUI:
         """
         self.page = page
         self.is_web = bool(getattr(page, "web", False))
+        self.backend_available = False
         self.ingredient_rows = ft.Column()
         self.result_text = ft.Text(value="", color=Styles.GREEN_COLOR, size=12, weight=ft.FontWeight.BOLD)
         self.product_id = 0
@@ -70,20 +72,20 @@ class ProductTableUI:
         self.loading_indicator = ft.ProgressBar(visible=False, color=Styles.LOADINGBAR_COLOR, bgcolor= Styles.LOADINGBAR_BACKGROUNDCOLOR)
 
         if self.is_web:
-            self.search_button.disabled = True
-            self.search_button.tooltip = "Search is unavailable in the GitHub Pages web build"
-            self.save_button.tooltip = "Save is unavailable in the GitHub Pages web build"
             self.result_text.value = (
                 "Web mode: recipe generation works locally here, but search/save features need the backend service."
             )
             self.result_text.color = Styles.TEXT_COLOR
+
+        self.refresh_backend_status(update_page=False)
         
     def on_find_product_click(self, e):
         """
         Handles the find Product button click by calling ProductCreator.
         """
-        if self.is_web:
-            self.feedback.value = "⚠️ Search is unavailable in the web deployment because it depends on the backend service."
+        self.refresh_backend_status()
+        if not self.backend_available:
+            self.feedback.value = self.get_backend_unavailable_message()
             self.feedback.color = Styles.RED_COLOR
             self.page.update()
             return
@@ -165,8 +167,9 @@ class ProductTableUI:
 
         Stores recipe and evaluation information in the database
         """
-        if self.is_web:
-            self.feedback.value = "⚠️ Save is unavailable in the web deployment because it depends on the backend service."
+        self.refresh_backend_status()
+        if not self.backend_available:
+            self.feedback.value = self.get_backend_unavailable_message()
             self.feedback.color = Styles.RED_COLOR
             self.page.update()
             return None
@@ -203,12 +206,38 @@ class ProductTableUI:
         self.update_save_button_state(enabled=False)
         self.page.update()
 
-    def update_save_button_state(self, enabled: bool):
+    def get_backend_unavailable_message(self) -> str:
         if self.is_web:
+            return "⚠️ Search and save are unavailable in this web version because the backend service is not connected."
+        return "⚠️ Search and save are unavailable right now because the database service is offline. Please try again in a moment."
+
+    def refresh_backend_status(self, update_page: bool = True):
+        self.backend_available = False if self.is_web else ProductManager.is_backend_available()
+        self.update_search_button_state(enabled=self.backend_available)
+        self.update_save_button_state(enabled=self.is_submitted and self.backend_available)
+        if update_page:
+            self.page.update()
+
+    def update_search_button_state(self, enabled: bool):
+        self.search_button.disabled = not enabled
+        self.search_button.bgcolor = Styles.BUTTON_FILL_COLOR if enabled else Styles.BUTTON_FILL_DISABLED_COLOR
+        self.search_button.color = ft.Colors.WHITE if enabled else ft.Colors.GREY_600
+        if enabled:
+            self.search_button.tooltip = "Click to search product"
+        elif self.is_web:
+            self.search_button.tooltip = "Search is unavailable in the web build because it needs the backend service"
+        else:
+            self.search_button.tooltip = "Search is unavailable because the database service is offline"
+
+    def update_save_button_state(self, enabled: bool):
+        if not self.backend_available:
             self.save_button.disabled = True
             self.save_button.bgcolor = Styles.BUTTON_FILL_DISABLED_COLOR
             self.save_button.color = ft.Colors.GREY_600
-            self.save_button.tooltip = "Save is unavailable in the GitHub Pages web build"
+            if self.is_web:
+                self.save_button.tooltip = "Save is unavailable in the web build because it needs the backend service"
+            else:
+                self.save_button.tooltip = "Save is unavailable because the database service is offline"
             return
 
         self.save_button.disabled = not enabled
