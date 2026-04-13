@@ -367,6 +367,7 @@ class ProductTableUI:
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=20,
+                scroll=ft.ScrollMode.AUTO,
             ),
             bgcolor=Styles.TABLE_HEADER_COLOR,
             padding=10,
@@ -420,10 +421,17 @@ class ProductTableUI:
                 [
                     Styles.build_title("Analyze a product"),
                     self.build_name_input(),
-                    Styles.build_button("Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO), 
+                    Styles.build_button("Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO),
                     self.instruction_container,
-                    self.build_table_header(),
-                    self.ingredient_rows,
+                    ft.Row(
+                        [
+                            ft.Column([
+                                self.build_table_header(),
+                                self.ingredient_rows,
+                            ])
+                        ],
+                        scroll=ft.ScrollMode.AUTO,
+                    ),
                     self.feedback,
                     self.build_table_buttons(),
                     ft.Container(
@@ -435,22 +443,27 @@ class ProductTableUI:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
             ),
-            width=700,  
         )
-        
         self.results_section = ft.Container(
             content=ft.Column(
                 [
                     Styles.build_title("Generated Recipe"),
-                    ft.Text("Recipe will appear here after analysis...", 
-                        color=Styles.TEXT_COLOR, italic=True),
+                    ft.Row(
+                        [
+                            ft.ProgressRing(width=16, height=16, stroke_width=2, color=Styles.TEXT_COLOR),
+                            ft.Text("Recipe will appear here after analysis...",
+                                color=Styles.TEXT_COLOR, italic=True),
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    )
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
                 height=850,
+                scroll=ft.ScrollMode.AUTO,
             ),
-            width=700,
             padding=ft.padding.only(top=0, left=20, right=20, bottom=20),
+            scroll=ft.ScrollMode.AUTO,
         )
 
         return ft.Container(
@@ -458,7 +471,7 @@ class ProductTableUI:
                 [
                     ft.Container(
                         content=input_section,
-                        col={"sm": 12, "md": 12, "lg": 12, "xl":6}, 
+                        col={"sm": 12, "md": 12, "lg": 12, "xl":6},
                     ),
                     ft.Container(
                         content=self.results_section,
@@ -466,9 +479,11 @@ class ProductTableUI:
                     ),
                 ],
                 vertical_alignment=ft.CrossAxisAlignment.START,
+                expand=True,
             ),
             expand=True,
             alignment=ft.alignment.top_left,
             padding=20,
             bgcolor=Styles.BACKGROUND_COLOR,
+            width=float("inf"),
         )
