@@ -83,7 +83,7 @@ class AboutView:
                     ),
                     ft.Row(
                         controls=[
-                            self.team_member("Emilio", "Cognitive Science", "hts_lib/assets/Emilio.JPG", "https://github.com/ERibelles12", "ERibelles12" ),
+                            self.team_member("Emilio", "Cognitive Science", "hts_lib/assets/Emilio.JPG", "https://github.com/ERibelles12", "ERibelles12"),
                             self.team_member("Danilo", "Medical Informatics",
                                             "hts_lib/assets/Danilo.JPG", "https://github.com/danilomonge", "danilomonge"),
                         ],
@@ -99,7 +99,7 @@ class AboutView:
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
                         scroll=ft.ScrollMode.AUTO,
-                    ), 
+                    ),
                     ft.Container(
                         content=ft.Image(
                             src="hts_lib/assets/Group-2.JPG",

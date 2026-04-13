@@ -293,30 +293,30 @@ class ProductTableUI:
         return ft.Container(
         content=ft.Column(
             [
-                Styles.build_explanation_subtitle("📝 How to fill the ingredient form"),
+                Styles.build_explanation_subtitle("How to fill the ingredient form"),
                 ft.Divider(height=6, color="transparent"),
                 Styles.build_explanation(
-                    "🔢 List the ingredients from most to least used. Only include a percentage if known; otherwise, leave it blank or use 0%."
+                    "List the ingredients from most to least used. Only include a percentage if known; otherwise, leave it blank or use 0%."
                 ),
                 Styles.build_explanation(
-                    "✅ If there is only one ingredient, it may be 100%. If there are multiple ingredients, each filled value must stay at or below 99.99%."
+                    "If there is only one ingredient, it may be 100%. If there are multiple ingredients, each filled value must stay at or below 99.99%."
                 ),
                 ft.Divider(height=6, color="transparent"),
                 Styles.build_explanation(
-                    "➕ The total of all ingredients must add up to 100%. Empty ingredient rows must be lower or equal to the value above, and higher or equal to the value below."
+                    "The total of all ingredients must add up to 100%. Empty ingredient rows must be lower or equal to the value above, and higher or equal to the value below."
                 ),
                 Styles.build_explanation(
-                    "🎯 Make sure enough percentage space is left for undefined ingredients so that the final sum is exactly 100%."
+                    "Make sure enough percentage space is left for undefined ingredients so that the final sum is exactly 100%."
                 ),
                 ft.Divider(height=12, color="transparent"),
-                Styles.build_explanation_subtitle("⚠️  Explanation of errors"),
+                Styles.build_explanation_subtitle("Explanation of errors"),
                 ft.Divider(height=6, color="transparent"),
-                Styles.build_explanation_subtitle("❌ Error 101:"),
+                Styles.build_explanation_subtitle("⚠️ Error 101:"),
                 Styles.build_explanation(
                     "There is not enough space left for the empty fields based on the values that follow them. Please lower the values that come after empty fields."
                 ),
                 ft.Divider(height=4, color="transparent"),
-                Styles.build_explanation_subtitle("- Error 102:"),
+                Styles.build_explanation_subtitle("⚠️ Error 102:"),
                 Styles.build_explanation(
                     "The total is already 100%, but there are still empty ingredient values. Please reduce one or more percentages."
                 ),
@@ -339,7 +339,7 @@ class ProductTableUI:
         """
         container = self.instruction_container  
         container.visible = not container.visible
-        e.control.text = "📕 Hide Instructions" if container.visible else "📖 Show Instructions"
+        e.control.text = "Hide Instructions" if container.visible else "Show Instructions"
         self.page.update()
 
 
@@ -355,12 +355,12 @@ class ProductTableUI:
                 [
                     ft.Container(
                         ft.Text("Ingredient", weight=ft.FontWeight.BOLD, size=18, color=Styles.TABLE_HEADER_FONT_COLOR),
-                        width=210,
+                        width=220,
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
                         ft.Text("Percentage", weight=ft.FontWeight.BOLD, size=18, color=Styles.TABLE_HEADER_FONT_COLOR),
-                        width=130,
+                        width=140,
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(width=40),
@@ -420,14 +420,17 @@ class ProductTableUI:
                 [
                     Styles.build_title("Analyze a product"),
                     self.build_name_input(),
-                    Styles.build_button("📖 Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO),
+                    Styles.build_button("Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO),
                     self.instruction_container,
                     ft.Row(
                         [
-                            ft.Column([
-                                self.build_table_header(),
-                                self.ingredient_rows,
-                            ])
+                            ft.Container(
+                                content=ft.Column([
+                                    self.build_table_header(),
+                                    self.ingredient_rows,
+                                ]),
+                                width=440,
+                            )
                         ],
                         scroll=ft.ScrollMode.AUTO,
                     ),
