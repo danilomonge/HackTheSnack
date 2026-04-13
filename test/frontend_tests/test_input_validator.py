@@ -185,6 +185,55 @@ def test_fix_input_while_typing():
     assert event.control.value == ""
     assert last_valid[0] == ""
     assert page.updated
+
+
+def test_fix_input_while_typing_respects_dynamic_max():
+    class TestControl:
+        def __init__(self, value, data=None):
+            self.value = value
+            self.data = data or {}
+
+    class TestEvent:
+        def __init__(self, control):
+            self.control = control
+
+    class TestPage:
+        def __init__(self):
+            self.updated = False
+
+        def update(self):
+            self.updated = True
+
+    upper_field = ft.TextField(value="40")
+    lower_field = ft.TextField(value="45")
+    upper_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Sugar")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), upper_field, ft.IconButton()])),
+            ]
+        )
+    )
+    lower_row = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Container(content=ft.TextField(value="Salt")),
+                ft.Container(content=ft.Row(controls=[ft.IconButton(), lower_field, ft.IconButton()])),
+            ]
+        )
+    )
+    rows = [upper_row, lower_row]
+
+    page = TestPage()
+    last_valid = [""]
+    control = TestControl("45", data={"rows": rows, "row": lower_row})
+    event = TestEvent(control)
+    handler = InputValidator.fix_input_while_typing(last_valid, page)  # type: ignore[arg-type]
+    handler(event)
+
+    assert event.control.value == "40.00"
+    assert last_valid[0] == "40.00"
+    assert page.updated
     
 
 def test_has_product_name():
@@ -227,6 +276,30 @@ def test_has_product_name():
     assert result is False
     assert message.value == "⚠️ Please enter a product name."
     assert message.color == "red"
+    assert page.updated
+
+
+def test_check_first_percentage_is_large_enough():
+    class TestText:
+        def __init__(self):
+            self.value = ""
+            self.color = ""
+
+    class TestPage:
+        def __init__(self):
+            self.updated = False
+
+        def update(self):
+            self.updated = True
+
+    message = TestText()
+    page = TestPage()
+    assert InputValidator._check_first_percentage_is_large_enough([40.0, 30.0, 30.0], message, page) is True  # type: ignore[arg-type]
+
+    message = TestText()
+    page = TestPage()
+    assert InputValidator._check_first_percentage_is_large_enough([10.0, 0.0, 0.0], message, page) is False  # type: ignore[arg-type]
+    assert "first ingredient is too small" in message.value
     assert page.updated
 
     # Case 3: whitespace-only string
