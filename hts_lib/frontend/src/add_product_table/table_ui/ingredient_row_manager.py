@@ -1,8 +1,6 @@
 import flet as ft
 from frontend.src.add_product_table.logic.input_validator import InputValidator
 from frontend.src.add_product_table.logic.percentage_adjuster import PercentageAdjuster
-from backend.data_base_manager.ingredient_manager import IngredientManager
-from backend.translation import Translation
 from frontend.src.styles import Styles
 from frontend.src.create_result_table.result_table_ui import RecipeResultUI
 
@@ -168,14 +166,20 @@ class IngredientRowManager:
             row (ft.Container): The ingredient row to remove.
         """
         ingredient_name = name_input.value
+        if ingredient_name:
+            try:
+                from backend.data_base_manager.ingredient_manager import IngredientManager
+                from backend.translation import Translation
 
-        ingredient_response = IngredientManager.find_ingredient(ingredient_name)
-        ingredient_data = ingredient_response.json()
-        ingredient_id = Translation.get_ingredient_id_by_name(ingredient_data)
-        
-        if ingredient_id is not None:
-            if ingredient_id not in self.deleted_ingredient_ids:
-                self.deleted_ingredient_ids.append(ingredient_id)
+                ingredient_response = IngredientManager.find_ingredient(ingredient_name)
+                ingredient_data = ingredient_response.json()
+                ingredient_id = Translation.get_ingredient_id_by_name(ingredient_data)
+
+                if ingredient_id is not None and ingredient_id not in self.deleted_ingredient_ids:
+                    self.deleted_ingredient_ids.append(ingredient_id)
+            except Exception:
+                # Removing a row must still work even when the external backend is unavailable.
+                pass
 
         self.ingredients.remove(row)
         self.quantity_table.controls.remove(row)
@@ -225,5 +229,4 @@ class IngredientRowManager:
         """
         if len(self.quantity_table.controls) == 0:
             self.add_ingredient_row(self.page)
-
 
