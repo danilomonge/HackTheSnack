@@ -225,8 +225,14 @@ class RecipeResultUI:
                                     results_container_wrapper.content = ft.Column(
                                         [
                                             Styles.build_title("Generated Recipe"),
-                                            ft.Text("Recipe will appear here after analysis...", 
-                                                color=Styles.TEXT_COLOR, italic=True),
+                                            ft.Row(
+                                                [
+                                                    ft.ProgressRing(width=16, height=16, stroke_width=2, color=Styles.TEXT_COLOR),
+                                                    ft.Text("Recipe will appear here after analysis...", 
+                                                        color=Styles.TEXT_COLOR, italic=True),
+                                                ],
+                                                alignment=ft.MainAxisAlignment.CENTER,
+                                            )
                                         ],
                                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                         spacing=10,
@@ -310,7 +316,7 @@ class RecipeResultUI:
                     self.message,
                     self.toggle_button,
                     self.result_text_container,
-                    self.table,
+                    ft.Row([self.table], scroll=ft.ScrollMode.AUTO),
                     chart, # type: ignore
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -318,7 +324,6 @@ class RecipeResultUI:
                 spacing=10,
             ),
             padding=ft.padding.only(top=0, left=20, right=20, bottom=20),
-            width=400,
             bgcolor=Styles.BACKGROUND_COLOR,
             border_radius=Styles.BORDER_RADIUS,
             expand=True,

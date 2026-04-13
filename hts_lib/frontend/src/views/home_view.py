@@ -48,6 +48,7 @@ class HomeView:
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=25,
+            scroll=ft.ScrollMode.AUTO,
         )
 
 
