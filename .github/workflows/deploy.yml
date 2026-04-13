@@ -28,7 +28,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install Flet
-        run: pip install flet==0.27.6
+        run: pip install flet==0.28.3
 
       - name: Build web app
         working-directory: ./hts_lib
