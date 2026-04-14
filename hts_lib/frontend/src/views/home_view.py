@@ -8,12 +8,15 @@ class HomeView:
         self.page = page
 
     def build(self):
+        content_height = max((self.page.height or 800) + 220, 1100)
+
         content = ft.Column(
             controls=[
                 ft.Image(
-                src="Title.png", 
-                width=700,  
-                fit=ft.ImageFit.CONTAIN,  ),
+                    src="Title.png",
+                    width=760,
+                    fit=ft.ImageFit.CONTAIN,
+                ),
                 ft.Container(
                     content=Styles.build_description(
                         "Recreate your favorite food products at home with the help of our food hacker \n - \n Crack it · Cook it · Love it"
@@ -40,36 +43,44 @@ class HomeView:
                             on_click=lambda e: self.page.go("/about"),
                             icon=ft.Icons.INFO,
                             ),
-                        
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
+                    wrap=True,
+                    run_spacing=12,
+                ),
+                ft.Text(
+                    "Start with Try it out to explore the generator, or choose More about us for a quick introduction.",
+                    size=13,
+                    color=Styles.TEXT_COLOR,
+                    italic=True,
+                    text_align=ft.TextAlign.CENTER,
                 ),
             ],
-            alignment=ft.MainAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.START,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=25,
+            scroll=ft.ScrollMode.AUTO,
         )
 
 
         return ft.View(
             route="/",
             controls=[
-                ft.Stack(
-                    controls=[
-                        ft.Image(
-                            src="bg_test.png",
-                            width=float("inf"),  
-                            height=float("inf"),  
-                            fit=ft.ImageFit.COVER,
-                        ),
-                        ft.Container(
-                            content=content,
-                            alignment=ft.alignment.center,
-                            padding=50,
-                            expand=True,
-                        )
-                    ],
-                    expand=True
+                ft.Container(
+                    image=ft.DecorationImage(
+                        src="bg_test.png",
+                        fit=ft.ImageFit.COVER,
+                        alignment=ft.Alignment(0, -0.24),
+                    ),
+                    content=ft.Container(
+                        content=content,
+                        alignment=ft.alignment.top_center,
+                        padding=ft.padding.only(top=200, right=50, bottom=220, left=50),
+                        width=float("inf"),
+                    ),
+                    width=float("inf"),
+                    height=content_height,
                 )
-            ]
+            ],
+            scroll=ft.ScrollMode.ALWAYS,
         )
