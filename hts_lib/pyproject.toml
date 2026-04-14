@@ -2,7 +2,7 @@
 name = "hack-the-snack"
 version = "0.1.0"
 description = "HackTheSnack - Recipe Generator"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     { name = "HackTheSnack Team" }
 ]
