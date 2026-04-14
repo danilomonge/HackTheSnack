@@ -61,12 +61,39 @@ class Styles:
     BOX_SIZE = 18
     ICON_SIZE = 20
     CHART_TEXT_SIZE = 16
+    NAVBAR_TEXT_SIZE = 18
+    BUTTON_TEXT_SIZE = 18
 
     BORDER_RADIUS = 10
 
     @staticmethod
     def build_button(text, icon=None, on_click=None):
-        return ft.ElevatedButton(text+" ", icon=icon, on_click=on_click, color=Styles.BUTTON_TEXT_COLOR,bgcolor=Styles.BUTTON_FILL_COLOR,)
+        btn = ft.ElevatedButton(
+            text + " ",
+            icon=icon,
+            on_click=on_click,
+            on_hover=lambda e: Styles._handle_button_hover(e, btn),
+            color=Styles.BUTTON_TEXT_COLOR,
+            bgcolor=Styles.BUTTON_FILL_COLOR,
+            style=ft.ButtonStyle(
+                color=Styles.BUTTON_TEXT_COLOR,
+                text_style=ft.TextStyle(
+                    size=Styles.BUTTON_TEXT_SIZE,
+                    weight=ft.FontWeight.W_500,
+                ),
+                padding=ft.padding.symmetric(horizontal=22, vertical=18),
+                shape=ft.RoundedRectangleBorder(radius=18),
+            ),
+        )
+        return btn
+
+    @staticmethod
+    def _handle_button_hover(e: ft.ControlEvent, btn: ft.ElevatedButton):
+        hovered = getattr(e, "data", None) == "true"
+        btn.bgcolor = "#44512d" if hovered and not btn.disabled else (
+            Styles.BUTTON_FILL_DISABLED_COLOR if btn.disabled else Styles.BUTTON_FILL_COLOR
+        )
+        btn.update()
 
     ICON_BUTTON_SIZE = 20
 

@@ -8,11 +8,13 @@ class HomeView:
         self.page = page
 
     def build(self):
+        content_height = max((self.page.height or 800) + 220, 1100)
+
         content = ft.Column(
             controls=[
                 ft.Image(
                     src="Title.png",
-                    width=700,
+                    width=760,
                     fit=ft.ImageFit.CONTAIN,
                 ),
                 ft.Container(
@@ -46,8 +48,15 @@ class HomeView:
                     wrap=True,
                     run_spacing=12,
                 ),
+                ft.Text(
+                    "Start with Try it out to explore the generator, or choose More about us for a quick introduction.",
+                    size=13,
+                    color=Styles.TEXT_COLOR,
+                    italic=True,
+                    text_align=ft.TextAlign.CENTER,
+                ),
             ],
-            alignment=ft.MainAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.START,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=25,
             scroll=ft.ScrollMode.AUTO,
@@ -61,16 +70,17 @@ class HomeView:
                     image=ft.DecorationImage(
                         src="bg_test.png",
                         fit=ft.ImageFit.COVER,
+                        alignment=ft.Alignment(0, -0.24),
                     ),
                     content=ft.Container(
                         content=content,
                         alignment=ft.alignment.top_center,
-                        padding=50,
+                        padding=ft.padding.only(top=200, right=50, bottom=220, left=50),
                         width=float("inf"),
                     ),
                     width=float("inf"),
-                    expand=True,
-                ),
+                    height=content_height,
+                )
             ],
-            scroll=ft.ScrollMode.AUTO,
+            scroll=ft.ScrollMode.ALWAYS,
         )
