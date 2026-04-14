@@ -79,19 +79,29 @@ class IngredientRowManager:
         """
         return ft.Row(
             controls=[
-                Styles.icon_button(
-                    ft.Icons.REMOVE,
-                    lambda e: PercentageAdjuster.increase_or_decrease_percentage(
-                        percent_input, -1.0
+                ft.Container(
+                    content=Styles.icon_button(
+                        ft.Icons.REMOVE,
+                        lambda e: PercentageAdjuster.increase_or_decrease_percentage(
+                            percent_input, -1.0
+                        ),
+                        Styles.TEXT_COLOR,
                     ),
-                    Styles.TEXT_COLOR),
+                    width=32,
+                    alignment=ft.alignment.center,
+                ),
                 percent_input,
-                Styles.icon_button(
-                    ft.Icons.ADD,
-                    lambda e: PercentageAdjuster.increase_or_decrease_percentage(
-                        percent_input, 1.0
+                ft.Container(
+                    content=Styles.icon_button(
+                        ft.Icons.ADD,
+                        lambda e: PercentageAdjuster.increase_or_decrease_percentage(
+                            percent_input, 1.0
+                        ),
+                        Styles.TEXT_COLOR,
                     ),
-                    Styles.TEXT_COLOR),
+                    width=32,
+                    alignment=ft.alignment.center,
+                ),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=5,
@@ -112,14 +122,19 @@ class IngredientRowManager:
         return ft.Container(
             content=ft.Row(
                 controls=[
-                    ft.Container(content=name_input, padding=5),
-                    ft.Container(content=percent_section, padding=5),
-                    Styles.icon_button(ft.Icons.DELETE,lambda e: on_delete(), Styles.RED_COLOR, "Remove ingredient"),
+                    ft.Container(content=name_input, width=210, padding=5, alignment=ft.alignment.center),
+                    ft.Container(content=percent_section, width=194, padding=5, alignment=ft.alignment.center),
+                    ft.Container(
+                        content=Styles.icon_button(ft.Icons.DELETE,lambda e: on_delete(), Styles.RED_COLOR, "Remove ingredient"),
+                        width=32,
+                        alignment=ft.alignment.center,
+                    ),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=20,
             ),
+            width=600,
             bgcolor=Styles.TABLE_ROW_COLOR,
             border_radius=Styles.BORDER_RADIUS,
             padding=10,
