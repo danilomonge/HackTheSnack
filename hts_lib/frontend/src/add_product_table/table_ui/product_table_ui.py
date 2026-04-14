@@ -311,12 +311,12 @@ class ProductTableUI:
                 ft.Divider(height=12, color="transparent"),
                 Styles.build_explanation_subtitle("Explanation of errors"),
                 ft.Divider(height=6, color="transparent"),
-                Styles.build_explanation_subtitle("- Error 101:"),
+                Styles.build_explanation_subtitle("⚠️ Error 101:"),
                 Styles.build_explanation(
                     "There is not enough space left for the empty fields based on the values that follow them. Please lower the values that come after empty fields."
                 ),
                 ft.Divider(height=4, color="transparent"),
-                Styles.build_explanation_subtitle("- Error 102:"),
+                Styles.build_explanation_subtitle("⚠️ Error 102:"),
                 Styles.build_explanation(
                     "The total is already 100%, but there are still empty ingredient values. Please reduce one or more percentages."
                 ),
@@ -337,7 +337,7 @@ class ProductTableUI:
         Args:
             e (ft.ControlEvent): The event triggered by the button click.
         """
-        container = self.instruction_container  
+        container = self.instruction_container
         container.visible = not container.visible
         e.control.text = "Hide Instructions" if container.visible else "Show Instructions"
         self.page.update()
@@ -355,19 +355,22 @@ class ProductTableUI:
                 [
                     ft.Container(
                         ft.Text("Ingredient", weight=ft.FontWeight.BOLD, size=18, color=Styles.TABLE_HEADER_FONT_COLOR),
-                        width=200,
+                        width=210,
                         alignment=ft.alignment.center,
+                        padding=5,
                     ),
                     ft.Container(
-                        ft.Text("Percentage", weight=ft.FontWeight.BOLD, size=18, color=Styles.TABLE_HEADER_FONT_COLOR),
-                        width=120,
+                        content=ft.Text("Percentage", weight=ft.FontWeight.BOLD, size=18, color=Styles.TABLE_HEADER_FONT_COLOR),
+                        width=194,
                         alignment=ft.alignment.center,
+                        padding=5,
                     ),
-                    ft.Container(width=40),
+                    ft.Container(width=32),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=20,
             ),
+            width=600,
             bgcolor=Styles.TABLE_HEADER_COLOR,
             padding=10,
             border_radius=Styles.BORDER_RADIUS,
@@ -403,6 +406,7 @@ class ProductTableUI:
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=20,
+                scroll=ft.ScrollMode.AUTO,
             ),
             padding=10,
         )
@@ -420,10 +424,20 @@ class ProductTableUI:
                 [
                     Styles.build_title("Analyze a product"),
                     self.build_name_input(),
-                    Styles.build_button("Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO), 
+                    Styles.build_button("Show Instructions", on_click=self.toggle_instruction, icon=ft.Icons.INFO),
                     self.instruction_container,
-                    self.build_table_header(),
-                    self.ingredient_rows,
+                    ft.Row(
+                        [
+                            ft.Container(
+                                content=ft.Column([
+                                    self.build_table_header(),
+                                    self.ingredient_rows,
+                                ]),
+                                width=600,
+                            )
+                        ],
+                        scroll=ft.ScrollMode.AUTO,
+                    ),
                     self.feedback,
                     self.build_table_buttons(),
                     ft.Container(
@@ -435,21 +449,25 @@ class ProductTableUI:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
             ),
-            width=700,  
         )
-        
         self.results_section = ft.Container(
             content=ft.Column(
                 [
                     Styles.build_title("Generated Recipe"),
-                    ft.Text("Recipe will appear here after analysis...", 
-                        color=Styles.TEXT_COLOR, italic=True),
+                    ft.Row(
+                        [
+                            ft.ProgressRing(width=16, height=16, stroke_width=2, color=Styles.TEXT_COLOR),
+                            ft.Text("Recipe will appear here after analysis...",
+                                color=Styles.TEXT_COLOR, italic=True),
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    ),
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10,
                 height=850,
+                scroll=ft.ScrollMode.AUTO,
             ),
-            width=700,
             padding=ft.padding.only(top=0, left=20, right=20, bottom=20),
         )
 
@@ -458,7 +476,7 @@ class ProductTableUI:
                 [
                     ft.Container(
                         content=input_section,
-                        col={"sm": 12, "md": 12, "lg": 12, "xl":6}, 
+                        col={"sm": 12, "md": 12, "lg": 12, "xl":6},
                     ),
                     ft.Container(
                         content=self.results_section,

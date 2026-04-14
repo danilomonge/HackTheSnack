@@ -1,11 +1,12 @@
 import sys
 import os
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, BASE_DIR)
 
 import flet as ft
 from frontend.src.navbar import NavigationBar
+from frontend.src.styles import Styles
 
 def main(page: ft.Page):
     """
@@ -23,6 +24,7 @@ def main(page: ft.Page):
     page.scroll = ft.ScrollMode.AUTO
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.expand = True
+    page.bgcolor = Styles.BACKGROUND_COLOR
 
     navbar = NavigationBar(page)
 
@@ -51,6 +53,7 @@ def main(page: ft.Page):
                     ),
                 ),
             ],
+            bgcolor=Styles.BACKGROUND_COLOR,
         )
 
     def route_change(e: ft.RouteChangeEvent):
@@ -76,6 +79,7 @@ def main(page: ft.Page):
                             navbar.build(),
                             about_view.build(),
                         ],
+                        bgcolor=Styles.BACKGROUND_COLOR,
                     )
                 )
             except Exception as ex:
@@ -102,8 +106,10 @@ def main(page: ft.Page):
                                 ],
                                 scroll=ft.ScrollMode.AUTO,
                                 expand=True,
+                                horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
                             ),
                         ],
+                        bgcolor=Styles.BACKGROUND_COLOR,
                     )
                 )
                 generator_view.ingredient_manager.initialize_with_empty_row()
@@ -127,6 +133,7 @@ def main(page: ft.Page):
                             navbar.build(),
                             recipes_view.build(),
                         ],
+                        bgcolor=Styles.BACKGROUND_COLOR,
                     )
                 )
             except Exception as ex:
@@ -149,6 +156,7 @@ def main(page: ft.Page):
                             navbar.build(),
                             statistics_view.build(),
                         ],
+                        bgcolor=Styles.BACKGROUND_COLOR,
                     )
                 )
             except Exception as ex:
@@ -164,14 +172,11 @@ def main(page: ft.Page):
                 from frontend.src.views.home_view import HomeView
 
                 home_view = HomeView(page)
+                home_page = home_view.build()
+                home_page.controls.insert(0, navbar.build())
+                home_page.bgcolor = Styles.BACKGROUND_COLOR
                 page.views.append(
-                    ft.View(
-                        "/home",
-                        [
-                            navbar.build(),
-                            *home_view.build().controls,
-                        ],
-                    )
+                    home_page
                 )
             except Exception as ex:
                 page.views.append(
@@ -187,4 +192,8 @@ def main(page: ft.Page):
     page.on_route_change = route_change
     page.go("/")  
 
-ft.app(target=main, assets_dir="assets")
+ft.app(
+    target=main,
+    assets_dir=os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets"),
+    web_renderer=ft.WebRenderer.HTML,
+)
