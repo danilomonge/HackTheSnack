@@ -269,6 +269,8 @@ class ProductTableUI:
                             ],
                             alignment=ft.MainAxisAlignment.CENTER,
                             spacing=10,
+                            scroll=ft.ScrollMode.AUTO,
+                            wrap=False,
                         ),
                         alignment=ft.alignment.center,
                     ),

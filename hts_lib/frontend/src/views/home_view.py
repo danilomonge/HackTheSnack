@@ -9,6 +9,7 @@ class HomeView:
 
     def build(self):
         content_height = max((self.page.height or 800) + 220, 1100)
+        is_narrow = bool(getattr(self.page, "width", 0) and self.page.width < 1100)
 
         content = ft.Column(
             controls=[
@@ -59,7 +60,6 @@ class HomeView:
             alignment=ft.MainAxisAlignment.START,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=25,
-            scroll=ft.ScrollMode.AUTO,
         )
 
 
@@ -69,8 +69,8 @@ class HomeView:
                 ft.Container(
                     image=ft.DecorationImage(
                         src="bg_test.png",
-                        fit=ft.ImageFit.COVER,
-                        alignment=ft.Alignment(0, -0.24),
+                        fit=ft.ImageFit.CONTAIN if is_narrow else ft.ImageFit.COVER,
+                        alignment=ft.alignment.top_center if is_narrow else ft.Alignment(0, -0.24),
                     ),
                     content=ft.Container(
                         content=content,
