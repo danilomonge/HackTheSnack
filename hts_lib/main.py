@@ -7,6 +7,8 @@ sys.path.insert(0, BASE_DIR)
 import flet as ft
 from frontend.src.navbar import NavigationBar
 from frontend.src.styles import Styles
+from backend.data_base_manager.db_config import initialize_db_url
+
 
 def main(page: ft.Page):
     """
@@ -25,6 +27,10 @@ def main(page: ft.Page):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.expand = True
     page.bgcolor = Styles.BACKGROUND_COLOR
+
+    # Resolve the FakeTheSnackDB API base URL once at startup.
+    # Reads from: env var USER_MANAGEMENT_BASE_URL > runtime-config.json > localhost fallback
+    initialize_db_url(page)
 
     navbar = NavigationBar(page)
 

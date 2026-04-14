@@ -1,3 +1,4 @@
 {
-  "nutrition_proxy_url": "https://hackthesnack-nutrition-proxy.onrender.com/api/nutrition"
+  "nutrition_proxy_url": "https://hackthesnack-nutrition-proxy.onrender.com",
+  "user_management_url": "https://fakethesnackdb-api.onrender.com/user-management"
 }
