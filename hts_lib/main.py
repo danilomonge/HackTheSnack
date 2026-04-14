@@ -172,11 +172,20 @@ def main(page: ft.Page):
                 from frontend.src.views.home_view import HomeView
 
                 home_view = HomeView(page)
-                home_page = home_view.build()
-                home_page.controls.insert(0, navbar.build())
-                home_page.bgcolor = Styles.BACKGROUND_COLOR
                 page.views.append(
-                    home_page
+                    ft.View(
+                        "/home",
+                        [
+                            navbar.build(),
+                            ft.Column(
+                                home_view.build().controls,
+                                scroll=ft.ScrollMode.AUTO,
+                                expand=True,
+                                horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
+                            ),
+                        ],
+                        bgcolor=Styles.BACKGROUND_COLOR,
+                    )
                 )
             except Exception as ex:
                 page.views.append(
