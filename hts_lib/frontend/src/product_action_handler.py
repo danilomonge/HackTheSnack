@@ -238,9 +238,11 @@ class ProductActionHandler:
 
     @staticmethod
     def handle_delete_ingredients(product_id: int, ingredient_list: list[int]):
-        
         for ingredient in ingredient_list:
-            RecipeManager.delete_product_ingredient(product_id, ingredient)
+            try:
+                RecipeManager.delete_product_ingredient(product_id, ingredient)
+            except Exception:
+                pass
             
     
     @staticmethod
