@@ -1,36 +1,41 @@
 import httpx
 import json
 
+from backend.data_base_manager.db_config import get_user_management_url
+
+
 class EvaluationManager:
     """
     Handles API interactions for evaluation-related actions.
-    Attributes:
-        page (ft.Page): The Flet page object for UI updates.
-        
     """
+
     @staticmethod
-    def create_evaluation(product_id, 
+    def _base_url() -> str:
+        return f"{get_user_management_url()}/evaluation"
+
+    @staticmethod
+    def create_evaluation(product_id,
         ingredient_ids: list[int],
         recipe_ids: list[int],
         result_dict: dict[str, dict[str, float]]):
         """
         Sends a POST request to create an evaluation in the database.
+
         Args:
         product_id (int): Product ID
         ingredient_ids (list[int]): List of ingredient IDs matching the result_dict order.
         recipe_ids (list[int]): List of recipe IDs, one per ingredient.
         result_dict (dict[str, dict[str, float]]): Dict with ingredient names as keys and their stats.
-        
-        Returns:
-        httpx.Response: The HTTP response object returned by the API request.
-                        Use response.status_code to check for success,
-                        and response.json() to access the response data
-        """
 
-        data = EvaluationManager.build_results_payload(product_id, ingredient_ids, recipe_ids, result_dict)
+        Returns:
+        httpx.Response
+        """
+        data = EvaluationManager.build_results_payload(
+            product_id, ingredient_ids, recipe_ids, result_dict
+        )
 
         response = httpx.post(
-                "http://localhost:8087/user-management/evaluation",
+                EvaluationManager._base_url(),
                 headers={"Content-Type": "application/json"},
                 content=json.dumps(data)
             )
@@ -38,27 +43,24 @@ class EvaluationManager:
         return response
 
     @staticmethod
-    def build_results_payload( 
-        product_id, 
+    def build_results_payload(
+        product_id,
         ingredient_ids: list[int],
         recipe_ids: list[int],
-        result_dict: dict[str, dict[str, float]]  
+        result_dict: dict[str, dict[str, float]]
     ) -> dict:
         """
-        Builds a JSON arrangement for the POST evaluation service.
-        Args:
-            product_id (int): Product ID
-        ingredient_ids (list[int]): List of ingredient IDs matching the result_dict order.
-        recipe_ids (list[int]): List of recipe IDs, one per ingredient.
-        result_dict (dict[str, dict[str, float]]): Dict with ingredient names as keys and their stats.
-        Returns:
-            dict: Payload with overall stats and a resultList of per-recipe stats.
+        Builds the JSON payload for the POST evaluation service.
         """
         if not (len(recipe_ids) == len(ingredient_ids) == len(result_dict)):
-            raise ValueError("recipe_ids, ingredient_ids, and result_dict must all be the same length.")
+            raise ValueError(
+                "recipe_ids, ingredient_ids, and result_dict must all be the same length."
+            )
 
         result_list = []
-        for recipe_id, ingredient_id, (ingredient, stats) in zip(recipe_ids, ingredient_ids, result_dict.items()):
+        for recipe_id, ingredient_id, (ingredient, stats) in zip(
+            recipe_ids, ingredient_ids, result_dict.items()
+        ):
             result_entry = {
                 "recipeId": recipe_id,
                 "ingredientId": ingredient_id,
@@ -79,41 +81,35 @@ class EvaluationManager:
     @staticmethod
     def find_evaluation_list(product_id):
         """
-        Searches for all evaluations related to one product ID. 
-        Args:
-            product_id (int)
+        Searches for all evaluations related to one product ID.
         """
-        response = httpx.get(f"http://localhost:8087/user-management/evaluation/list?page=1&size=10&orderBy&orderType&idProduct={product_id}")
-
+        response = httpx.get(
+            f"{EvaluationManager._base_url()}/list?page=1&size=10&orderBy&orderType&idProduct={product_id}"
+        )
         return response
-
 
     @staticmethod
     def find_evaluation_detail(product_id):
         """
-        Searches for the details of an evaluation by id and returns the information for every ingredient-value.
-        Args:
-            product_id (int)
+        Searches for the details of an evaluation by id.
         """
-        response = httpx.get(f"http://localhost:8087/user-management/evaluation/detail?id={product_id}")
-
+        response = httpx.get(
+            f"{EvaluationManager._base_url()}/detail?id={product_id}"
+        )
         return response
 
     @staticmethod
     def find_evaluation_product_ingredient(product_id, ingredient_id):
         """
-        Searches all evaluations related to a product and ingredient ID. 
-        Args:
-            product_id (int)
-            
+        Searches all evaluations related to a product and ingredient ID.
         """
-        #transformt product_id and ingredient_id if they are not searched
         if product_id == 0:
             product_id = ""
-
         if ingredient_id == 0:
             ingredient_id = ""
 
-        response = httpx.get(f"http://localhost:8087/user-management/evaluation/listResult?page=1&size=50&orderBy&orderType&idProduct={product_id}&idIngredient={ingredient_id}")
-
+        response = httpx.get(
+            f"{EvaluationManager._base_url()}/listResult?page=1&size=50&orderBy&orderType"
+            f"&idProduct={product_id}&idIngredient={ingredient_id}"
+        )
         return response

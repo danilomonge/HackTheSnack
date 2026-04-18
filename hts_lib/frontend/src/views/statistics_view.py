@@ -43,9 +43,12 @@ class StatisticsView:
         selected_product_name = self.product_dropdown.value
         selected_product_id = self.product_dict.get(selected_product_name) # type: ignore
 
-        ingredient_response = RecipeManager.find_product_ingredient_list(selected_product_id)
-        ingredient_data = ingredient_response.json()
-        ingredients, ids = Translation.product_table_filter(ingredient_data)
+        try:
+            ingredient_response = RecipeManager.find_product_ingredient_list(selected_product_id)
+            ingredient_data = ingredient_response.json()
+            ingredients, ids = Translation.product_table_filter(ingredient_data)
+        except Exception:
+            ingredients = {}
 
         updated_dropdown = self.build_dropdown("Select Ingredient", list(ingredients.keys()))
         self.ingredient_dropdown = updated_dropdown
@@ -77,8 +80,11 @@ class StatisticsView:
                 print("Ingredient ID not found for selected name.")
                 return
         
-        response = EvaluationManager.find_evaluation_product_ingredient(product_id, ingredient_id)
-        data = response.json()
+        try:
+            response = EvaluationManager.find_evaluation_product_ingredient(product_id, ingredient_id)
+            data = response.json()
+        except Exception:
+            data = {"data": []}
         chart = self.build_ingredient_line_chart(data)
 
         self.chart_container.content = chart
