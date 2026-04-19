@@ -25,6 +25,8 @@ class Translation:
         data = api_response.get("data", [])
         for item in data:
             name = item.get("nameIngredient")
+            if name is None:
+                continue
             name = name.capitalize()
             id_ = item.get("idIngredient")
             if name is not None and id_ is not None:
