@@ -3,6 +3,8 @@ import json
 
 from backend.data_base_manager.db_config import get_user_management_url
 
+_TIMEOUT = 45.0
+
 
 class IngredientManager:
     """
@@ -34,7 +36,8 @@ class IngredientManager:
         response = httpx.post(
                 IngredientManager._base_url(),
                 headers={"Content-Type": "application/json"},
-                content=json.dumps(data)
+                content=json.dumps(data),
+                timeout=_TIMEOUT,
             )
 
         return response
@@ -51,7 +54,8 @@ class IngredientManager:
         httpx.Response
         """
         response = httpx.get(
-            f"{IngredientManager._base_url()}/detail?name={ingredient_name.upper().strip()}"
+            f"{IngredientManager._base_url()}/detail?name={ingredient_name.upper().strip()}",
+            timeout=_TIMEOUT,
         )
         return response
 
@@ -67,7 +71,8 @@ class IngredientManager:
         httpx.Response
         """
         response = httpx.get(
-            f"{IngredientManager._base_url()}/list?page=1&size=500&name={ingredient_name}"
+            f"{IngredientManager._base_url()}/list?page=1&size=500&name={ingredient_name}",
+            timeout=_TIMEOUT,
         )
         return response
 
