@@ -3,6 +3,8 @@ import json
 
 from backend.data_base_manager.db_config import get_user_management_url
 
+_TIMEOUT = 45.0
+
 
 class ProductManager:
     """
@@ -37,7 +39,8 @@ class ProductManager:
         response = httpx.post(
                 ProductManager._base_url(),
                 headers={"Content-Type": "application/json"},
-                content=json.dumps(data)
+                content=json.dumps(data),
+                timeout=_TIMEOUT,
             )
 
         return response
@@ -55,7 +58,10 @@ class ProductManager:
                         Use response.status_code to check for success,
                         and response.json() to access the response data.
         """
-        response = httpx.get(f"{ProductManager._base_url()}/detail?name={product_name.upper().strip()}")
+        response = httpx.get(
+            f"{ProductManager._base_url()}/detail?name={product_name.upper().strip()}",
+            timeout=_TIMEOUT,
+        )
         return response
 
     @staticmethod
@@ -69,7 +75,10 @@ class ProductManager:
         Returns:
             id_product (int): id of the product
         """
-        response = httpx.get(f"{ProductManager._base_url()}/detail?name={product_name.upper().strip()}")
+        response = httpx.get(
+            f"{ProductManager._base_url()}/detail?name={product_name.upper().strip()}",
+            timeout=_TIMEOUT,
+        )
 
         if response.status_code == 200:
             product_data = response.json()
@@ -93,7 +102,8 @@ class ProductManager:
                         and response.json() to access the response data.
         """
         response = httpx.get(
-            f"{ProductManager._base_url()}/list?page=1&size=100&name={product_name}"
+            f"{ProductManager._base_url()}/list?page=1&size=100&name={product_name}",
+            timeout=_TIMEOUT,
         )
         return response
 
