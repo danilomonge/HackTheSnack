@@ -147,10 +147,7 @@ class ProductTableUI:
 
         if result:  # Only if submit was successful
             self.is_submitted = True
-            if not self.is_web:
-                self.update_save_button_state(enabled=True)
-            else:
-                self.update_save_button_state(enabled=False)
+            self.update_save_button_state(enabled=True)
             
 
         return result
