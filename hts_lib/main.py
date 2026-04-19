@@ -129,61 +129,43 @@ def main(page: ft.Page):
                 )
         elif page.route == "/recipes":
             try:
-                loading_content = ft.Container(
-                    content=ft.Column(
-                        [ft.ProgressRing(color=Styles.BUTTON_FILL_COLOR),
-                         ft.Text("Loading recipes...", color=Styles.TEXT_COLOR)],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                        alignment=ft.MainAxisAlignment.CENTER,
-                        spacing=20,
-                    ),
-                    alignment=ft.alignment.center,
-                    expand=True,
-                )
-                page.views.append(ft.View("/recipes", [navbar.build(), loading_content], bgcolor=Styles.BACKGROUND_COLOR))
-                page.update()
-
                 from frontend.src.views.recipes_view import RecipesView
+
                 recipes_view = RecipesView(page)
-                page.views[-1] = ft.View(
-                    "/recipes",
-                    [navbar.build(), recipes_view.build()],
-                    bgcolor=Styles.BACKGROUND_COLOR,
+                page.views.append(
+                    ft.View(
+                        "/recipes",
+                        [navbar.build(), recipes_view.build()],
+                        bgcolor=Styles.BACKGROUND_COLOR,
+                    )
                 )
             except Exception as ex:
-                page.views[-1] = build_unavailable_view(
-                    "/recipes",
-                    "My recipes",
-                    f"This section is temporarily unavailable in the web build.\n\n{ex}",
+                page.views.append(
+                    build_unavailable_view(
+                        "/recipes",
+                        "My recipes",
+                        f"This section is temporarily unavailable in the web build.\n\n{ex}",
+                    )
                 )
         elif page.route == "/statistics":
             try:
-                loading_content = ft.Container(
-                    content=ft.Column(
-                        [ft.ProgressRing(color=Styles.BUTTON_FILL_COLOR),
-                         ft.Text("Loading statistics...", color=Styles.TEXT_COLOR)],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                        alignment=ft.MainAxisAlignment.CENTER,
-                        spacing=20,
-                    ),
-                    alignment=ft.alignment.center,
-                    expand=True,
-                )
-                page.views.append(ft.View("/statistics", [navbar.build(), loading_content], bgcolor=Styles.BACKGROUND_COLOR))
-                page.update()
-
                 from frontend.src.views.statistics_view import StatisticsView
+
                 statistics_view = StatisticsView(page)
-                page.views[-1] = ft.View(
-                    "/statistics",
-                    [navbar.build(), statistics_view.build()],
-                    bgcolor=Styles.BACKGROUND_COLOR,
+                page.views.append(
+                    ft.View(
+                        "/statistics",
+                        [navbar.build(), statistics_view.build()],
+                        bgcolor=Styles.BACKGROUND_COLOR,
+                    )
                 )
             except Exception as ex:
-                page.views[-1] = build_unavailable_view(
-                    "/statistics",
-                    "Statistics",
-                    f"This section is temporarily unavailable in the web build.\n\n{ex}",
+                page.views.append(
+                    build_unavailable_view(
+                        "/statistics",
+                        "Statistics",
+                        f"This section is temporarily unavailable in the web build.\n\n{ex}",
+                    )
                 )
         else:
             try:
