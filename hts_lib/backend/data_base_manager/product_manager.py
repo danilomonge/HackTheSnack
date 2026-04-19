@@ -4,6 +4,7 @@ import json
 from backend.data_base_manager.db_config import get_user_management_url
 
 _TIMEOUT = 45.0
+_LIST_TIMEOUT = 15.0
 
 
 class ProductManager:
@@ -103,7 +104,7 @@ class ProductManager:
         """
         response = httpx.get(
             f"{ProductManager._base_url()}/list?page=1&size=100&name={product_name}",
-            timeout=_TIMEOUT,
+            timeout=_LIST_TIMEOUT,
         )
         return response
 
