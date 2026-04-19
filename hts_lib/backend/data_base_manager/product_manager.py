@@ -98,7 +98,7 @@ class ProductManager:
         return response
 
     @staticmethod
-    def is_backend_available(timeout: float = 1.5) -> bool:
+    def is_backend_available(timeout: float = 5.0) -> bool:
         """
         Checks whether the backend service is reachable.
 
@@ -111,5 +111,5 @@ class ProductManager:
                 timeout=timeout,
             )
             return response.status_code < 500
-        except httpx.HTTPError:
+        except Exception:
             return False
