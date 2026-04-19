@@ -35,7 +35,8 @@ class ProductTableUI:
         self.recipe_ids = []
         self.result_dict = dict 
         self.is_submitted = False
-        
+        self.is_autofilled = False
+
         self.instruction_container = self.build_instruction_text()
 
         style = Styles.input_style()
@@ -45,7 +46,7 @@ class ProductTableUI:
             hint_text="e.g. Fruit Yogurt",
             **style
         )
-        self.product_name.on_change = self.on_user_input_change
+        self.product_name.on_change = self.on_product_name_change
 
         self.ingredient_manager = IngredientRowManager(
             self.ingredient_rows,
@@ -71,7 +72,10 @@ class ProductTableUI:
 
         self.loading_indicator = ft.ProgressBar(visible=False, color=Styles.LOADINGBAR_COLOR, bgcolor= Styles.LOADINGBAR_BACKGROUNDCOLOR)
 
-        self.refresh_backend_status(update_page=False)
+        # Start optimistically enabled — actual check happens on first Search/Save click
+        self.backend_available = True
+        self.update_search_button_state(enabled=True)
+        self.update_save_button_state(enabled=False)
         
     def on_find_product_click(self, e):
         """
@@ -94,15 +98,24 @@ class ProductTableUI:
         if found:
            dialog = AutofillConfirmationWindow(
             self.page,
-            on_confirm=lambda: ProductActionHandler.handle_search_and_fill(
-                self.product_name,
-                self.feedback,
-                self.page,
-                self.ingredient_manager,
-                self.store_submission_results),
+            on_confirm=self._on_autofill_complete,
             on_cancel=lambda: print("Cancelled.")
             )
            dialog.show_dialog()
+
+    def _on_autofill_complete(self):
+        from frontend.src.product_action_handler import ProductActionHandler
+        ProductActionHandler.handle_search_and_fill(
+            self.product_name,
+            self.feedback,
+            self.page,
+            self.ingredient_manager,
+            self.store_submission_results)
+        if self.product_id:
+            self.is_autofilled = True
+            self.is_submitted = True
+            self.update_save_button_state(enabled=True)
+            self.page.update()
 
     def on_add_click(self):
         """
@@ -121,6 +134,7 @@ class ProductTableUI:
         Clears all ingredient rows from the table and resets the product name.
         """
         self.ingredient_manager.clear_all()
+        self.is_autofilled = False
         self.disable_save_button()
 
 
@@ -187,13 +201,21 @@ class ProductTableUI:
         if result_dict is not None:
             self.result_dict = result_dict
 
-    def on_user_input_change(self, e=None): 
+    def on_product_name_change(self, e=None):
         self.is_submitted = False
+        self.is_autofilled = False
         self.update_save_button_state(enabled=False)
         self.page.update()
-    
+
+    def on_user_input_change(self, e=None):
+        if not self.is_autofilled:
+            self.is_submitted = False
+            self.update_save_button_state(enabled=False)
+        self.page.update()
+
     def disable_save_button(self):
         self.is_submitted = False
+        self.is_autofilled = False
         self.update_save_button_state(enabled=False)
         self.page.update()
 
