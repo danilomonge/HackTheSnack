@@ -3,6 +3,8 @@ import json
 
 from backend.data_base_manager.db_config import get_user_management_url
 
+_TIMEOUT = 45.0
+
 
 class EvaluationManager:
     """
@@ -37,7 +39,8 @@ class EvaluationManager:
         response = httpx.post(
                 EvaluationManager._base_url(),
                 headers={"Content-Type": "application/json"},
-                content=json.dumps(data)
+                content=json.dumps(data),
+                timeout=_TIMEOUT,
             )
 
         return response
@@ -84,7 +87,8 @@ class EvaluationManager:
         Searches for all evaluations related to one product ID.
         """
         response = httpx.get(
-            f"{EvaluationManager._base_url()}/list?page=1&size=10&orderBy&orderType&idProduct={product_id}"
+            f"{EvaluationManager._base_url()}/list?page=1&size=10&orderBy&orderType&idProduct={product_id}",
+            timeout=_TIMEOUT,
         )
         return response
 
@@ -94,7 +98,8 @@ class EvaluationManager:
         Searches for the details of an evaluation by id.
         """
         response = httpx.get(
-            f"{EvaluationManager._base_url()}/detail?id={product_id}"
+            f"{EvaluationManager._base_url()}/detail?id={product_id}",
+            timeout=_TIMEOUT,
         )
         return response
 
@@ -110,6 +115,7 @@ class EvaluationManager:
 
         response = httpx.get(
             f"{EvaluationManager._base_url()}/listResult?page=1&size=50&orderBy&orderType"
-            f"&idProduct={product_id}&idIngredient={ingredient_id}"
+            f"&idProduct={product_id}&idIngredient={ingredient_id}",
+            timeout=_TIMEOUT,
         )
         return response
