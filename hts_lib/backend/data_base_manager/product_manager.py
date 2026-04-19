@@ -55,7 +55,7 @@ class ProductManager:
                         Use response.status_code to check for success,
                         and response.json() to access the response data.
         """
-        response = httpx.get(f"{ProductManager._base_url()}/detail?name={product_name}")
+        response = httpx.get(f"{ProductManager._base_url()}/detail?name={product_name.upper().strip()}")
         return response
 
     @staticmethod
@@ -69,7 +69,7 @@ class ProductManager:
         Returns:
             id_product (int): id of the product
         """
-        response = httpx.get(f"{ProductManager._base_url()}/detail?name={product_name}")
+        response = httpx.get(f"{ProductManager._base_url()}/detail?name={product_name.upper().strip()}")
 
         if response.status_code == 200:
             product_data = response.json()
