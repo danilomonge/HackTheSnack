@@ -1,5 +1,6 @@
 import sys
 import os
+import threading
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -66,13 +67,8 @@ def main(page: ft.Page):
         """
         Handles route changes to update the page views based on the current route.
         """
-        # Clear views but ensure we don't process the same route twice
         page.views.clear()
-        
-        # Add a small delay to ensure proper cleanup
-        import time
-        time.sleep(0.01)  # 10ms delay
-        
+
         if page.route == "/about":
             try:
                 from frontend.src.views.about_view import AboutView
@@ -139,6 +135,7 @@ def main(page: ft.Page):
                         bgcolor=Styles.BACKGROUND_COLOR,
                     )
                 )
+                threading.Thread(target=recipes_view.load_recipes, daemon=True).start()
             except Exception as ex:
                 page.views.append(
                     build_unavailable_view(
@@ -159,6 +156,7 @@ def main(page: ft.Page):
                         bgcolor=Styles.BACKGROUND_COLOR,
                     )
                 )
+                threading.Thread(target=statistics_view.load_dropdown_data, daemon=True).start()
             except Exception as ex:
                 page.views.append(
                     build_unavailable_view(
