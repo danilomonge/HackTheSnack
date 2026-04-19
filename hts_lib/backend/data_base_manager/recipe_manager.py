@@ -5,6 +5,8 @@ from backend.data_base_manager.db_config import get_user_management_url
 from backend.data_base_manager.ingredient_manager import IngredientManager
 from backend.data_base_manager.product_manager import ProductManager
 
+_TIMEOUT = 45.0
+
 
 class RecipeManager:
     """
@@ -65,7 +67,8 @@ class RecipeManager:
         response = httpx.post(
                 RecipeManager._base_url(),
                 headers={"Content-Type": "application/json"},
-                content=json.dumps(data)
+                content=json.dumps(data),
+                timeout=_TIMEOUT,
             )
 
         return response
@@ -111,7 +114,8 @@ class RecipeManager:
         httpx.Response
         """
         response = httpx.delete(
-            f"{RecipeManager._base_url()}/deleteByProduct/?idProduct={idProduct}&idIngredient={idIngredient}"
+            f"{RecipeManager._base_url()}/deleteByProduct/?idProduct={idProduct}&idIngredient={idIngredient}",
+            timeout=_TIMEOUT,
         )
         return response
 
@@ -124,7 +128,8 @@ class RecipeManager:
         httpx.Response
         """
         response = httpx.get(
-            f"{RecipeManager._base_url()}/list?page=1&size=10&orderBy&orderType&id={idProduct}"
+            f"{RecipeManager._base_url()}/list?page=1&size=10&orderBy&orderType&id={idProduct}",
+            timeout=_TIMEOUT,
         )
         return response
 
@@ -137,6 +142,7 @@ class RecipeManager:
         httpx.Response
         """
         response = httpx.get(
-            f"{RecipeManager._base_url()}/detailRecipeByProduct?idProduct={idProduct}&idIngredient={idIngredient}"
+            f"{RecipeManager._base_url()}/detailRecipeByProduct?idProduct={idProduct}&idIngredient={idIngredient}",
+            timeout=_TIMEOUT,
         )
         return response
