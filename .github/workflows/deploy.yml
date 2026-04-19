@@ -34,12 +34,15 @@ jobs:
         env:
           NUTRITION_PROXY_URL_VAR: ${{ vars.NUTRITION_PROXY_URL }}
           NUTRITION_PROXY_URL_SECRET: ${{ secrets.NUTRITION_PROXY_URL }}
+          USER_MANAGEMENT_URL: ${{ vars.USER_MANAGEMENT_URL }}
         run: |
           PROXY_URL="${NUTRITION_PROXY_URL_VAR:-$NUTRITION_PROXY_URL_SECRET}"
+          DB_URL="${USER_MANAGEMENT_URL:-https://fakethesnackdb-api.onrender.com/user-management}"
           if [ -n "$PROXY_URL" ]; then
             cat > ./hts_lib/assets/runtime-config.json <<EOF
           {
-            "nutrition_proxy_url": "$PROXY_URL"
+            "nutrition_proxy_url": "$PROXY_URL",
+            "user_management_url": "$DB_URL"
           }
           EOF
           fi
