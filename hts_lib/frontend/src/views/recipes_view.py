@@ -351,11 +351,19 @@ class RecipesView:
 
     def build(self):
         """
-        Builds the main content for the RecipesView.
+        Builds the main content for the RecipesView (no HTTP — data loads in background).
         Returns:
             ft.Container: The main container for the RecipesView.
         """
-        self.load_recipes()
+        self.recipes_row.controls.append(
+            ft.Row(
+                [
+                    ft.ProgressRing(width=16, height=16, stroke_width=2, color=Styles.TEXT_COLOR),
+                    ft.Text("Loading recipes...", color=Styles.TEXT_COLOR, italic=True),
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+            )
+        )
 
         search_field = ft.TextField(
             label="Search recipes",
@@ -369,9 +377,6 @@ class RecipesView:
             label_style=ft.TextStyle(color=Styles.TEXT_COLOR),
             cursor_color=Styles.TEXT_COLOR
         )
-
-        if not self.recipes_container.controls:
-            self.update_recipe_containers()
 
         column_content = ft.Column(
             controls=[
