@@ -51,7 +51,7 @@ class IngredientManager:
         httpx.Response
         """
         response = httpx.get(
-            f"{IngredientManager._base_url()}/detail?name={ingredient_name}"
+            f"{IngredientManager._base_url()}/detail?name={ingredient_name.upper().strip()}"
         )
         return response
 
