@@ -422,19 +422,22 @@ class StatisticsView:
             height=400,
         )
 
+    def load_dropdown_data(self):
+        """Fetch products and ingredients in background and populate dropdowns."""
+        dropdown_product_data, dropdown_ingredient_data = self.get_products_and_ingredients()
+        self.product_dropdown.options = [ft.dropdown.Option(item) for item in dropdown_product_data]
+        self.ingredient_dropdown.options = [ft.dropdown.Option(item) for item in dropdown_ingredient_data]
+        self.page.update()
+
     def build(self):
         """
-        Builds the StatisticsView UI with product and ingredient dropdowns, a chart container, and a confirm button.
+        Builds the StatisticsView UI with empty dropdowns (data loads in background).
         """
-        dropdown_product_data, dropdown_ingredient_data = (
-            self.get_products_and_ingredients()
-        )
-
         self.product_dropdown = self.build_dropdown(
-            "Select Product", dropdown_product_data, on_change=self.on_product_select
+            "Select Product", [], on_change=self.on_product_select
         )
         self.ingredient_dropdown = self.build_dropdown(
-            "Select Ingredient", dropdown_ingredient_data
+            "Select Ingredient", []
         )
         self.ingredient_container.content = self.ingredient_dropdown
 
