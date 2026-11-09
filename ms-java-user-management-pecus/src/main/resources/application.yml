@@ -1,0 +1,113 @@
+#Perfil de producccion de la aplicacion
+#NO MODIFICAR
+spring:
+  config:
+    activate:
+      on-profile: prod
+  application:
+    name: "@artifactId@"
+    version: "@project.version@"
+  main:
+    allow-bean-definition-overriding: true
+#FIN DE PERFIL DE PRODUCCION
+---
+#PERFIL DE DESARROLLO
+#MODIFICA ESTE PERFIL PARA CONFIGURAR TU AMBIENTE LOCAL
+#NO ES NECESARIO MODIFICARLO ANTES DE SUBIR AL REPOSITORIO REMOTO
+server:
+  port: 8087
+  servlet:
+    context-path: /user-management
+application:
+  id: USER-MANAGEMENT
+  moduleOperation:
+    companyManagement: /user-management
+spring:
+  config:
+    activate:
+      on-profile: local
+  main:
+    allow-bean-definition-overriding: true
+    banner-mode: off
+  datasource:
+    jdbcUrl: jdbc:postgresql://localhost:13579/postgres
+    username: postgres
+    password: admin
+    driverClassName: org.postgresql.Driver
+    hikari:
+     maximum-pool-size: 4
+
+  jpa:
+    show-sql: false
+    open-in-view: false
+    properties:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+jdbc:
+  initialPoolSize: 3
+  acquireIncrement: 3
+  minPoolSize: 2
+  maxPoolSize: 5
+  maxIdleTime: 10800 #Default: 0 how many seconds a Connection should be permitted to go unused before being culled from the pool.
+  #maxConnectionAge: 1800 #Default: 0 forces the pool to cull any Connections that were acquired from the database more than the set number of seconds in the past.
+  maxIdleTimeExcessConnections: 300 #Default: 0   much shorter than maxIdleTime, forcing Connections beyond your set minimum size to be released if they sit idle for more than a short period of time.
+  #unreturnedConnectionTimeout: 60 #Default: 0  secondes   how long a Connection may remain checked out.
+  checkoutTimeout: 4000 #limits how long a client will wait for a Connection. El valor predeterminado es 0, el tiempo de espera para una nueva conexión después de getConnection (), SQLException se lanzará después del tiempo de espera, si se establece en 0, esperará indefinidamente. La unidad es milisegundos.
+  contextClassLoaderSource: caller
+  privilegeSpawnedThreads: true
+
+hibernate:
+  show_sql: false
+  format_sql: false
+  dialect: org.hibernate.dialect.PostgreSQLDialect
+  hbm2ddl:
+    auto: validate
+  connection:
+    provider_class: org.hibernate.connection.C3P0ConnectionProvider
+  c3p0:
+    acquire_increment: 1
+
+swagger:
+  contact:
+    email: dev.api@pecus.com.mx
+    url: dev.api@pecus.com.mx
+    name: DEV API
+  description: USER MANAGEMENT PECUS API
+  title: API - PECUS
+  enabled: true
+
+logging:
+  level:
+    org:
+      root: INFO
+      hibernate: INFO
+
+url:
+  validateToken: http://localhost:59336/session-management/session/validate
+
+service:
+  client:
+      find-person: http://localhost:51854/ml-person-management/persons/listByName
+      find-person-id: http://localhost:51854/ml-person-management/persons/list
+      patient: http://localhost:65510/person-management/person
+      create-person: http://localhost:51854/ml-person-management/persons
+      send-mail: http://localhost:51692/messaging-management/messaging/mail/send-notification
+      send-push: http://localhost:51692/messaging-management/messaging/push/send-notification
+      send-sms: http://localhost:51692/messaging-management/messaging/sms/send-notification
+      find-patient: http://localhost:65510/person-management/person
+      increse-statistics: http://localhost:54652/statistics-management/statistics/estadistica/increase
+#      send-sms: https://apidev.sappecus.com.mx/v1/pecus-api/mm/messaging-management/messaging/sms/send-notification
+  token:
+      increse-statistics: Token....
+  props:
+      increse-statistics:
+        idTipoComponente: 4
+        idComponente: 4
+app:
+  version: ^project.version^
+
+security:
+  rolmenu-validation: false
+

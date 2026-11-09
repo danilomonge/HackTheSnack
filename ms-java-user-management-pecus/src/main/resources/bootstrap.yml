@@ -1,0 +1,8 @@
+spring:
+  cloud:
+    bootstrap:
+      enabled: false
+    config:
+      uri: ${CONFIG_SERVICE_URI}
+      username: admin.config
+      password: 4dm1nC0nf16.
