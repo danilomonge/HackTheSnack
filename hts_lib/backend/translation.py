@@ -128,7 +128,10 @@ class Translation:
                 date_str = entry["evaluationDate"]
                 try:
                     date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f%z")
-                    formatted_date = date.strftime("%Y-%m-%d %H:%M:%S")  # Inkl. Uhrzeit für Unterscheidung
+                    # The API stores UTC; label versions in the viewer's local time
+                    # (the OS zone on the desktop, the browser's zone under Pyodide).
+                    # Seconds are kept so versions saved in the same minute stay apart.
+                    formatted_date = date.astimezone().strftime("%Y-%m-%d %H:%M:%S")
                 except ValueError:
                     continue
 
