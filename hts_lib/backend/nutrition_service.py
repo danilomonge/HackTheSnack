@@ -12,6 +12,8 @@ Only depends on ``httpx`` so the proxy stays lightweight.
 
 from __future__ import annotations
 
+import statistics
+
 import httpx
 
 USDA_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
@@ -56,8 +58,10 @@ def lookup_usda(ingredient_name: str, api_key: str | None) -> dict | None:
     """
     Nutrition facts per 100 g for an ingredient from the USDA FoodData Central API.
 
-    Only an exact (case-insensitive) name match among the branded foods is
-    accepted, so a vague query never returns data for a different food.
+    Only exact (case-insensitive) name matches among the branded foods are
+    accepted, so a vague query never returns data for a different food. Each
+    value is the median over all exact matches, so a single unusual product
+    (e.g. heavily salted peanuts) does not decide the result.
 
     Returns:
         ``{"name", "kcal", "carbs", "fat", "protein", "sodium" (mg), "per"}`` or None.
@@ -81,17 +85,28 @@ def lookup_usda(ingredient_name: str, api_key: str | None) -> dict | None:
     )
     response.raise_for_status()
 
-    for food in response.json().get("foods") or []:
-        if str(food.get("description", "")).strip().lower() != searched:
-            continue
-        nutrients = {n.get("nutrientName"): n.get("value", 0) for n in food.get("foodNutrients") or []}
-        return {
-            "name": food["description"],
-            "kcal": float(nutrients.get("Energy", 0) or 0),
-            "carbs": float(nutrients.get("Carbohydrate, by difference", 0) or 0),
-            "fat": float(nutrients.get("Total lipid (fat)", 0) or 0),
-            "protein": float(nutrients.get("Protein", 0) or 0),
-            "sodium": float(nutrients.get("Sodium, Na", 0) or 0),
-            "per": "100g",
-        }
-    return None
+    matches = [
+        food for food in response.json().get("foods") or []
+        if str(food.get("description", "")).strip().lower() == searched
+    ]
+    if not matches:
+        return None
+
+    per_food = [
+        {n.get("nutrientName"): n.get("value") for n in food.get("foodNutrients") or []}
+        for food in matches
+    ]
+
+    def median_of(nutrient_name: str) -> float:
+        values = [float(n[nutrient_name]) for n in per_food if n.get(nutrient_name) is not None]
+        return float(statistics.median(values)) if values else 0.0
+
+    return {
+        "name": matches[0]["description"],
+        "kcal": median_of("Energy"),
+        "carbs": median_of("Carbohydrate, by difference"),
+        "fat": median_of("Total lipid (fat)"),
+        "protein": median_of("Protein"),
+        "sodium": median_of("Sodium, Na"),
+        "per": "100g",
+    }

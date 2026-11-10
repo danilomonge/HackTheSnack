@@ -61,6 +61,43 @@ def test_lookup_usda_returns_exact_match(monkeypatch):
     assert calls["params"]["api_key"] == "key"
 
 
+def _branded(description, kcal, fat, sodium):
+    return {
+        "description": description,
+        "foodNutrients": [
+            {"nutrientName": "Energy", "value": kcal},
+            {"nutrientName": "Carbohydrate, by difference", "value": 20},
+            {"nutrientName": "Total lipid (fat)", "value": fat},
+            {"nutrientName": "Protein", "value": 25},
+            {"nutrientName": "Sodium, Na", "value": sodium},
+        ],
+    }
+
+
+def test_lookup_usda_uses_the_median_of_all_exact_matches(monkeypatch):
+    # The first exact hit is a heavily salted product; the median is representative.
+    payload = {"foods": [
+        _branded("PEANUTS", 571, 39.3, 1390),
+        _branded("PEANUT BUTTER", 600, 50, 400),  # not an exact match: ignored
+        _branded("Peanuts", 567, 49.2, 18),
+        _branded("PEANUTS", 585, 46.4, 384),
+    ]}
+    monkeypatch.setattr(nutrition_service.httpx, "get", lambda *a, **k: FakeResponse(payload))
+
+    data = nutrition_service.lookup_usda("peanuts", "key")
+
+    assert data == {"name": "PEANUTS", "kcal": 571.0, "carbs": 20.0, "fat": 46.4, "protein": 25.0, "sodium": 384.0, "per": "100g"}
+
+
+def test_lookup_usda_median_ignores_missing_nutrients(monkeypatch):
+    with_sodium = _branded("SALT", 0, 0, 38000)
+    without_sodium = {"description": "SALT", "foodNutrients": [{"nutrientName": "Energy", "value": 0}]}
+    payload = {"foods": [without_sodium, with_sodium]}
+    monkeypatch.setattr(nutrition_service.httpx, "get", lambda *a, **k: FakeResponse(payload))
+
+    assert nutrition_service.lookup_usda("salt", "key")["sodium"] == 38000.0
+
+
 def test_lookup_usda_rejects_partial_matches(monkeypatch):
     monkeypatch.setattr(nutrition_service.httpx, "get", lambda *a, **k: FakeResponse(USDA_SUGAR))
     assert nutrition_service.lookup_usda("Sugar cane", "key") is None
