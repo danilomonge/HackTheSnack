@@ -24,7 +24,6 @@ class IngredientRowManager:
             product_name (ft.TextField): The field for the product name.
         """
         self.ingredients = []
-        self.deleted_ingredient_ids = []
         self.quantity_table = quantity_table
         self.product_name = product_name
         self.page = page
@@ -82,10 +81,9 @@ class IngredientRowManager:
                 ft.Container(
                     content=Styles.icon_button(
                         ft.Icons.REMOVE,
-                        lambda e: PercentageAdjuster.increase_or_decrease_percentage(
-                            percent_input, -1.0
-                        ),
+                        lambda e: self._adjust_percentage(percent_input, -1.0),
                         Styles.TEXT_COLOR,
+                        "Decrease by 1%",
                     ),
                     width=32,
                     alignment=ft.alignment.center,
@@ -94,10 +92,9 @@ class IngredientRowManager:
                 ft.Container(
                     content=Styles.icon_button(
                         ft.Icons.ADD,
-                        lambda e: PercentageAdjuster.increase_or_decrease_percentage(
-                            percent_input, 1.0
-                        ),
+                        lambda e: self._adjust_percentage(percent_input, 1.0),
                         Styles.TEXT_COLOR,
+                        "Increase by 1%",
                     ),
                     width=32,
                     alignment=ft.alignment.center,
@@ -106,6 +103,12 @@ class IngredientRowManager:
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=5,
         )
+
+    def _adjust_percentage(self, percent_input: ft.TextField, step: float):
+        """Applies a +/- click and marks the table as changed."""
+        PercentageAdjuster.increase_or_decrease_percentage(percent_input, step)
+        if self.on_user_input_change:
+            self.on_user_input_change(None)
 
     def ingredient_row(self, name_input, percent_section, on_delete):
         """
@@ -179,30 +182,20 @@ class IngredientRowManager:
         """
         Removes a row from both the ingredient list and the UI.
 
+        Ingredients removed here are also removed from the stored recipe the
+        next time it is saved (see RecipeManager.submit_recipe).
+
         Args:
             row (ft.Container): The ingredient row to remove.
+            name_input (ft.TextField): The row's name field (kept for API compatibility).
         """
-        ingredient_name = name_input.value
-        if ingredient_name:
-            try:
-                from backend.data_base_manager.ingredient_manager import IngredientManager
-                from backend.translation import Translation
-
-                ingredient_response = IngredientManager.find_ingredient(ingredient_name)
-                ingredient_data = ingredient_response.json()
-                ingredient_id = Translation.get_ingredient_id_by_name(ingredient_data)
-
-                if ingredient_id is not None and ingredient_id not in self.deleted_ingredient_ids:
-                    self.deleted_ingredient_ids.append(ingredient_id)
-            except Exception:
-                # Removing a row must still work even when the external backend is unavailable.
-                pass
-
-        self.ingredients.remove(row)
-        self.quantity_table.controls.remove(row)
+        if row in self.ingredients:
+            self.ingredients.remove(row)
+        if row in self.quantity_table.controls:
+            self.quantity_table.controls.remove(row)
         self.quantity_table.update()
 
-        if self.on_user_input_change: 
+        if self.on_user_input_change:
             self.on_user_input_change(None)
 
     def clear_all(self):
@@ -237,7 +230,7 @@ class IngredientRowManager:
         self.quantity_table.controls.clear()
         self.quantity_table.update()
 
-        if self.on_user_input_change:  # NEW
+        if self.on_user_input_change:
             self.on_user_input_change(None)
 
     def initialize_with_empty_row(self):

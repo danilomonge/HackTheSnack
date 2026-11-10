@@ -16,14 +16,14 @@ class AutofillConfirmationWindow:
                     "Yes",
                     on_click=self._handle_confirm,
                     style=ft.ButtonStyle(
-                        color=Styles.ICON_COLOR,
+                        color=Styles.TEXT_COLOR,
                     )
                 ),
                 ft.TextButton(
                     "No",
                     on_click=self._handle_cancel,
                     style=ft.ButtonStyle(
-                        color=Styles.ICON_COLOR,
+                        color=Styles.TEXT_COLOR,
                     )
                 )
             ],

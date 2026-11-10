@@ -1,15 +1,21 @@
+# Render Blueprint for the nutrition / translation proxy used by the web build.
+# It keeps the USDA and DeepL API keys on the server (never in the browser).
 services:
   - type: web
     name: hackthesnack-nutrition-proxy
     runtime: python
     plan: free
+    region: oregon
     buildCommand: pip install -r requirements-proxy.txt
     startCommand: uvicorn hts_lib.backend.nutrition_proxy_api:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
+    autoDeploy: true
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.11"
       - key: USDA_API_KEY
         sync: false
       - key: DEEPL_API_KEY
         sync: false
       - key: ALLOWED_ORIGINS
-        sync: false
+        value: https://danilomonge.github.io

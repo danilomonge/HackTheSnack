@@ -1,3 +1,16 @@
+"""Nutrition / translation proxy for the public web build.
+
+The web app runs entirely in the visitor's browser, so it must not contain the
+USDA and DeepL API keys. This tiny FastAPI service holds the keys and exposes:
+
+* ``GET  /health``                         → ``{"ok": true}``
+* ``GET  /api/nutrition?ingredient=sugar`` → ``{"data": {...} | null}``
+* ``POST /api/translate``                  → ``{"text": "..."}``
+
+Run locally:  ``uvicorn hts_lib.backend.nutrition_proxy_api:app --reload``
+Environment:  ``USDA_API_KEY``, ``DEEPL_API_KEY``, ``ALLOWED_ORIGINS`` (comma-separated).
+"""
+
 import os
 
 import httpx
@@ -5,17 +18,15 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
-DEEPL_URL = "https://api-free.deepl.com/v2/translate"
+from hts_lib.backend.nutrition_service import lookup_usda, translate
+
 USDA_API_KEY = os.getenv("USDA_API_KEY")
 DEEPL_API_KEY = os.getenv("DEEPL_API_KEY")
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "")
 
 
-def _allowed_origins():
-    """
-    Builds the CORS allowlist from an environment variable.
-    """
+def _allowed_origins() -> list[str]:
+    """CORS allowlist from the ALLOWED_ORIGINS environment variable."""
     return [origin.strip() for origin in ALLOWED_ORIGINS.split(",") if origin.strip()]
 
 
@@ -35,106 +46,33 @@ class TranslationRequest(BaseModel):
     target_lang: str = "EN"
 
 
-def _translate_to_english(text, source_lang="DE", target_lang="EN"):
-    """
-    Uses the DeepL API with a server-side secret.
-    """
-    if not DEEPL_API_KEY:
-        return text
-
-    response = httpx.post(
-        DEEPL_URL,
-        data={
-            "auth_key": DEEPL_API_KEY,
-            "text": text,
-            "source_lang": source_lang,
-            "target_lang": target_lang,
-        },
-        timeout=10.0,
-    )
-    response.raise_for_status()
-    payload = response.json()
-    return payload["translations"][0]["text"]
-
-
-def _lookup_usda(ingredient_name):
-    """
-    Uses the USDA API with a server-side secret.
-    """
-    if not USDA_API_KEY:
-        raise HTTPException(status_code=503, detail="USDA_API_KEY is not configured on the proxy.")
-
-    searched = ingredient_name.strip().lower()
-    if len(searched) < 3:
-        return None
-
-    response = httpx.get(
-        SEARCH_URL,
-        params={
-            "query": ingredient_name,
-            "api_key": USDA_API_KEY,
-            "pageSize": 5,
-            "dataType": ["Branded", "Branded Foods"],
-        },
-        timeout=10.0,
-    )
-    response.raise_for_status()
-    payload = response.json()
-
-    foods = payload.get("foods", [])
-    if not foods:
-        return None
-
-    for food in foods:
-        name = food["description"].strip().lower()
-        if name == searched:
-            nutrients = {n["nutrientName"]: n["value"] for n in food["foodNutrients"]}
-            return {
-                "name": food["description"],
-                "kcal": nutrients.get("Energy", 0),
-                "carbs": nutrients.get("Carbohydrate, by difference", 0),
-                "fat": nutrients.get("Total lipid (fat)", 0),
-                "protein": nutrients.get("Protein", 0),
-                "sodium": nutrients.get("Sodium, Na", 0),
-                "per": "100g",
-            }
-
-    return None
-
-
 @app.get("/health")
 def healthcheck():
-    """
-    Simple healthcheck endpoint for deployments.
-    """
+    """Health check used by Render."""
     return {"ok": True}
 
 
 @app.post("/api/translate")
-def translate(request: TranslationRequest):
-    """
-    Translates text without exposing the DeepL secret to the browser.
-    """
+def translate_text(request: TranslationRequest):
+    """Translates text without exposing the DeepL key to the browser."""
     try:
-        translated_text = _translate_to_english(
-            request.text,
-            source_lang=request.source_lang,
-            target_lang=request.target_lang,
-        )
+        translated = translate(request.text, DEEPL_API_KEY, request.source_lang, request.target_lang)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=502, detail=f"DeepL request failed with HTTP {exc.response.status_code}") from exc
     except httpx.HTTPError as exc:
-        raise HTTPException(status_code=502, detail=f"DeepL request failed: {exc}") from exc
-
-    return {"text": translated_text}
+        raise HTTPException(status_code=502, detail="DeepL request failed") from exc
+    return {"text": translated}
 
 
 @app.get("/api/nutrition")
-def nutrition(ingredient: str = Query(..., min_length=1)):
-    """
-    Returns nutrition data for an ingredient without exposing the USDA secret.
-    """
+def nutrition(ingredient: str = Query(..., min_length=1, max_length=200)):
+    """Nutrition facts per 100 g without exposing the USDA key to the browser."""
+    if not USDA_API_KEY:
+        raise HTTPException(status_code=503, detail="USDA_API_KEY is not configured on the proxy.")
     try:
-        data = _lookup_usda(ingredient)
+        data = lookup_usda(ingredient, USDA_API_KEY)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=502, detail=f"USDA request failed with HTTP {exc.response.status_code}") from exc
     except httpx.HTTPError as exc:
-        raise HTTPException(status_code=502, detail=f"USDA request failed: {exc}") from exc
-
+        raise HTTPException(status_code=502, detail="USDA request failed") from exc
     return {"data": data}

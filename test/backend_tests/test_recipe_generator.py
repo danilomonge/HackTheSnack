@@ -3,9 +3,8 @@ import sys
 import os
 from pytest import approx
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from hts_lib.backend.recipe_generator import RecipeGenerator 
+from backend.recipe_generator import RecipeGenerator 
 
 
 

@@ -175,3 +175,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Flet build output and local storage
+hts_lib/build/
+hts_lib/storage/
