@@ -32,3 +32,9 @@ exclude = ["Secure_env", "build", "storage", "__pycache__"]
 pwa = true
 base_url = "/HackTheSnack/"
 route_url_strategy = "hash"
+
+# The Flet 0.28.3 build template overrides the Dart package "web" with "^1.0.0".
+# web 1.1.2 (Oct 2026) needs Dart 3.13, newer than Flutter 3.29.2 ships (3.7),
+# so dart2js fails. Pin the last compatible release.
+[tool.flet.flutter.pubspec.dependency_overrides]
+web = "1.1.1"
