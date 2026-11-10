@@ -25,7 +25,7 @@ Food labels in the EU list ingredients in descending order of weight, and only s
 * each ingredient is at least as large as the next one,
 * the printed percentages are fixed.
 
-`backend/algorithm` samples uniformly from that polytope with **slice sampling**, a Markov chain Monte Carlo method. A linear program finds the starting point; random directions are restricted to the null space of the equality constraints. The mean of the samples is the estimate and twice the standard deviation is the "variation". Simple cases, like a single unknown or all values given, are solved exactly without sampling (`backend/algorithm_skipper.py`). The derivation is in [`notebooks/MakerSpace.ipynb`](notebooks/MakerSpace.ipynb).
+`backend/algorithm` samples uniformly from that polytope with **slice sampling**, a Markov chain Monte Carlo method. A linear program finds the starting point (SciPy's `linprog` on the desktop; in the browser, where SciPy is not available, an equivalent NumPy barrier method); random directions are restricted to the null space of the equality constraints. The mean of the samples is the estimate and twice the standard deviation is the "variation". Simple cases, like a single unknown or all values given, are solved exactly without sampling (`backend/algorithm_skipper.py`). The derivation is in [`notebooks/MakerSpace.ipynb`](notebooks/MakerSpace.ipynb).
 
 ---
 
