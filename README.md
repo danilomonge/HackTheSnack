@@ -140,7 +140,9 @@ The suite covers the algorithm, input validation, the database client (against a
 
 ### Web app → GitHub Pages
 
-[`deploy.yml`](.github/workflows/deploy.yml) runs the tests on every push and pull request. On `main` it then runs `flet build web` and publishes `hts_lib/build/web` to the `gh-pages` branch, served at https://danilomonge.github.io/HackTheSnack/.
+[`deploy.yml`](.github/workflows/deploy.yml) runs the tests and `flet build web` on every push and pull request, so a broken web build is caught before merging. On `main` it then publishes the build to the `gh-pages` branch, served at https://danilomonge.github.io/HackTheSnack/.
+
+The Flet 0.28.3 build template lets the Dart package `web` float (`^1.0.0`); `hts_lib/pyproject.toml` pins it to `1.1.1` because newer releases need a newer Dart than Flutter 3.29.2 ships.
 
 Optional repository **variables** (Settings → Secrets and variables → Actions → Variables) override the URLs in `runtime-config.json` at build time:
 
