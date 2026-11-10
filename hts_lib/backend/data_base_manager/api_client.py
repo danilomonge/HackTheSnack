@@ -69,8 +69,16 @@ def warm_up(*urls: str) -> None:
         try:
             import js  # type: ignore[import-not-found]  # Pyodide bridge to the browser
 
+            # Runs entirely in JavaScript: a "no-cors" request still reaches (and
+            # wakes) the service, the opaque response is ignored, and errors are
+            # caught there, so no rejected promise reaches Python and nothing is
+            # logged to the console. (Spring's actuator endpoints send no CORS headers.)
+            ping = js.Function.new(
+                "url",
+                "fetch(url, { mode: 'no-cors', cache: 'no-store' }).catch(function () {});",
+            )
             for target in targets:
-                js.fetch(target)  # returns a Promise we deliberately ignore
+                ping(target)
         except Exception:
             pass
         return
