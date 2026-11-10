@@ -144,16 +144,12 @@ class Computation:
         y = (A @ xi) - a  # value of inequality constraints
         z = A @ s  # projected onto the slice
 
-        upper = np.inf
-        lower = -np.inf
-
-        # find the *tightest* of all constrains in both directions
-        K = len(y)
-        for k in range(K):
-            if z[k] > 0:
-                upper = np.minimum(upper, -y[k] / z[k])
-            elif z[k] < 0:
-                lower = np.maximum(lower, -y[k] / z[k])
+        # find the *tightest* of all constraints in both directions (vectorized:
+        # this runs once per MCMC step, so a Python loop here dominated the runtime)
+        positive = z > 0
+        negative = z < 0
+        upper = np.min(-y[positive] / z[positive]) if positive.any() else np.inf
+        lower = np.max(-y[negative] / z[negative]) if negative.any() else -np.inf
 
         return xi, upper, lower, s
 

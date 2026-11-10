@@ -11,6 +11,7 @@ class RecipesView:
         self.recipe_images = ["recipe_img.png"]
         self.recipe_overlay = None
         self.search_text = ""
+        self.filtered_titles = []
 
         self.recipes_row = ft.Row(
             controls=[],
@@ -32,9 +33,24 @@ class RecipesView:
         )
 
     def load_recipes(self):
-        """Load recipes from backend"""
-        self.recipe_titles = Translation.collect_product_dict()
-        self.filtered_titles = list(self.recipe_titles.keys())
+        """Loads the saved products from the database and shows them as cards."""
+        try:
+            self.recipe_titles = Translation.collect_product_dict(raise_errors=True)
+        except Exception:
+            self.recipes_row.controls.clear()
+            self.recipes_row.controls.append(
+                ft.Text(
+                    "⚠️ The database service is offline or still starting up. Please reload the page in a moment.",
+                    size=16,
+                    color=Styles.RED_COLOR,
+                    weight=ft.FontWeight.BOLD,
+                )
+            )
+            self.page.update()
+            return
+        self.filtered_titles = [
+            title for title in self.recipe_titles if self.search_text.lower() in title.lower()
+        ]
         self.update_recipe_containers()
 
     def filter_recipes(self, query):
@@ -58,7 +74,7 @@ class RecipesView:
         for title, id_val in self.recipe_titles.items():
             if id_val == recipe_id:
                 return title
-        return f"Rezept #{recipe_id}"
+        return f"Recipe #{recipe_id}"
 
     def close_overlay(self, e=None):
         """
@@ -346,7 +362,7 @@ class RecipesView:
             if recipe_id:
                 self.open_recipe_overlay(recipe_id)
             else:
-                print(f"Keine ID für Rezept '{title}' gefunden")
+                print(f"No id found for recipe '{title}'")
         return handler
 
     def build(self):

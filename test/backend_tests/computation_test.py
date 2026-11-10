@@ -2,9 +2,8 @@ import sys
 import os
 import numpy as np
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from hts_lib.backend.algorithm.computation import Computation
+from backend.algorithm.computation import Computation
 
 #Definition of standard constraints for 3 ingredients 
 D = 3

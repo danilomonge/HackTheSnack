@@ -1,37 +1,55 @@
-import sys
+"""HackTheSnack — Flet application entry point.
+
+Run on the desktop:   cd hts_lib && python main.py
+Run in the browser:   cd hts_lib && flet run --web main.py
+Static web build:     cd hts_lib && flet build web   (see README)
+"""
+
 import os
-import threading
+import sys
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-sys.path.insert(0, BASE_DIR)
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
 import flet as ft
+
+from backend.data_base_manager import api_client
+from backend.data_base_manager.db_config import (
+    get_nutrition_proxy_url,
+    get_user_management_url,
+    initialize_db_url,
+)
 from frontend.src.navbar import NavigationBar
 from frontend.src.styles import Styles
-from backend.data_base_manager.db_config import initialize_db_url
+
+#: Routes the app knows; anything else shows the home page.
+ROUTES = ("/", "/generator", "/recipes", "/statistics", "/about")
 
 
 def main(page: ft.Page):
     """
-    Launches the Flet app with the product ingredient table UI.
-
-    - Sets page title and layout
-    - Loads the home view by default
-    - Initializes navigation bar and views
-    - Handles route changes to switch between views
-    - Adds one empty ingredient row by default
+    Sets up the page, resolves the backend URLs and renders the view of the
+    current route (Home, Recipe Generator, My Recipes, Statistics, About us).
     """
     page.title = "Hack The Snack"
     if not getattr(page, "web", False):
         page.window.icon = "icon/icon.ico"
     page.scroll = ft.ScrollMode.AUTO
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.expand = True
+    page.padding = 0
     page.bgcolor = Styles.BACKGROUND_COLOR
 
-    # Resolve the FakeTheSnackDB API base URL once at startup.
-    # Reads from: env var USER_MANAGEMENT_BASE_URL > runtime-config.json > localhost fallback
+    # Resolve the API base URL once (env var > runtime-config.json > localhost).
     initialize_db_url(page)
+
+    # Wake the free-tier backends in the background so the first Search,
+    # Save or nutrition lookup does not have to wait for a cold start.
+    proxy_url = get_nutrition_proxy_url(page)
+    api_client.warm_up(
+        f"{get_user_management_url()}/actuator/health",
+        f"{proxy_url}/health" if proxy_url else "",
+    )
 
     navbar = NavigationBar(page)
 
@@ -46,13 +64,8 @@ def main(page: ft.Page):
                     padding=40,
                     content=ft.Column(
                         [
-                            ft.Text(title, size=28, weight=ft.FontWeight.BOLD),
-                            ft.Text(
-                                message,
-                                size=16,
-                                text_align=ft.TextAlign.CENTER,
-                                width=600,
-                            ),
+                            ft.Text(title, size=28, weight=ft.FontWeight.BOLD, color=Styles.TEXT_COLOR),
+                            ft.Text(message, size=16, text_align=ft.TextAlign.CENTER, width=600),
                         ],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         alignment=ft.MainAxisAlignment.CENTER,
@@ -61,146 +74,94 @@ def main(page: ft.Page):
                 ),
             ],
             bgcolor=Styles.BACKGROUND_COLOR,
+            padding=0,
         )
 
-    def route_change(e: ft.RouteChangeEvent):
+    def show_view(route: str, title: str, build, load=None):
         """
-        Handles route changes to update the page views based on the current route.
+        Renders a view; ``load`` (optional) fetches its data afterwards.
+
+        The view is drawn first so a loading indicator is visible, then the data
+        is loaded with ``page.run_thread`` (a real thread on desktop; runs inline
+        in the browser, where Pyodide has no threads).
         """
+        try:
+            page.views.append(
+                ft.View(route, [navbar.build(), build()], bgcolor=Styles.BACKGROUND_COLOR, padding=0)
+            )
+            page.update()
+            if load is not None:
+                page.run_thread(load)
+        except Exception as ex:
+            page.views.clear()
+            page.views.append(
+                build_unavailable_view(route, title, f"This section could not be loaded.\n\n{ex}")
+            )
+            page.update()
+
+    def route_change(e: ft.RouteChangeEvent | None = None):
+        """
+        Replaces the visible view with the one for ``page.route``.
+        """
+        route = page.route if page.route in ROUTES else "/"
         page.views.clear()
 
-        if page.route == "/about":
-            try:
-                from frontend.src.views.about_view import AboutView
+        if route == "/about":
+            from frontend.src.views.about_view import AboutView
 
-                about_view = AboutView(page)
-                page.views.append(
-                    ft.View(
-                        "/about",
-                        [
-                            navbar.build(),
-                            about_view.build(),
-                        ],
-                        bgcolor=Styles.BACKGROUND_COLOR,
-                    )
-                )
-            except Exception as ex:
-                page.views.append(
-                    build_unavailable_view(
-                        "/about",
-                        "About us",
-                        f"This section is temporarily unavailable in the web build.\n\n{ex}",
-                    )
-                )
-        elif page.route == "/generator":
-            try:
-                from frontend.src.add_product_table.table_ui.product_table_ui import ProductTableUI
+            show_view("/about", "About us", AboutView(page).build)
 
-                generator_view = ProductTableUI(page)
-                page.views.append(
-                    ft.View(
-                        "/generator",
-                        [
-                            navbar.build(),
-                            ft.Column(
-                                [
-                                    generator_view.build_table_ui(),
-                                ],
-                                scroll=ft.ScrollMode.AUTO,
-                                expand=True,
-                                horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
-                            ),
-                        ],
-                        bgcolor=Styles.BACKGROUND_COLOR,
-                    )
-                )
-                generator_view.ingredient_manager.initialize_with_empty_row()
-            except Exception as ex:
-                page.views.append(
-                    build_unavailable_view(
-                        "/generator",
-                        "Recipe generator",
-                        f"This section is not ready in the web build yet.\n\n{ex}",
-                    )
-                )
-        elif page.route == "/recipes":
-            try:
-                from frontend.src.views.recipes_view import RecipesView
+        elif route == "/generator":
+            from frontend.src.add_product_table.table_ui.product_table_ui import ProductTableUI
 
-                recipes_view = RecipesView(page)
-                page.views.append(
-                    ft.View(
-                        "/recipes",
-                        [navbar.build(), recipes_view.build()],
-                        bgcolor=Styles.BACKGROUND_COLOR,
-                    )
-                )
-                threading.Thread(target=recipes_view.load_recipes, daemon=True).start()
-            except Exception as ex:
-                page.views.append(
-                    build_unavailable_view(
-                        "/recipes",
-                        "My recipes",
-                        f"This section is temporarily unavailable in the web build.\n\n{ex}",
-                    )
-                )
-        elif page.route == "/statistics":
-            try:
-                from frontend.src.views.statistics_view import StatisticsView
+            generator_view = ProductTableUI(page)
 
-                statistics_view = StatisticsView(page)
-                page.views.append(
-                    ft.View(
-                        "/statistics",
-                        [navbar.build(), statistics_view.build()],
-                        bgcolor=Styles.BACKGROUND_COLOR,
-                    )
+            def build_generator():
+                return ft.Column(
+                    [generator_view.build_table_ui()],
+                    scroll=ft.ScrollMode.AUTO,
+                    expand=True,
+                    horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
                 )
-                threading.Thread(target=statistics_view.load_dropdown_data, daemon=True).start()
-            except Exception as ex:
-                page.views.append(
-                    build_unavailable_view(
-                        "/statistics",
-                        "Statistics",
-                        f"This section is temporarily unavailable in the web build.\n\n{ex}",
-                    )
-                )
+
+            show_view("/generator", "Recipe generator", build_generator,
+                      generator_view.ingredient_manager.initialize_with_empty_row)
+
+        elif route == "/recipes":
+            from frontend.src.views.recipes_view import RecipesView
+
+            recipes_view = RecipesView(page)
+            show_view("/recipes", "My recipes", recipes_view.build, recipes_view.load_recipes)
+
+        elif route == "/statistics":
+            from frontend.src.views.statistics_view import StatisticsView
+
+            statistics_view = StatisticsView(page)
+            show_view("/statistics", "Statistics", statistics_view.build, statistics_view.load_dropdown_data)
+
         else:
-            try:
-                from frontend.src.views.home_view import HomeView
+            from frontend.src.views.home_view import HomeView
 
-                home_view = HomeView(page)
-                page.views.append(
-                    ft.View(
-                        "/home",
-                        [
-                            navbar.build(),
-                            ft.Column(
-                                home_view.build().controls,
-                                scroll=ft.ScrollMode.AUTO,
-                                expand=True,
-                                horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
-                            ),
-                        ],
-                        bgcolor=Styles.BACKGROUND_COLOR,
-                    )
-                )
-            except Exception as ex:
-                page.views.append(
-                    build_unavailable_view(
-                        "/home",
-                        "HackTheSnack",
-                        f"The home page could not be loaded.\n\n{ex}",
-                    )
+            home_view = HomeView(page)
+
+            def build_home():
+                return ft.Column(
+                    home_view.build().controls,
+                    scroll=ft.ScrollMode.AUTO,
+                    expand=True,
+                    horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
                 )
 
-        page.update()
+            show_view("/", "HackTheSnack", build_home)
 
     page.on_route_change = route_change
-    page.go("/")  
+    # Open the route from the URL (e.g. a shared link to #/recipes), not always Home.
+    page.go(page.route if page.route in ROUTES else "/")
 
+
+# Started at import time (no __main__ guard) so the same file works for
+# `python main.py`, `flet run` and the static `flet build web` bundle.
 ft.app(
     target=main,
-    assets_dir=os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets"),
-    web_renderer=ft.WebRenderer.HTML,
+    assets_dir=os.path.join(BASE_DIR, "assets"),
 )

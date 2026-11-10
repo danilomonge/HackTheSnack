@@ -1,15 +1,13 @@
+"""Command-line demo of the recipe generator (no UI, no database)."""
+
 import sys
 import os
-import time 
+import time
 
-current_path = os.path.abspath(os.path.dirname(__file__))
-while not os.path.isdir(os.path.join(current_path, "Backend")):
-    parent = os.path.dirname(current_path)
-    if parent == current_path:
-        break  # prevent infinite loop
-    current_path = parent
-
-sys.path.insert(0, current_path)
+# Make `backend` importable when this file is run directly:
+#   python hts_lib/backend/main.py
+HTS_LIB_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, HTS_LIB_DIR)
 
 from backend.recipe_generator import RecipeGenerator
 

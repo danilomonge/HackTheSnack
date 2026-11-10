@@ -3,9 +3,8 @@ import sys
 import os
 
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from hts_lib.backend.algorithm.constraints import Constraints  
+from backend.algorithm.constraints import Constraints  
 
 
 def test_inequality_constraints_shape_one():
