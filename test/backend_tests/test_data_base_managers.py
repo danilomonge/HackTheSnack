@@ -214,3 +214,59 @@ def test_collect_product_dict_reports_errors_only_when_asked(monkeypatch):
     assert Translation.collect_product_dict() == {}
     with pytest.raises(httpx.ConnectError):
         Translation.collect_product_dict(raise_errors=True)
+
+
+# ------------------------------------------------------------------ warm-up
+
+class _FakeJsFunction:
+    """Stands in for the browser's ``Function`` constructor (Pyodide ``js`` module)."""
+
+    created = []
+
+    @classmethod
+    def new(cls, *args):
+        source = args[-1]
+        calls = []
+
+        def function(*call_args):
+            calls.append(call_args)
+            # Like the real function: returns undefined, so no promise reaches Python.
+            return None
+
+        cls.created.append((args[:-1], source, calls))
+        return function
+
+
+def test_web_warm_up_pings_without_cors_and_swallows_errors(monkeypatch):
+    import sys
+    import types
+
+    fake_js = types.SimpleNamespace(Function=_FakeJsFunction, fetch=lambda *a: pytest.fail("raw fetch used"))
+    monkeypatch.setitem(sys.modules, "js", fake_js)
+    monkeypatch.setattr(api_client, "IS_WEB", True)
+    _FakeJsFunction.created.clear()
+
+    api_client.warm_up("https://api.test/actuator/health", "", "https://proxy.test/health")
+
+    assert len(_FakeJsFunction.created) == 1
+    params, source, calls = _FakeJsFunction.created[0]
+    assert "no-cors" in source and ".catch(" in source and "return" not in source
+    assert calls == [("https://api.test/actuator/health",), ("https://proxy.test/health",)]
+
+
+def test_desktop_warm_up_uses_a_background_thread(monkeypatch):
+    seen = []
+    monkeypatch.setattr(api_client, "IS_WEB", False)
+    monkeypatch.setattr(api_client.httpx, "get", lambda url, timeout=None: seen.append(url))
+
+    class ImmediateThread:
+        def __init__(self, target, daemon):
+            self.target = target
+            assert daemon
+
+        def start(self):
+            self.target()
+
+    monkeypatch.setattr(api_client.threading, "Thread", ImmediateThread)
+    api_client.warm_up("https://api.test/actuator/health", "")
+    assert seen == ["https://api.test/actuator/health"]
