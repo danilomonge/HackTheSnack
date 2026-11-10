@@ -1,11 +1,11 @@
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from hts_lib.frontend.src.add_product_table.logic.input_validator import InputValidator
+from frontend.src.add_product_table.logic.input_validator import InputValidator
 
 import flet as ft
+from frontend.src.styles import Styles
 
 
 def test_clean_percentage_input():
@@ -331,7 +331,7 @@ def test_has_product_name():
     result = InputValidator._has_product_name(name_input, message, page) # type: ignore[arg-type]
     assert result is False
     assert message.value == "⚠️ Please enter a product name."
-    assert message.color == "red"
+    assert message.color == Styles.RED_COLOR
     assert page.updated
 
     # Case 3: whitespace-only string
@@ -341,7 +341,7 @@ def test_has_product_name():
     result = InputValidator._has_product_name(name_input, message, page) # type: ignore[arg-type]
     assert result is False
     assert message.value == "⚠️ Please enter a product name."
-    assert message.color == "red"
+    assert message.color == Styles.RED_COLOR
     assert page.updated
 
     # Case 4: None as input value
@@ -351,7 +351,7 @@ def test_has_product_name():
     result = InputValidator._has_product_name(name_input, message, page) # type: ignore[arg-type]
     assert result is False
     assert message.value == "⚠️ Please enter a product name."
-    assert message.color == "red"
+    assert message.color == Styles.RED_COLOR
     assert page.updated
 
 
@@ -443,7 +443,7 @@ def test_validate_ingredient_names_and_values():
     assert total == 0.0
     assert percentages is None
     assert message.value.startswith("⚠️ One or more ingredients are missing a name")
-    assert message.color == "red"
+    assert message.color == Styles.RED_COLOR
     assert page.updated
 
     # Case 4: Name with only spaces
@@ -454,7 +454,7 @@ def test_validate_ingredient_names_and_values():
     assert total == 0.0
     assert percentages is None
     assert message.value.startswith("⚠️ One or more ingredients are missing a name")
-    assert message.color == "red"
+    assert message.color == Styles.RED_COLOR
     assert page.updated
 
     # Case 5: Name is None
@@ -465,7 +465,7 @@ def test_validate_ingredient_names_and_values():
     assert total == 0.0
     assert percentages is None
     assert message.value.startswith("⚠️ One or more ingredients are missing a name")
-    assert message.color == "red"
+    assert message.color == Styles.RED_COLOR
     assert page.updated
 
 
@@ -511,7 +511,7 @@ def test_check_total_not_exceed_100():
     result = InputValidator._check_total_not_exceed_100(100.01, message, page) # type: ignore[arg-type]
     assert result is False
     assert "⚠️ Total percentage is" in message.value
-    assert message.color == "red"
+    assert message.color == Styles.RED_COLOR
     assert page.updated
 
 
@@ -557,7 +557,7 @@ def test_check_percentage_order():
     result = InputValidator._check_percentage_order([20.0, 50.0], message, page) # type: ignore[arg-type]
     assert result is False
     assert "descending order" in message.value
-    assert message.color == "red"
+    assert message.color == Styles.RED_COLOR
     assert page.updated
 
     # Case 4: single-element list → valid
@@ -612,7 +612,7 @@ def test_check_total_if_filled():
     result = InputValidator._check_total_if_filled([50.0, 30.0, 20.0], 99.9, message, page) # type: ignore[arg-type]
     assert result is False
     assert "must be 100%" in message.value
-    assert message.color == "red"
+    assert message.color == Styles.RED_COLOR
     assert page.updated
 
     # Case 3: at least one percentage is 0.0 → rule does not apply → always valid
@@ -690,7 +690,7 @@ def test_check_remaining_space_is_enough():
     result = InputValidator._check_remaining_space_is_enough(rows, message, page) # type: ignore[arg-type]
     assert result is False
     assert message.value.startswith("⚠️ Error 101:")
-    assert message.color == "red"
+    assert message.color == Styles.RED_COLOR
     assert page.updated
 
     # Case 4: empty field with no value below → valid

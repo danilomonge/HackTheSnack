@@ -5,115 +5,70 @@ from datetime import datetime
 
 class Translation:
     """
-    Filters data to be processed in Backend and Frontend
-    """ 
+    Converts HackTheSnackDB API responses into the dictionaries the UI uses.
+    """
 
     @staticmethod
-    def product_table_filter(api_response: dict) -> tuple[dict[str, float], list[float]]:
+    def product_table_filter(api_response: dict) -> tuple[dict[str, int], list[int]]:
         """
-        Extracts data from an API-recipe response and puts it into a dictionary mapping ingredient names to their IDs.
+        Extracts the ingredients of a ``/recipe/list`` response, in label order.
 
         Args:
-            api_response (dict): Dictionary containing 'data' key with ingredient info.
+            api_response (dict): JSON with a ``data`` list of
+                ``{"idIngredient": int, "nameIngredient": str, ...}`` items.
 
         Returns:
-            dict[str, float]: Dictionary with {ingredient_name: ingredient_id}
+            tuple: ``({display_name: ingredient_id}, [ingredient_id, ...])``.
+            Display names are capitalized ("PEANUTS" -> "Peanuts").
         """
-        ingredients = {}
-        ingredient_ids = []
+        ingredients: dict[str, int] = {}
+        ingredient_ids: list[int] = []
+        items = (api_response or {}).get("data") or []
 
-        data = api_response.get("data", [])
-        for item in data:
-            name = item.get("nameIngredient")
-            if name is None:
-                continue
-            name = name.capitalize()
+        # Older API versions did not send names: resolve them with one list call.
+        names_by_id: dict[int, str] = {}
+        if any(item.get("nameIngredient") is None for item in items):
+            names_by_id = {v: k for k, v in Translation.collect_ingredient_dict().items()}
+
+        for item in items:
             id_ = item.get("idIngredient")
-            if name is not None and id_ is not None:
-                ingredients[name] = id_
-                ingredient_ids.append(id_)
+            name = item.get("nameIngredient") or names_by_id.get(id_)
+            if id_ is None or not name:
+                continue
+            display_name = name.capitalize()
+            if display_name in ingredients:
+                continue
+            ingredients[display_name] = id_
+            ingredient_ids.append(id_)
 
         return ingredients, ingredient_ids
-    
+
     @staticmethod
-    def evaluation_translation(results_json: dict) -> dict[int, dict[str, float]]:
+    def collect_product_dict(raise_errors: bool = False) -> dict[str, int]:
         """
-        Parses a result JSON from a find_evaluation service and returns a dictionary mapping ingredient IDs to their mean and std percentages.
+        Fetches all products.
+
         Args:
-            results_json (dict): The JSON object containing resultList.
+            raise_errors: re-raise connection/HTTP errors instead of returning {}.
+
         Returns:
-            dict[int, dict[str, float]]: A dictionary with structure:
-                {
-                    ingredient_id: {
-                        'mean': float,
-                        'variation': float
-                    },
-                    ...
-                }
-        """
-        ingredient_dict = {}
-
-        for result in results_json.get("resultList", []):
-            ingredient_id = result.get("ingredientId")
-            mean = result.get("ingredientMeanPercentage")
-            std = result.get("ingredientStdPercentage")
-
-            if ingredient_id is not None:
-                ingredient_dict[ingredient_id] = {
-                    "mean": mean,
-                    "variation": std,
-                }
-
-        return ingredient_dict
-    
-    @staticmethod
-    def collect_product_list() -> list[str]:
-        """
-        Sends a Product GET request, parses a result JSON from a find_product_list service
-        and returns a list with all product names.
-        Returns:
-            product_list: List of all product names in the database, or [] if backend is unreachable.
+            dict[str, int]: product name -> product id ({} if none or on error).
         """
         try:
-            product_list = []
             response = ProductManager.find_product_list("")
-            product_data = response.json()
-
-            for result in product_data.get("data", []):
-                product_name = result.get("name")
-
-                if product_name is not None:
-                    product_list.append(product_name)
-
-            return product_list
-        except Exception:
-            return []
-
-    @staticmethod
-    def collect_product_dict() -> dict[str, int]:
-        """
-        Sends a Product GET request, parses a result JSON from a find_product_list service
-        and returns a list with all product names.
-        Returns:
-            product_dict: Dict of all product names matched to their ids in the database,
-                          or {} if backend is unreachable.
-        """
-        try:
+            if response.status_code >= 500:
+                raise Exception(f"HTTP {response.status_code}")
             product_dict = {}
-            response = ProductManager.find_product_list("")
-            product_data = response.json()
-
-            for result in product_data.get("data", []):
+            for result in response.json().get("data") or []:
                 product_name = result.get("name")
                 product_id = result.get("id")
-
                 if product_name is not None and product_id is not None:
                     product_dict[product_name] = product_id
-
             return product_dict
         except Exception:
+            if raise_errors:
+                raise
             return {}
-
 
     @staticmethod
     def get_last_evaluation(product_id) -> dict[str, dict[str, float]]:
@@ -200,32 +155,28 @@ class Translation:
 
 
     @staticmethod
-    def collect_ingredient_dict() -> dict[str, int]:
+    def collect_ingredient_dict(raise_errors: bool = False) -> dict[str, int]:
         """
-        Sends a Ingredient GET request, parses a result JSON from a find_ingredient_list service
-        and returns a list with all ingredient names.
+        Fetches all ingredients.
+
+        Args:
+            raise_errors: re-raise connection/HTTP errors instead of returning {}.
+
         Returns:
-            ingredient_list: List of all ingredient names in the database, or {} if backend is unreachable.
+            dict[str, int]: ingredient name (upper-case) -> id ({} if none or on error).
         """
         try:
-            ingredient_dict = {}
             response = IngredientManager.find_ingredient_list("")
-            ingredient_data = response.json()
-
-            for result in ingredient_data.get("data", []):
+            if response.status_code >= 500:
+                raise Exception(f"HTTP {response.status_code}")
+            ingredient_dict = {}
+            for result in response.json().get("data") or []:
                 ingredient_name = result.get("name")
                 ingredient_id = result.get("id")
-
                 if ingredient_name is not None and ingredient_id is not None:
                     ingredient_dict[ingredient_name] = ingredient_id
-
             return ingredient_dict
         except Exception:
+            if raise_errors:
+                raise
             return {}
-    
-    @staticmethod
-    def get_ingredient_id_by_name(response_json: dict):
-    
-        ingredient_id = response_json['data']['id'] 
-
-        return ingredient_id

@@ -1,156 +1,185 @@
 # HackTheSnack
-A web platform to find and recreate the full recipes behind any supermarket product. Built for food hacking and ingredient exploration. 
 
-Group Members: Katja Greiffenhagen, Jana Danner, Emilio Ribelles and Danilo Monge.
+**Recreate your favourite supermarket products at home.** Enter a product's ingredient list, in label order, plus the percentages printed on the package. HackTheSnack estimates the missing percentages, shows nutrition facts per ingredient, and lets you save and compare recipes.
 
+**Live app:** https://danilomonge.github.io/HackTheSnack/
 
-## Getting Started
+Team project at the University of Tübingen by Katja Greiffenhagen, Jana Danner, Emilio Ribelles and Danilo Monge.
+
+---
+
+## Features
+
+| Page | What it does |
+|---|---|
+| **Recipe Generator** | Enter ingredients from most to least used. Fill in the percentages you know and leave the others empty. *Submit Product* estimates the unknown shares (mean ± variation) and draws a pie chart. The 🔍 icon shows USDA nutrition facts; German names are translated with DeepL. *Save* stores the recipe. *Search* loads the ingredients of a saved product. |
+| **My Recipes** | Every saved product. Click a card to see its ingredients per 100 g. A version picker appears when the recipe was saved more than once. |
+| **Statistics** | How the estimated share of each ingredient changed across saved versions of a product, or how one ingredient is used across all products. |
+| **About us** | The team and the project. |
+
+### How the estimation works
+
+Food labels in the EU list ingredients in descending order of weight, and only some percentages are printed. The unknown shares therefore satisfy linear constraints:
+
+* every share is > 0 and the shares sum to 100 %,
+* each ingredient is at least as large as the next one,
+* the printed percentages are fixed.
+
+`backend/algorithm` samples uniformly from that polytope with **slice sampling**, a Markov chain Monte Carlo method. A linear program finds the starting point; random directions are restricted to the null space of the equality constraints. The mean of the samples is the estimate and twice the standard deviation is the "variation". Simple cases, like a single unknown or all values given, are solved exactly without sampling (`backend/algorithm_skipper.py`). The derivation is in [`notebooks/MakerSpace.ipynb`](notebooks/MakerSpace.ipynb).
+
+---
+
+## Architecture
+
+```
+GitHub Pages ─ static Flet web app (Python running in the browser via Pyodide)
+   │
+   ├─▶ HackTheSnackDB API (Spring Boot on Render) ─▶ PostgreSQL on Supabase
+   │      products, ingredients, recipes, saved evaluations
+   │      repo: https://github.com/danilomonge/HackTheSnackDB
+   │
+   └─▶ Nutrition proxy (FastAPI on Render, this repo) ─▶ USDA FoodData Central, DeepL
+          keeps the API keys out of the browser
+```
+
+The app reads both URLs from [`hts_lib/assets/runtime-config.json`](hts_lib/assets/runtime-config.json):
+
+```json
+{
+  "user_management_url": "https://fakethesnackdb-api.onrender.com/user-management",
+  "nutrition_proxy_url": "https://hackthesnack-nutrition-proxy.onrender.com"
+}
+```
+
+The Render services are on the free plan and stop after 15 idle minutes. The app pings both when it starts, so they are usually awake by the time you click *Search* or *Save*. If one is still starting, the page shows a progress bar and waits up to about a minute.
+
+### Repository layout
+
+```
+HackTheSnack/
+├── hts_lib/                        # the Flet application (build root)
+│   ├── main.py                     # entry point and routing
+│   ├── pyproject.toml              # app metadata + `flet build web` settings
+│   ├── assets/                     # images, icon, runtime-config.json
+│   ├── frontend/src/
+│   │   ├── views/                  # Home, My Recipes, Statistics, About pages
+│   │   ├── add_product_table/      # Recipe Generator input table (UI + validation)
+│   │   ├── create_result_table/    # generated recipe table + pie chart
+│   │   ├── product_action_handler.py   # Search / autofill / Save
+│   │   ├── product_submit_handler.py   # Submit -> recipe generation
+│   │   ├── handle_nutritional_info.py  # nutrition dialog
+│   │   ├── navbar.py, styles.py
+│   ├── backend/
+│   │   ├── recipe_generator.py     # chooses the exact solution or MCMC
+│   │   ├── algorithm/              # constraints + slice sampling
+│   │   ├── data_base_manager/      # HackTheSnackDB REST client
+│   │   ├── nutrition_service.py    # USDA + DeepL calls (shared by app and proxy)
+│   │   ├── nutrition_proxy_api.py  # FastAPI proxy deployed on Render
+│   │   └── translation.py          # API responses -> UI data
+│   └── Secure_env/                 # encrypted API keys for desktop runs (not in the web build)
+├── test/                           # pytest suite (no network needed)
+├── notebooks/MakerSpace.ipynb      # the algorithm, step by step
+├── requirements-dev.txt            # pip setup for development
+├── requirements-proxy.txt          # dependencies of the proxy
+├── environment.yaml                # conda setup for development
+├── render.yaml                     # Render Blueprint for the proxy
+└── .github/workflows/deploy.yml    # tests + GitHub Pages deployment
+```
+
+---
+
+## Getting started
 
 ### Prerequisites
-Before you get started, ensure you have the following installed: 
-- the latest version of [Git](https://git-scm.com/downloads)
-- an IDE, such as [VS Code](https://code.visualstudio.com/), with the necessary Python extension installed
-- [Miniconda3](https://www.anaconda.com/docs/getting-started/miniconda/install) (during installation , select "Add Miniconda3 to my PATH environment  variable" in the *Advanced Installation Options* window)
 
-### Set up
+* Python **3.11+**
+* [Git](https://git-scm.com/downloads)
+* Optional: [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/install) if you prefer conda
 
-1. Open Anaconda Prompt and initialize Conda by running: **conda init --all** 
-2. Clone this repository into your IDE 
-3. In your Command Line run the following command to create the necessary environment:  **conda env create -f environment.yaml**
-4. Once the packages have finished downloading, activate the environment by running:  **conda activate mainEnv**
-
-## Secrets and GitHub Pages
-
-GitHub Pages can host only static files. That means your browser receives the full built app, so any API key injected into the web build would become visible to users. GitHub Secrets do not stay secret if they are baked into frontend code.
-
-To keep `USDA_API_KEY` and `DEEPL_API_KEY` safe:
-
-1. Deploy the Flet web app on GitHub Pages as usual.
-2. Deploy the proxy API in `hts_lib/backend/nutrition_proxy_api.py` on a backend host such as Render, Railway, Fly.io, or a VPS.
-3. Set `USDA_API_KEY` and `DEEPL_API_KEY` only on that backend host.
-4. Set `ALLOWED_ORIGINS` on the proxy to your GitHub Pages origin, for example `https://<your-user>.github.io`.
-5. In GitHub, add a repository variable called `NUTRITION_PROXY_URL` with the public URL of that proxy, for example `https://hackthesnack-proxy.onrender.com`.
-
-The GitHub Actions deploy workflow writes that public URL into `hts_lib/assets/runtime-config.json` during build. That URL is public and safe to expose. The API keys remain only on the proxy server.
-
-### Run the proxy locally
+### Install
 
 ```bash
-uvicorn hts_lib.backend.nutrition_proxy_api:app --reload
+git clone https://github.com/danilomonge/HackTheSnack.git
+cd HackTheSnack
+
+# pip
+python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -r requirements-dev.txt
+
+# or conda
+conda env create -f environment.yaml && conda activate mainEnv
 ```
 
-Then point `hts_lib/assets/runtime-config.json` to `http://127.0.0.1:8000` while testing the web build locally.
-
-## Full setup checklist
-
-### 1. Create the API keys
-
-You need:
-
-- `USDA_API_KEY`
-- `DEEPL_API_KEY`
-
-Do not put these into frontend code, `runtime-config.json`, or GitHub Pages files.
-
-### 2. Deploy the proxy backend
-
-This repo now includes:
-
-- `hts_lib/backend/nutrition_proxy_api.py`
-- `requirements-proxy.txt`
-- `render.yaml`
-
-#### Option A: Render
-
-1. Push this repo to GitHub.
-2. Open Render and create a new Blueprint or Web Service from the repo.
-3. If Render detects `render.yaml`, accept it.
-4. Add these environment variables in Render:
-   - `USDA_API_KEY=...`
-   - `DEEPL_API_KEY=...`
-   - `ALLOWED_ORIGINS=https://<your-github-user>.github.io`
-5. Deploy.
-6. Copy the public URL Render gives you, for example:
-   - `https://hackthesnack-nutrition-proxy.onrender.com`
-
-#### Option B: Manual Python host
-
-If you deploy on Railway, Fly.io, a VPS, or similar, use:
+### Run
 
 ```bash
-pip install -r requirements-proxy.txt
-uvicorn hts_lib.backend.nutrition_proxy_api:app --host 0.0.0.0 --port 8000
+cd hts_lib
+python main.py                  # desktop window
+flet run --web main.py          # in the browser (http://localhost:8550)
 ```
 
-Set the same environment variables there:
-
-- `USDA_API_KEY`
-- `DEEPL_API_KEY`
-- `ALLOWED_ORIGINS=https://<your-github-user>.github.io`
-
-### 3. Test the proxy before wiring the frontend
-
-Open these URLs after deploy:
-
-- `https://your-proxy-url/health`
-- `https://your-proxy-url/api/nutrition?ingredient=sugar`
-
-And test translation with:
+By default the app talks to the **production API** configured in `runtime-config.json`. To use a local HackTheSnackDB instead (see that repository's README):
 
 ```bash
-curl -X POST https://your-proxy-url/api/translate \
-  -H "Content-Type: application/json" \
-  -d '{"text":"Zucker","source_lang":"DE","target_lang":"EN"}'
+USER_MANAGEMENT_BASE_URL=http://localhost:8087/user-management python main.py
 ```
 
-If that works, the secrets are correctly staying server-side.
+Nutrition facts on the desktop need `USDA_API_KEY` (free at https://fdc.nal.usda.gov/api-key-signup) and, for translation, `DEEPL_API_KEY`. Either export them, or decrypt `Secure_env/.env.enc` by setting `HTS_ENV_PASSWORD` (ask the team for the password). Alternatively, point `NUTRITION_PROXY_URL` at the deployed proxy.
 
-### 4. Configure GitHub Pages to use the proxy
+### Test
 
-In GitHub:
+```bash
+pytest
+```
 
-1. Go to `Settings` -> `Pages`.
-2. Ensure Pages is enabled and uses GitHub Actions as the source.
-3. Go to `Settings` -> `Secrets and variables` -> `Actions` -> `Variables`.
-4. Create this repository variable:
-   - `NUTRITION_PROXY_URL=https://your-proxy-url`
+The suite covers the algorithm, input validation, the database client (against an in-memory fake API), the generator page and the statistics page. It needs no network or keys. Two optional live tests run only when `LIVE_USDA_API_KEY` / `LIVE_DEEPL_API_KEY` are set.
 
-Important:
+---
 
-- This is a variable, not a secret.
-- The proxy URL is public and safe to expose.
-- Do not store `USDA_API_KEY` or `DEEPL_API_KEY` in GitHub Pages variables for frontend use.
+## Deployment
 
-### 5. Keep secrets out of GitHub Pages
+### Web app → GitHub Pages
 
-If you already created these in GitHub Secrets for the Pages build:
+[`deploy.yml`](.github/workflows/deploy.yml) runs the tests on every push and pull request. On `main` it then runs `flet build web` and publishes `hts_lib/build/web` to the `gh-pages` branch, served at https://danilomonge.github.io/HackTheSnack/.
 
-- `USDA_API_KEY`
-- `DEEPL_API_KEY`
+Optional repository **variables** (Settings → Secrets and variables → Actions → Variables) override the URLs in `runtime-config.json` at build time:
 
-remove them from the Pages/frontend workflow path. They do not protect the keys in a static site. The keys should live only in the proxy host.
+| Variable | Example |
+|---|---|
+| `USER_MANAGEMENT_URL` | `https://fakethesnackdb-api.onrender.com/user-management` |
+| `NUTRITION_PROXY_URL` | `https://hackthesnack-nutrition-proxy.onrender.com` |
 
-### 6. Redeploy the site
+These URLs are public. **Never** put `USDA_API_KEY` or `DEEPL_API_KEY` into the web build: GitHub Pages serves everything to the browser.
 
-After `NUTRITION_PROXY_URL` is set:
+### Nutrition proxy → Render
 
-1. Push to `main`, or
-2. Open `Actions` in GitHub and manually rerun the Pages workflow.
+[`render.yaml`](render.yaml) defines the service, `uvicorn hts_lib.backend.nutrition_proxy_api:app`. Set these in the Render dashboard:
 
-The workflow writes the proxy URL into the generated `hts_lib/assets/runtime-config.json` during build.
+| Variable | Value |
+|---|---|
+| `USDA_API_KEY` | USDA FoodData Central key |
+| `DEEPL_API_KEY` | DeepL key (Free keys end in `:fx`; the right endpoint is chosen automatically) |
+| `ALLOWED_ORIGINS` | `https://danilomonge.github.io` |
 
-### 7. Confirm in production
+Check it with:
 
-After GitHub Pages redeploys:
+```bash
+curl https://hackthesnack-nutrition-proxy.onrender.com/health
+curl "https://hackthesnack-nutrition-proxy.onrender.com/api/nutrition?ingredient=sugar"
+curl -X POST https://hackthesnack-nutrition-proxy.onrender.com/api/translate \
+     -H "Content-Type: application/json" -d '{"text":"Zucker"}'
+```
 
-1. Open your Pages site.
-2. Trigger the nutrition lookup in the UI.
-3. Confirm it returns real data.
-4. Open browser DevTools and verify requests go to your proxy domain, not directly to USDA or DeepL with your keys.
+Run it locally with `uvicorn hts_lib.backend.nutrition_proxy_api:app --reload` from the repository root.
 
-### 8. Security notes
+### Database → Supabase
 
-- Users will see the proxy URL, which is fine.
-- Users must never see `USDA_API_KEY` or `DEEPL_API_KEY`.
-- Restrict `ALLOWED_ORIGINS` to your real GitHub Pages origin whenever possible.
-- If you ever think a key was exposed, rotate it immediately in USDA or DeepL.
+The API and its database live in [HackTheSnackDB](https://github.com/danilomonge/HackTheSnackDB). That README covers the Supabase setup, the schema and the API reference.
+
+---
+
+## Security notes
+
+* API keys live only on the proxy (Render) or in your local environment. `Secure_env` is excluded from the web build (`tool.flet.app.exclude`).
+* The browser only knows the public URLs of the API and the proxy. The API allows cross-origin calls only from the GitHub Pages origin and localhost.
+* If a key may have leaked, rotate it at USDA / DeepL and update it on Render.

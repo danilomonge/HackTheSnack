@@ -1,5 +1,4 @@
 import flet as ft
-from backend.data_base_manager.product_manager import ProductManager
 from frontend.src.add_product_table.table_ui.ingredient_row_manager import IngredientRowManager
 from frontend.src.product_submit_handler import ProductSubmitHandler
 from frontend.src.styles import Styles
@@ -26,16 +25,14 @@ class ProductTableUI:
             page (ft.Page): The Flet page used to build and update the UI.
         """
         self.page = page
-        self.is_web = bool(getattr(page, "web", False))
-        self.backend_available = False
         self.ingredient_rows = ft.Column()
         self.result_text = ft.Text(value="", color=Styles.GREEN_COLOR, size=12, weight=ft.FontWeight.BOLD)
         self.product_id = 0
         self.ingredient_ids = []
         self.recipe_ids = []
-        self.result_dict = dict 
+        self.result_dict: dict = {}
         self.is_submitted = False
-        self.is_autofilled = False
+        self.is_busy = False
 
         self.instruction_container = self.build_instruction_text()
 
@@ -44,6 +41,7 @@ class ProductTableUI:
         self.product_name = ft.TextField(
             label="Product Name",
             hint_text="e.g. Fruit Yogurt",
+            on_submit=self.on_find_product_click,
             **style
         )
         self.product_name.on_change = self.on_product_name_change
@@ -52,98 +50,129 @@ class ProductTableUI:
             self.ingredient_rows,
             self.product_name,
             self.page,
-            on_user_input_change = self.on_user_input_change
+            on_user_input_change=self.on_user_input_change
         )
 
         self.search_button = Styles.build_button(
-                                    text="Search",
-                                    on_click=self.on_find_product_click,
-                                    icon=ft.Icons.SEARCH,
-                                )
-        
+            text="Search",
+            on_click=self.on_find_product_click,
+            icon=ft.Icons.SEARCH,
+        )
+        self.search_button.tooltip = "Search a saved product and load its ingredients"
+
         self.save_button = Styles.build_button(
             text="Save",
             on_click=self.on_save_recipe_click,
-            icon=ft.Icons.CREATE,
+            icon=ft.Icons.SAVE,
         )
-        self.save_button.disabled = True
 
         self.feedback = ft.Text(value="", color=Styles.RED_COLOR, size=12, weight=ft.FontWeight.BOLD)
 
-        self.loading_indicator = ft.ProgressBar(visible=False, color=Styles.LOADINGBAR_COLOR, bgcolor= Styles.LOADINGBAR_BACKGROUNDCOLOR)
+        self.loading_indicator = ft.ProgressBar(
+            visible=False, color=Styles.LOADINGBAR_COLOR, bgcolor=Styles.LOADINGBAR_BACKGROUNDCOLOR
+        )
 
-        # Start optimistically enabled — actual check happens on first Search/Save click
-        self.backend_available = True
-        self.update_search_button_state(enabled=True)
         self.update_save_button_state(enabled=False)
-        
-    def on_find_product_click(self, e):
+
+    # ------------------------------------------------------------------ helpers
+
+    def _set_feedback(self, message: str, color: str) -> None:
+        self.feedback.value = message
+        self.feedback.color = color
+        self.feedback.size = Styles.FEEDBACK_FONT_SIZE
+        self.feedback.text_align = ft.TextAlign.CENTER
+
+    def _start_busy(self, message: str) -> None:
+        """Shows the progress bar and a status message before a database call."""
+        self.is_busy = True
+        self.loading_indicator.visible = True
+        self.search_button.disabled = True
+        self.update_save_button_state(enabled=False)
+        self._set_feedback(message, Styles.TEXT_COLOR)
+        self.page.update()
+
+    def _stop_busy(self) -> None:
+        self.is_busy = False
+        self.loading_indicator.visible = False
+        self.search_button.disabled = False
+        self.page.update()
+
+    # ------------------------------------------------------------------ actions
+
+    def on_find_product_click(self, e=None):
         """
-        Handles the find Product button click by calling ProductCreator.
+        Searches the entered product; if it exists, offers to load its ingredients.
         """
-        self.refresh_backend_status()
-        if not self.backend_available:
-            self.feedback.value = self.get_backend_unavailable_message()
-            self.feedback.color = Styles.RED_COLOR
+        if self.is_busy:
+            return
+        from frontend.src.product_action_handler import ProductActionHandler
+
+        if not (self.product_name.value or "").strip():
+            self._set_feedback("⚠️ Please enter a product name to search.", Styles.RED_COLOR)
             self.page.update()
             return
 
-        from frontend.src.product_action_handler import ProductActionHandler
+        self._start_busy("⏳ Searching… The database may need up to a minute to wake up.")
+        try:
+            found = ProductActionHandler.check_if_product_exists(self.product_name, self.feedback, self.page)
+        finally:
+            self._stop_busy()
 
-        found = ProductActionHandler.check_if_product_exists(
-            self.product_name,
-            self.feedback,
-            self.page,
-        )
         if found:
-           dialog = AutofillConfirmationWindow(
-            self.page,
-            on_confirm=self._on_autofill_complete,
-            on_cancel=lambda: print("Cancelled.")
+            dialog = AutofillConfirmationWindow(
+                self.page,
+                on_confirm=self._on_autofill_confirmed,
+                on_cancel=self._on_autofill_cancelled,
             )
-           dialog.show_dialog()
+            dialog.show_dialog()
 
-    def _on_autofill_complete(self):
+    def _on_autofill_confirmed(self):
         from frontend.src.product_action_handler import ProductActionHandler
-        ProductActionHandler.handle_search_and_fill(
-            self.product_name,
-            self.feedback,
-            self.page,
-            self.ingredient_manager,
-            self.store_submission_results)
-        if self.product_id:
-            self.is_autofilled = True
-            self.is_submitted = True
-            self.update_save_button_state(enabled=True)
-            self.page.update()
+
+        self._start_busy("⏳ Loading the saved ingredients…")
+        try:
+            ProductActionHandler.handle_search_and_fill(
+                self.product_name,
+                self.feedback,
+                self.page,
+                self.ingredient_manager,
+                self.store_submission_results,
+            )
+        finally:
+            self._stop_busy()
+        # Loaded ingredients still need percentages and a new Submit before saving.
+        self.is_submitted = False
+        self.update_save_button_state(enabled=False)
+        self.page.update()
+
+    def _on_autofill_cancelled(self):
+        self._set_feedback("✅ Product found. You can edit it and save a new version.", Styles.GREEN_COLOR)
+        self.page.update()
 
     def on_add_click(self):
         """
-        Handles the Add Ingredient button click.
-
-        Adds a new ingredient row to the table.
+        Adds a new, empty ingredient row.
         """
         self.ingredient_manager.add_ingredient_row(self.page)
         self.disable_save_button()
 
-
     def on_clearall_click(self):
         """
-        Handles the Clear All button click.
-
-        Clears all ingredient rows from the table and resets the product name.
+        Clears the product name, all ingredient rows and the generated recipe.
         """
         self.ingredient_manager.clear_all()
-        self.is_autofilled = False
+        self.result_dict = {}
+        self.product_id = 0
+        self.feedback.value = ""
         self.disable_save_button()
-
 
     def on_submit_click(self):
         """
-        Handles the Submit Product button click.
-
-        Delegates validation, feedback and recipe generation to ProductSubmitHandler.
+        Validates the table and generates the recipe (ProductSubmitHandler).
+        Save becomes available once a recipe was generated.
         """
+        if self.is_busy:
+            return None
         self.loading_indicator.visible = True
         self.page.update()
 
@@ -157,40 +186,35 @@ class ProductTableUI:
         )
 
         self.loading_indicator.visible = False
+        self.is_submitted = bool(result)
+        self.update_save_button_state(enabled=self.is_submitted)
         self.page.update()
-
-        if result:  # Only if submit was successful
-            self.is_submitted = True
-            self.update_save_button_state(enabled=True)
-            
-
         return result
-    
-    def on_save_recipe_click(self, e):
-        """
-        Handles the save recipe button click action.
 
-        Stores recipe and evaluation information in the database
+    def on_save_recipe_click(self, e=None):
         """
-        self.refresh_backend_status()
-        if not self.backend_available:
-            self.feedback.value = self.get_backend_unavailable_message()
-            self.feedback.color = Styles.RED_COLOR
-            self.page.update()
+        Saves the generated recipe (product, ingredients and estimated
+        percentages) in the database and reports the outcome.
+        """
+        if self.is_busy or not self.is_submitted or not self.result_dict:
             return None
-
         from frontend.src.product_action_handler import ProductActionHandler
 
-        self.update_save_button_state(enabled=False)
-        delete_ingredients = self.ingredient_manager.deleted_ingredient_ids
-        ProductActionHandler.handle_delete_ingredients(self.product_id, delete_ingredients)
-        self.ingredient_manager.deleted_ingredient_ids.clear()
-        
-        return ProductActionHandler.handle_save_new_recipe(self.product_name, 
-                                                        self.result_dict, 
-                                                        self.store_submission_results)
-            
-    
+        self._start_busy("⏳ Saving… The database may need up to a minute to wake up.")
+        try:
+            success, message = ProductActionHandler.handle_save_new_recipe(
+                self.product_name, self.result_dict, self.store_submission_results
+            )
+        finally:
+            self._stop_busy()
+
+        self._set_feedback(message, Styles.GREEN_COLOR if success else Styles.RED_COLOR)
+        # After a successful save the button stays disabled until the recipe
+        # changes, so the same result is not stored twice.
+        self.update_save_button_state(enabled=not success)
+        self.page.update()
+        return success
+
     def store_submission_results(self, product_id, ingredient_ids, recipe_ids, result_dict):
         if product_id is not None:
             self.product_id = product_id
@@ -202,55 +226,22 @@ class ProductTableUI:
             self.result_dict = result_dict
 
     def on_product_name_change(self, e=None):
-        self.is_submitted = False
-        self.is_autofilled = False
-        self.update_save_button_state(enabled=False)
-        self.page.update()
+        self.disable_save_button()
 
     def on_user_input_change(self, e=None):
-        if not self.is_autofilled:
-            self.is_submitted = False
-            self.update_save_button_state(enabled=False)
-        self.page.update()
+        # Any edit invalidates the generated recipe: Submit again before saving.
+        self.disable_save_button()
 
     def disable_save_button(self):
         self.is_submitted = False
-        self.is_autofilled = False
         self.update_save_button_state(enabled=False)
         self.page.update()
 
-    def get_backend_unavailable_message(self) -> str:
-        return "⚠️ Search and save are unavailable right now because the database service is offline. Please try again in a moment."
-
-    def refresh_backend_status(self, update_page: bool = True):
-        self.backend_available = ProductManager.is_backend_available()
-        self.update_search_button_state(enabled=self.backend_available)
-        self.update_save_button_state(enabled=self.is_submitted and self.backend_available)
-        if update_page:
-            self.page.update()
-
-    def update_search_button_state(self, enabled: bool):
-        self.search_button.disabled = not enabled
-        self.search_button.bgcolor = Styles.BUTTON_FILL_COLOR if enabled else Styles.BUTTON_FILL_DISABLED_COLOR
-        self.search_button.color = ft.Colors.WHITE if enabled else ft.Colors.GREY_600
-        if enabled:
-            self.search_button.tooltip = "Click to search product"
-        else:
-            self.search_button.tooltip = "Search is unavailable because the database service is offline"
-
     def update_save_button_state(self, enabled: bool):
-        if not self.backend_available:
-            self.save_button.disabled = True
-            self.save_button.bgcolor = Styles.BUTTON_FILL_DISABLED_COLOR
-            self.save_button.color = ft.Colors.GREY_600
-            self.save_button.tooltip = "Save is unavailable because the database service is offline"
-            return
-
         self.save_button.disabled = not enabled
         self.save_button.bgcolor = Styles.BUTTON_FILL_COLOR if enabled else Styles.BUTTON_FILL_DISABLED_COLOR
         self.save_button.color = ft.Colors.WHITE if enabled else ft.Colors.GREY_600
-        self.save_button.tooltip = "Click to save recipe" if enabled else "Submit first before saving"
-        self.page.update()
+        self.save_button.tooltip = "Save this recipe" if enabled else "Press Submit Product first, then save"
 
     def build_name_input(self):
         """

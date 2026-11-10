@@ -1,10 +1,9 @@
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 
-from hts_lib.backend.algorithm_skipper import AlgorithmSkipper
+from backend.algorithm_skipper import AlgorithmSkipper
 
 
 def test_has_only_one_ingredient():

@@ -1,19 +1,21 @@
 [project]
 name = "hack-the-snack"
-version = "0.1.0"
-description = "HackTheSnack - Recipe Generator"
-requires-python = ">=3.10"
+version = "1.0.0"
+description = "HackTheSnack - estimate the recipe of a supermarket product from its ingredient list"
+requires-python = ">=3.11"
 authors = [
-    { name = "HackTheSnack Team" }
+  { name = "Katja Greiffenhagen" },
+  { name = "Jana Danner" },
+  { name = "Emilio Ribelles" },
+  { name = "Danilo Monge" },
 ]
+# Packages bundled into the app (also into the browser build, so keep it lean).
+# numpy / scipy versions match the ones Pyodide ships for the Flet web build.
 dependencies = [
   "flet==0.28.3",
   "numpy==2.0.2",
   "scipy==1.14.1",
-  "pandas==2.2.3",
   "httpx==0.28.1",
-  "fastapi==0.115.12",
-  "uvicorn==0.34.2",
 ]
 
 [tool.flet]
@@ -21,6 +23,10 @@ org = "com.hackthesnack"
 product = "HackTheSnack"
 company = "HackTheSnack"
 copyright = "Copyright (C) 2025 HackTheSnack"
+
+[tool.flet.app]
+# Never ship the (encrypted) desktop API keys or local build output to the web.
+exclude = ["Secure_env", "build", "storage", "__pycache__"]
 
 [tool.flet.web]
 pwa = true

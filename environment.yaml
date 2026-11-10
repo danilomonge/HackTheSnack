@@ -1,22 +1,25 @@
+# Conda environment for developing HackTheSnack (app, tests, proxy, notebook).
+#   conda env create -f environment.yaml && conda activate mainEnv
 name: mainEnv
 channels:
-  - defaults 
   - conda-forge
 dependencies:
+  - python=3.11
+  - pip
+  # app
+  - numpy=2.0.2
+  - scipy=1.14.1
   - httpx=0.28.1
-  - ipykernel=6.29.5
-  - jupyterlab=4.3.4
-  - numpy=1.26.4
-  - matplotlib
-  - pandas=2.1.4
-  - pip=25.0
-  - python=3.11.11
-  - scipy=1.15.2
-  - tqdm=4.67.1
+  # tests
   - pytest=8.3.4
+  # research notebook (notebooks/MakerSpace.ipynb)
+  - jupyterlab
+  - ipykernel
+  - matplotlib
+  - tqdm
   - pip:
-    - tueplots==0.2.0
-    - flet==0.28.3
-    - fastapi==0.115.12
-    - uvicorn==0.34.2
-  
+      - flet[all]==0.28.3
+      # nutrition proxy (hts_lib/backend/nutrition_proxy_api.py)
+      - fastapi==0.115.12
+      - uvicorn==0.34.2
+      - tueplots==0.2.0

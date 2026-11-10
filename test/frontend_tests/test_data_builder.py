@@ -1,9 +1,8 @@
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from hts_lib.frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
+from frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
 
 import flet as ft
 

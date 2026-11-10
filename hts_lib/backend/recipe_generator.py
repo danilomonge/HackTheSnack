@@ -167,6 +167,6 @@ class RecipeGenerator:
         ingredient_names = list(ingredient_input.keys())
 
         return {
-            name: {"mean": val, "variation": std}
+            name: {"mean": float(val), "variation": float(std)}
             for name, val, std in zip(ingredient_names, means, stds)
         }
