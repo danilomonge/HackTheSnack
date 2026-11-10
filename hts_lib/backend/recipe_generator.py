@@ -37,8 +37,9 @@ class RecipeGenerator:
         ingredient_input: dict[str, float | None],
     ) -> dict[str, dict[str, float]] | None:
         """
-        Builds a deterministic, order-preserving approximation when SciPy-backed
-        sampling is unavailable in the web runtime.
+        Builds a deterministic, order-preserving approximation. Last-resort
+        safety net used only if sampling raises unexpectedly (the sampler runs
+        in the browser too: without SciPy it finds its start with NumPy).
         """
         items = list(ingredient_input.items())
         values = [value for _, value in items]
@@ -153,7 +154,7 @@ class RecipeGenerator:
                 ingredient_input, mean_result, std_dev_result
             )
         except Exception as ex:
-            print(f"⚠️ Sampling backend is unavailable in this runtime ({ex}). Using deterministic fallback.")
+            print(f"⚠️ Sampling failed ({ex}). Using deterministic fallback.")
             return RecipeGenerator.solve_with_fallback(ingredient_input)
 
     @staticmethod
