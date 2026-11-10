@@ -1,271 +1,169 @@
-import sys
-import os
-
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-sys.path.insert(0, BASE_DIR)
-
 import flet as ft
-from backend.data_base_manager.product_manager import ProductManager
-from backend.data_base_manager.recipe_manager  import RecipeManager
+
 from backend.data_base_manager.evaluation_manager import EvaluationManager
-from frontend.src.add_product_table.logic.data_filler import DataFiller
+from backend.data_base_manager.product_manager import ProductManager
+from backend.data_base_manager.recipe_manager import RecipeManager
 from backend.translation import Translation
-from frontend.src.add_product_table.logic.input_validator import InputValidator
-from frontend.src.add_product_table.logic.data_builder import IngredientDataBuilder
+from frontend.src.add_product_table.logic.data_filler import DataFiller
 from frontend.src.styles import Styles
 
 
 class ProductActionHandler:
     """
-    Handles frontend actions after recieving information data.
-
+    Database actions of the recipe generator page: search, autofill and save.
+    Every method reports its outcome in the page's feedback text.
     """
+
     @staticmethod
-    def handle_product_search(
+    def _set_feedback(feedback_text: ft.Text, message: str, color: str) -> None:
+        feedback_text.value = message
+        feedback_text.color = color
+        feedback_text.size = Styles.FEEDBACK_FONT_SIZE
+        feedback_text.text_align = ft.TextAlign.CENTER
+
+    @staticmethod
+    def handle_product_search(product_name_field: ft.TextField, feedback_text: ft.Text, page: ft.Page):
+        """
+        Looks the entered product up and reports whether it exists.
+        """
+        found = ProductActionHandler.check_if_product_exists(product_name_field, feedback_text, page)
+        if found:
+            ProductActionHandler._set_feedback(feedback_text, "✅ Product found.", Styles.GREEN_COLOR)
+            page.update()
+
+    @staticmethod
+    def check_if_product_exists(product_name_field: ft.TextField, feedback_text: ft.Text, page: ft.Page):
+        """
+        Returns True if a product with the entered name exists, False if not,
+        and None when no name was entered or the database could not be reached
+        (the reason is written to ``feedback_text``).
+        """
+        product_name = (product_name_field.value or "").strip()
+        if not product_name:
+            ProductActionHandler._set_feedback(
+                feedback_text, "⚠️ Please enter a product name to search.", Styles.RED_COLOR
+            )
+            page.update()
+            return None
+
+        try:
+            response = ProductManager.find_product(product_name)
+        except Exception as ex:
+            ProductActionHandler._set_feedback(
+                feedback_text, ProductActionHandler.get_user_friendly_error_message(ex), Styles.RED_COLOR
+            )
+            page.update()
+            return None
+
+        if response.status_code == 200:
+            feedback_text.value = ""
+            page.update()
+            return True
+
+        if response.status_code == 404:
+            ProductActionHandler._set_feedback(
+                feedback_text,
+                "❌ Product not found. Enter its ingredients and press Submit Product to analyze it.",
+                Styles.RED_COLOR,
+            )
+        else:
+            ProductActionHandler._set_feedback(
+                feedback_text, f"❌ Search failed (HTTP {response.status_code}). Please try again.", Styles.RED_COLOR
+            )
+        page.update()
+        return False
+
+    @staticmethod
+    def handle_search_and_fill(
         product_name_field: ft.TextField,
         feedback_text: ft.Text,
         page: ft.Page,
-    ):
+        ingredient_manager,
+        store_values_callback,
+    ) -> bool:
         """
-        Handles the product search operation based on user input.
-
-        This method retrieves the product name from the input field, 
-        sends a request to the backend to find the product, and updates 
-        the UI with the appropriate feedback message based on the result.
-
-        Args:
-            product_name_field (ft.TextField): Field with the product name.
-            feedback_text (ft.Text): UI text for validation messages.
-            page (ft.Page): The current Flet page instance.
+        Loads a stored product and fills the ingredient table with its
+        ingredients (in label order). Percentages are left empty for the user.
 
         Returns:
-            tuple | None: (product name, ingredient dict) if valid, else None
-        """
-        
-        try:
-            product_name = product_name_field.value
-            if not product_name:
-                feedback_text.value = "⚠️ Please enter a product name to search."
-                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
-                feedback_text.text_align = ft.TextAlign.CENTER
-                page.update()
-                return
-            
-            response = ProductManager.find_product(product_name)
-            
-            if response.status_code == 200:
-                feedback_text.value = "✅ Product found."
-                feedback_text.color = Styles.GREEN_COLOR
-                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
-                feedback_text.text_align = ft.TextAlign.CENTER
-            elif response.status_code == 404:
-                feedback_text.value = "❌ Product not found."
-                feedback_text.color = Styles.RED_COLOR
-                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
-                feedback_text.text_align = ft.TextAlign.CENTER
-            else:
-                feedback_text.value = f"❌ Error {response.status_code}: {response.text}"
-                feedback_text.color = Styles.RED_COLOR
-                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
-                feedback_text.text_align = ft.TextAlign.CENTER
-        except Exception as ex:
-            feedback_text.value = ProductActionHandler.get_user_friendly_error_message(ex)
-            feedback_text.color = Styles.RED_COLOR
-            feedback_text.size = Styles.FEEDBACK_FONT_SIZE
-            feedback_text.text_align = ft.TextAlign.CENTER
-
-        page.update()
-
-    @staticmethod
-    def check_if_product_exists(
-        product_name_field: ft.TextField,
-        feedback_text: ft.Text,
-        page: ft.Page,):
-        """
-        Searches for a product by name in the database and returns a boolean statement
-
-        Args:
-        product_name (str): The name of the product to search for.
-
-        Returns:
-        boolean: True if the product exists and false if it does not 
+            bool: True if the table was filled.
         """
         try:
-            product_name = product_name_field.value
-            if not product_name:
-                feedback_text.value = "⚠️ Please enter a product name to search."
-                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
-                feedback_text.text_align = ft.TextAlign.CENTER
-                page.update()
-                return
-        
-            response = ProductManager.find_product(product_name)
-
-            if response.status_code == 200:
-                #feedback_text.value = "✅ Product found."
-                page.update()
-                return True
-            else:
-                feedback_text.value = "❌ Product not found."
-                feedback_text.color = Styles.RED_COLOR
-                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
-                feedback_text.text_align = ft.TextAlign.CENTER
+            response = ProductManager.find_product(product_name_field.value or "")
+            if response.status_code != 200:
+                ProductActionHandler._set_feedback(feedback_text, "❌ Product not found.", Styles.RED_COLOR)
                 page.update()
                 return False
-        except Exception as ex:
-            feedback_text.value = ProductActionHandler.get_user_friendly_error_message(ex)
-            feedback_text.color = Styles.RED_COLOR
-            feedback_text.size = Styles.FEEDBACK_FONT_SIZE
-            feedback_text.text_align = ft.TextAlign.CENTER
 
-        page.update()
+            id_product = response.json()["data"]["id"]
+            recipe_json = RecipeManager.find_product_ingredient_list(id_product).json()
+            recipe_dict, ingredient_ids = Translation.product_table_filter(recipe_json)
 
-    
-
-
-    @staticmethod
-    def handle_create_product(product_name_field: ft.TextField, 
-                       feedback_text: ft.Text, 
-                       page: ft.Page,):
-        """
-        Sends a POST request to create a product in the database and updates the feedback text.
-
-        Args:
-            product_name (ft.TextField): The input field containing the product name.
-            feedback_text (ft.Text): A text element to display the result status.
-        """
-        try:
-            product_name = product_name_field.value
-            if not product_name:
-                feedback_text.value = "⚠️ Please enter a product name to create."
-                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
-                feedback_text.text_align = ft.TextAlign.CENTER
+            if not recipe_dict:
+                ProductActionHandler._set_feedback(
+                    feedback_text, "ℹ️ This product has no saved ingredients yet.", Styles.TEXT_COLOR
+                )
                 page.update()
-                return
-            
-            response = ProductManager.create_product(product_name)
+                return False
 
-            if response.status_code == 201:
-
-                feedback_text.value = "✅ Product created successfully!"
-                feedback_text.color = Styles.GREEN_COLOR
-                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
-                feedback_text.text_align = ft.TextAlign.CENTER
-            else:
-                feedback_text.value = f"❌ Error {response.status_code}: {response.text}"
-                feedback_text.color = Styles.RED_COLOR
-                feedback_text.size = Styles.FEEDBACK_FONT_SIZE
-                feedback_text.text_align = ft.TextAlign.CENTER
+            store_values_callback(id_product, ingredient_ids, [], None)
+            DataFiller.fill_rows_from_data(recipe_dict, ingredient_manager)
+            ProductActionHandler._set_feedback(
+                feedback_text,
+                f"✅ Loaded {len(recipe_dict)} ingredient(s). Add the known percentages and press Submit Product.",
+                Styles.GREEN_COLOR,
+            )
+            page.update()
+            return True
         except Exception as ex:
-            feedback_text.value = ProductActionHandler.get_user_friendly_error_message(ex)
-            feedback_text.color = Styles.RED_COLOR
-            feedback_text.size = Styles.FEEDBACK_FONT_SIZE
-            feedback_text.text_align = ft.TextAlign.CENTER
-
-        page.update()
+            ProductActionHandler._set_feedback(
+                feedback_text, ProductActionHandler.get_user_friendly_error_message(ex), Styles.RED_COLOR
+            )
+            page.update()
+            return False
 
     @staticmethod
-    def handle_search_and_fill(product_name_field: ft.TextField, 
-                          feedback_text: ft.Text,
-                          page: ft.Page,
-                          ingredient_manager,
-                          store_values_callback):
+    def handle_save_new_recipe(product_name_field, result_dict, store_values_callback) -> tuple[bool, str]:
         """
-        Sends a GET request to search a product in the database. If the product exist sends a request
-        to get all their related ingredients and fills the product table automatically.
+        Saves the generated recipe: product, ingredients, their associations and
+        a new evaluation with the estimated percentages.
 
-        Args:
-            product_name (ft.TextField): The input field containing the product name.
-            feedback_text (ft.Text): A text element to display the result status.
+        Returns:
+            (success, message) — the message is meant for the user.
         """
+        product_name = (product_name_field.value or "").strip()
+        if not product_name:
+            return False, "⚠️ Please enter a product name before saving."
+        if not result_dict:
+            return False, "⚠️ Generate a recipe with Submit Product before saving."
+
         try:
-            product_name = product_name_field.value
-            
-            response = ProductManager.find_product(product_name)
-
-            if response.status_code == 200:
-                product_data = response.json()
-                id_product = product_data['data']['id']
-
-                data = RecipeManager.find_product_ingredient_list(id_product)
-                recipe_json = data.json()
-                recipe_dict, ingredient_ids = Translation.product_table_filter(recipe_json)
-                #could traverse a find-Detail recipe to save recipe_ids 
-                
-                store_values_callback(id_product, ingredient_ids, [], recipe_dict)
-
-                DataFiller.fill_rows_from_data(recipe_dict, ingredient_manager)
-            
-        except Exception as ex:
-            feedback_text.value = ProductActionHandler.get_user_friendly_error_message(ex)
-            feedback_text.color = Styles.RED_COLOR
-            feedback_text.size = Styles.FEEDBACK_FONT_SIZE
-            feedback_text.text_align = ft.TextAlign.CENTER
-        
-        page.update()
-
-    @staticmethod
-    def handle_save_new_recipe(product_name_field, 
-                               result_dict,  
-                               store_values_callback):
-        try:
-
-            product_name = (product_name_field.value or "").strip()
             product_id, ingredient_ids, recipe_ids = RecipeManager.submit_recipe(product_name, result_dict)
-
-            EvaluationManager.create_evaluation(product_id, ingredient_ids, recipe_ids, result_dict)
-            store_values_callback(product_id=product_id,
-                                ingredient_ids=ingredient_ids,
-                                recipe_ids=recipe_ids,
-                                result_dict=result_dict)
-
+            response = EvaluationManager.create_evaluation(product_id, ingredient_ids, recipe_ids, result_dict)
+            if response.status_code != 201:
+                return False, f"❌ The recipe could not be saved (HTTP {response.status_code}). Please try again."
+            store_values_callback(
+                product_id=product_id,
+                ingredient_ids=ingredient_ids,
+                recipe_ids=recipe_ids,
+                result_dict=result_dict,
+            )
+            return True, f"✅ Recipe for “{product_name}” saved. You can find it in My Recipes."
         except Exception as ex:
-            print(ProductActionHandler.get_user_friendly_error_message(ex))
+            return False, ProductActionHandler.get_user_friendly_error_message(ex)
 
-    @staticmethod
-    def handle_save_existing_recipe(product_id,
-                            ingredient_ids,
-                            recipe_ids,
-                            result_dict,
-                            store_values_callback):
-        try:
-            #Need to handle the case when a recipe is edited i.e. an ingredient id added or deleted
-
-            EvaluationManager.create_evaluation(product_id, ingredient_ids, recipe_ids, result_dict)
-            
-        except Exception as ex:
-            print(ProductActionHandler.get_user_friendly_error_message(ex))
-
-    @staticmethod
-    def handle_delete_ingredients(product_id: int, ingredient_list: list[int]):
-        for ingredient in ingredient_list:
-            try:
-                RecipeManager.delete_product_ingredient(product_id, ingredient)
-            except Exception:
-                pass
-            
-    
     @staticmethod
     def get_user_friendly_error_message(ex: Exception) -> str:
         """
-        Displays an error message when unable to connect to the database that is understandable to the user.
+        Turns a technical exception into a message the user understands.
         """
         error_message = str(ex).lower()
-        if (
-            "connection refused" in error_message
-            or "connection" in error_message
-            or "timeout" in error_message
-            or "temporarily unavailable" in error_message
-            or "network" in error_message
+        if any(
+            word in error_message
+            for word in ("connection", "timeout", "timed out", "temporarily unavailable", "network", "failed to fetch")
         ):
             return (
-                "⚠️ Search is unavailable right now because the database service is offline.\n"
+                "⚠️ The database service is offline or still starting up.\n"
                 "Please try again in a moment."
             )
         return "⚠️ Something went wrong while contacting the database. Please try again."
-            
-
-
-        
-
-    

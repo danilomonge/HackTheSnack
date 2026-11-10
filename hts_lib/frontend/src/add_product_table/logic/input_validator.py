@@ -13,6 +13,9 @@ class InputValidator:
     - If all percentages are filled, they must add up to exactly 100%
     """
 
+    #: Longest product / ingredient name the database accepts.
+    MAX_NAME_LENGTH = 100
+
     @staticmethod
     def _parse_percentage(value: str | None) -> float:
         """
@@ -214,7 +217,12 @@ class InputValidator:
         name = (name_input.value or "").strip()
         if not name:
             message_text.value = "⚠️ Please enter a product name."
-            message_text.color = "red"
+            message_text.color = Styles.RED_COLOR
+            page.update()
+            return False
+        if len(name) > InputValidator.MAX_NAME_LENGTH:
+            message_text.value = f"⚠️ The product name can have at most {InputValidator.MAX_NAME_LENGTH} characters."
+            message_text.color = Styles.RED_COLOR
             page.update()
             return False
         return True
@@ -240,7 +248,12 @@ class InputValidator:
             name = (name_field.value or "").strip()
             if not name:
                 message_text.value = "⚠️ One or more ingredients are missing a name. Please check your input again."
-                message_text.color = "red"
+                message_text.color = Styles.RED_COLOR
+                page.update()
+                return 0.0, None
+            if len(name) > InputValidator.MAX_NAME_LENGTH:
+                message_text.value = f"⚠️ Ingredient names can have at most {InputValidator.MAX_NAME_LENGTH} characters."
+                message_text.color = Styles.RED_COLOR
                 page.update()
                 return 0.0, None
 
@@ -263,7 +276,7 @@ class InputValidator:
         """
         if total > 100.0:
             message_text.value = f"⚠️ Total percentage is {total:.2f}%. It must not exceed 100%. Please check your inputs again."
-            message_text.color = "red"
+            message_text.color = Styles.RED_COLOR
             page.update()
             return False
         return True
@@ -279,7 +292,7 @@ class InputValidator:
         for i in range(len(percentages) - 1):
             if percentages[i] != 0.0 and percentages[i] < percentages[i + 1]:
                 message_text.value = "⚠️ Ingredient percentages must be in descending order. Please check your inputs again."
-                message_text.color = "red"
+                message_text.color = Styles.RED_COLOR
                 page.update()
                 return False
         return True
@@ -293,7 +306,7 @@ class InputValidator:
         """
         if all(p > 0.0 for p in percentages) and round(total, 2) != 100.00:
             message_text.value = f"⚠️ Total is {total:.2f}%, but it must be 100% when all ingredients are filled. Please adjust the values."
-            message_text.color = "red"
+            message_text.color = Styles.RED_COLOR
             page.update()
             return False
         return True
@@ -318,7 +331,7 @@ class InputValidator:
                 f"⚠️ The first ingredient is too small for a recipe with {len(percentages)} ingredients. "
                 f"It must be at least {minimum_required:.2f}%."
             )
-            message_text.color = "red"
+            message_text.color = Styles.RED_COLOR
             page.update()
             return False
 
@@ -368,7 +381,7 @@ class InputValidator:
 
         if total_needed_space > remaining:
             message_text.value = "⚠️ Error 101: Please check your inputs again or read the instructions."
-            message_text.color = "red"
+            message_text.color = Styles.RED_COLOR
             page.update()
             return False
 
@@ -401,7 +414,7 @@ class InputValidator:
 
         if has_empty and abs(total - 100.0) < 1e-6:
             message_text.value = "⚠️ Error 102: Please check your inputs again or read the instructions."
-            message_text.color = "red"
+            message_text.color = Styles.RED_COLOR
             page.update()
             return False
 
@@ -425,7 +438,7 @@ class InputValidator:
 
             if name in seen:
                 message_text.value = "⚠️ Ingredient names cannot be repeated."
-                message_text.color = "red"
+                message_text.color = Styles.RED_COLOR
                 page.update()
                 return False
 
@@ -456,6 +469,12 @@ class InputValidator:
             bool: True if all inputs are valid, False otherwise.
         """
         if not InputValidator._has_product_name(product_name_input, message_text, page):
+            return False
+
+        if not ingredient_rows:
+            message_text.value = "⚠️ Please add at least one ingredient."
+            message_text.color = Styles.RED_COLOR
+            page.update()
             return False
 
         total, percentages = InputValidator._validate_ingredient_names_and_values(

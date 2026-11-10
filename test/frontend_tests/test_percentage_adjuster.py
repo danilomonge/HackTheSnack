@@ -1,9 +1,8 @@
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from hts_lib.frontend.src.add_product_table.logic.percentage_adjuster import PercentageAdjuster
+from frontend.src.add_product_table.logic.percentage_adjuster import PercentageAdjuster
 
 import flet as ft
 

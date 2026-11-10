@@ -1,8 +1,7 @@
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-from hts_lib.backend.input.constraints_preparation import prepare_constraints_dict
+from backend.input.constraints_preparation import prepare_constraints_dict
 
 
 def test_prepare_constraints_dict():

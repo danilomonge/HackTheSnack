@@ -1,124 +1,77 @@
 import httpx
-import json
 
-from backend.data_base_manager.db_config import get_user_management_url
-
-_TIMEOUT = 45.0
-_LIST_TIMEOUT = 15.0
+from backend.data_base_manager import api_client
 
 
 class ProductManager:
     """
-    Handles API interactions for product-related actions.
+    API calls for products (``/product`` endpoints of HackTheSnackDB).
+
+    Product names are stored upper-case by the API, so lookups upper-case too.
     """
 
     @staticmethod
-    def _base_url() -> str:
-        return f"{get_user_management_url()}/product"
-
-    @staticmethod
-    def create_product(product_name):
+    def create_product(product_name: str) -> httpx.Response:
         """
-        Sends a POST request to create a product in the database.
-
-        Args:
-        product_name (str): The name of the product to create.
+        Creates a product with the default brand, category and subcategory.
 
         Returns:
-        httpx.Response: The HTTP response object returned by the API request.
-                        Use response.status_code to check for success,
-                        and response.json() to access the response data
+            httpx.Response: 201 with ``{"data": product_id}`` on success,
+            400 with ``DUPLICATED_ERROR`` if a product with that name exists.
         """
+        name = (product_name or "").strip()
         data = {
-                "name": product_name,
-                "descripcion": product_name,
-                "idBrand": 1,
-                "idCategory": 1,
-                "idSubCategory": 1
-            }
-
-        response = httpx.post(
-                ProductManager._base_url(),
-                headers={"Content-Type": "application/json"},
-                content=json.dumps(data),
-                timeout=_TIMEOUT,
-            )
-
-        return response
+            "name": name,
+            "descripcion": name,
+            "idBrand": 1,
+            "idCategory": 1,
+            "idSubCategory": 1,
+        }
+        return api_client.post("/product", data)
 
     @staticmethod
-    def find_product(product_name):
+    def find_product(product_name: str) -> httpx.Response:
         """
-        Searches for a product by name in the data base.
-
-        Args:
-        product_name (str): The name of the product to search for.
+        Looks a product up by its exact name (case-insensitive).
 
         Returns:
-        httpx.Response: The HTTP response object returned by the API request.
-                        Use response.status_code to check for success,
-                        and response.json() to access the response data.
+            httpx.Response: 200 with the product in ``data``, 404 if unknown.
         """
-        response = httpx.get(
-            f"{ProductManager._base_url()}/detail?name={product_name.upper().strip()}",
-            timeout=_TIMEOUT,
-        )
-        return response
+        return api_client.get("/product/detail", params={"name": (product_name or "").upper().strip()})
 
     @staticmethod
-    def find_product_id(product_name):
+    def find_product_id(product_name: str) -> dict:
         """
-        Searches for a product by name and returns its id if found.
+        Returns the product record (``{"id": ..., "name": ..., ...}``) for a name.
 
-        Args:
-            product_name (str): The name of the product being searched.
-
-        Returns:
-            id_product (int): id of the product
+        Raises:
+            Exception: if the product does not exist or the request fails.
         """
-        response = httpx.get(
-            f"{ProductManager._base_url()}/detail?name={product_name.upper().strip()}",
-            timeout=_TIMEOUT,
-        )
-
-        if response.status_code == 200:
-            product_data = response.json()
-            id_product = product_data['data']
-            return id_product
-        else:
+        response = ProductManager.find_product(product_name)
+        product = api_client.json_data(response) if response.status_code == 200 else None
+        if not isinstance(product, dict) or "id" not in product:
             raise Exception(f"Failed to find the product: {product_name}")
+        return product
 
     @staticmethod
-    def find_product_list(product_name):
+    def find_product_list(product_name: str = "") -> httpx.Response:
         """
-        Searches for multiple products by name in the data base.
-        If no name given, returns all products.
-
-        Args:
-        product_name (str): The name of the product to search for.
-
-        Returns:
-        httpx.Response: The HTTP response object returned by the API request.
-                        Use response.status_code to check for success,
-                        and response.json() to access the response data.
+        Lists products whose name contains ``product_name`` (all if empty).
         """
-        response = httpx.get(
-            f"{ProductManager._base_url()}/list?page=1&size=100&name={product_name}",
-            timeout=_LIST_TIMEOUT,
+        return api_client.get(
+            "/product/list",
+            params={"page": 1, "size": 100, "name": product_name or ""},
         )
-        return response
 
     @staticmethod
-    def is_backend_available(timeout: float = 5.0) -> bool:
+    def is_backend_available(timeout: float = api_client.PROBE_TIMEOUT) -> bool:
         """
-        Checks whether the backend service is reachable.
-
-        Returns:
-            bool: True when the product backend responds, False otherwise.
+        Returns True when the API answers (waiting for a cold start if needed).
         """
         try:
-            response = httpx.get(
-                f"{ProductManager._base_url()}/list?page=1&size=1&name=",
+            response = api_client.get(
+                "/product/list",
+                params={"page": 1, "size": 1, "name": ""},
                 timeout=timeout,
             )
             return response.status_code < 500

@@ -38,7 +38,6 @@ class Styles:
     BUTTON_FILL_COLOR = "#2b321f"
     BUTTON_FILL_DISABLED_COLOR = "#CBD4BB"
     BUTTON_TEXT_COLOR = "#FFFFFF"
-    BUTTON_FILL_DISABLED_COLOR = "#CBD4BB"
 
     BOX_COLOR = "#F0F4E3" 
     
@@ -54,7 +53,7 @@ class Styles:
     # Red -> error and delete button
     RED_COLOR = "#BB2020"
     # Green -> success feedback message
-    GREEN_COLOR = "#67CD6B"
+    GREEN_COLOR = "#2E7D32"
 
     TITLE_SIZE = 40
     SUBTITLE_SIZE = 23

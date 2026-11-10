@@ -1,19 +1,20 @@
+from datetime import datetime, timedelta
+
 import flet as ft
-from backend.translation import Translation
+
 from backend.data_base_manager.evaluation_manager import EvaluationManager
 from backend.data_base_manager.recipe_manager import RecipeManager
 from backend.translation import Translation
 from frontend.src.styles import Styles
 
-from datetime import datetime, timedelta
-import json
-
 
 class StatisticsView:
     def __init__(self, page: ft.Page):
         self.page = page
-        self.product_dropdown = ft.Dropdown
-        self.ingredient_dropdown = ft.Dropdown
+        self.product_dropdown = ft.Dropdown()
+        self.ingredient_dropdown = ft.Dropdown()
+        self.status_text = ft.Text("", size=Styles.FEEDBACK_FONT_SIZE, color=Styles.TEXT_COLOR,
+                                   text_align=ft.TextAlign.CENTER)
         self.chart_container = ft.Container()
         self.product_dict = {}
         self.ingredient_dict = {}
@@ -21,8 +22,9 @@ class StatisticsView:
         self.only_ingredient = False
 
     def get_products_and_ingredients(self):
-        self.product_dict = Translation.collect_product_dict()
-        self.ingredient_dict = Translation.collect_ingredient_dict()
+        """Loads products and ingredients; raises if the database is unreachable."""
+        self.product_dict = Translation.collect_product_dict(raise_errors=True)
+        self.ingredient_dict = Translation.collect_ingredient_dict(raise_errors=True)
         dropdown_products = list(self.product_dict.keys())
         dropdown_ingredients = list(self.ingredient_dict.keys())
 
@@ -40,65 +42,88 @@ class StatisticsView:
         )
 
     def on_product_select(self, e):
-        selected_product_name = self.product_dropdown.value
-        selected_product_id = self.product_dict.get(selected_product_name) # type: ignore
+        """
+        Limits the ingredient dropdown to the ingredients of the selected product.
+        """
+        selected_product_id = self.product_dict.get(self.product_dropdown.value)  # type: ignore[arg-type]
+        ingredients = {}
+        if selected_product_id:
+            try:
+                ingredient_response = RecipeManager.find_product_ingredient_list(selected_product_id)
+                ingredients, _ = Translation.product_table_filter(ingredient_response.json())
+            except Exception:
+                self.status_text.value = "⚠️ The ingredients of this product could not be loaded."
+                self.status_text.color = Styles.RED_COLOR
 
-        try:
-            ingredient_response = RecipeManager.find_product_ingredient_list(selected_product_id)
-            ingredient_data = ingredient_response.json()
-            ingredients, ids = Translation.product_table_filter(ingredient_data)
-        except Exception:
-            ingredients = {}
-
-        updated_dropdown = self.build_dropdown("Select Ingredient", list(ingredients.keys()))
-        self.ingredient_dropdown = updated_dropdown
+        self.ingredient_dropdown = self.build_dropdown("Select Ingredient", list(ingredients.keys()))
         self.ingredient_container.content = self.ingredient_dropdown
         self.page.update()
 
     def on_confirm(self, e):
+        """
+        Draws the chart for the selection:
+        * product only      -> every ingredient of the product over its saved versions;
+        * ingredient only   -> that ingredient across all products;
+        * product + ingredient -> that ingredient in that product.
+        """
         selected_product_name = self.product_dropdown.value
         selected_ingredient_name = self.ingredient_dropdown.value
-        
-        if not selected_ingredient_name and selected_product_name:
-            ingredient_id = 0
-            product_id = self.product_dict.get(selected_product_name) # type: ignore
-            self.only_ingredient = False
-        elif not selected_product_name and selected_ingredient_name:
-            product_id = 0
-            ingredient_id = self.ingredient_dict.get(selected_ingredient_name.upper()) # type: ignore
-            self.only_ingredient = True
-        else:
-            product_id = self.product_dict.get(selected_product_name) # type: ignore
-            ingredient_id = self.ingredient_dict.get(selected_ingredient_name.upper()) # type: ignore
-            self.only_ingredient = False
 
-            if not product_id:
-                print("Product ID not found for selected name.")
-                return
-        
-            if not ingredient_id:
-                print("Ingredient ID not found for selected name.")
-                return
-        
+        if not selected_product_name and not selected_ingredient_name:
+            self.status_text.value = "⚠️ Select a product, an ingredient, or both."
+            self.status_text.color = Styles.RED_COLOR
+            self.page.update()
+            return
+
+        product_id = self.product_dict.get(selected_product_name) if selected_product_name else 0  # type: ignore[arg-type]
+        ingredient_id = (
+            self.ingredient_dict.get(selected_ingredient_name.upper()) if selected_ingredient_name else 0
+        )
+        self.only_ingredient = bool(selected_ingredient_name and not selected_product_name)
+
+        if (selected_product_name and not product_id) or (selected_ingredient_name and not ingredient_id):
+            self.status_text.value = "⚠️ The selection is no longer available. Please reload the page."
+            self.status_text.color = Styles.RED_COLOR
+            self.page.update()
+            return
+
+        self.status_text.value = "⏳ Loading statistics…"
+        self.status_text.color = Styles.TEXT_COLOR
+        self.page.update()
+
         try:
             response = EvaluationManager.find_evaluation_product_ingredient(product_id, ingredient_id)
-            data = response.json()
+            data = response.json() if response.status_code == 200 else {"data": []}
         except Exception:
-            data = {"data": []}
-        chart = self.build_ingredient_line_chart(data)
+            data = None
 
-        self.chart_container.content = chart
+        if data is None:
+            self.status_text.value = "⚠️ The database service is offline or still starting up. Please try again."
+            self.status_text.color = Styles.RED_COLOR
+            self.chart_container.content = None
+        elif not data.get("data"):
+            self.status_text.value = "No saved recipes for this selection yet."
+            self.status_text.color = Styles.TEXT_COLOR
+            self.chart_container.content = None
+        else:
+            self.status_text.value = ""
+            self.chart_container.content = self.build_ingredient_line_chart(data)
         self.page.update()
 
     def on_clear(self, e):
-        """Reset dropdown values to None without changing their options or the chart."""
+        """Resets both dropdowns and removes the chart."""
         if isinstance(self.product_dropdown, ft.Dropdown):
             self.product_dropdown.value = None
 
         if isinstance(self.ingredient_dropdown, ft.Dropdown):
             self.ingredient_dropdown.value = None
 
-        self.page.update()    
+        # Show all ingredients again (product selection had narrowed the list).
+        self.ingredient_dropdown = self.build_dropdown("Select Ingredient", list(self.ingredient_dict.keys()))
+        self.ingredient_container.content = self.ingredient_dropdown
+        self.status_text.value = ""
+        self.chart_container.content = None
+        self.page.update()
 
     def build_ingredient_line_chart(self, data: dict) -> ft.Control:
         """
@@ -180,6 +205,9 @@ class StatisticsView:
 
             eval_rounds[product_name].append(date)
             product_data[product_name].append((date, percentage))
+
+        if not eval_rounds:
+            return {}, set()
 
         # Determine max number of evaluations
         max_evals = max(len(evals) for evals in eval_rounds.values())
@@ -325,7 +353,7 @@ class StatisticsView:
             ft.ChartAxisLabel(
                 label=ft.Container(
                     content=(
-                        ft.Text(f"{i}", color="black") if i > 0 else ft.Text("")
+                        ft.Text(f"{i}", color=Styles.TEXT_COLOR) if i > 0 else ft.Text("")
                     ),
                     padding=ft.padding.only(top=10),
                 ),
@@ -405,6 +433,7 @@ class StatisticsView:
             bottom_axis=ft.ChartAxis(
                 labels=x_labels,
                 labels_size=50,
+                labels_interval=1,
                 title=ft.Text(
                     "Saved recipes", size=16, color=Styles.CHART_TEXT_PERC_AND_TIME_COLOR
                 ),
@@ -413,20 +442,35 @@ class StatisticsView:
             min_y=0,
             max_y=100,
             horizontal_grid_lines=ft.ChartGridLines(
-                color=Styles.CHART_GRID_COORDINATE_LINES_COLOR, width=0.2
-            ),  # The horizontal grid lines (so that the point values are more readable)
+                interval=10, color=Styles.CHART_GRID_COORDINATE_LINES_COLOR, width=0.2
+            ),  # one horizontal line per 10 %
             vertical_grid_lines=ft.ChartGridLines(
-                color=Styles.CHART_GRID_COORDINATE_LINES_COLOR, width=0.2
-            ),  # The vertical grid lines (so that the point values are more readable)
+                interval=1, color=Styles.CHART_GRID_COORDINATE_LINES_COLOR, width=0.2
+            ),  # one vertical line per saved recipe version
             expand=True,
             height=400,
         )
 
     def load_dropdown_data(self):
-        """Fetch products and ingredients in background and populate dropdowns."""
-        dropdown_product_data, dropdown_ingredient_data = self.get_products_and_ingredients()
+        """Fetches products and ingredients and fills the dropdowns."""
+        self.status_text.value = "⏳ Loading products… The database may need up to a minute to wake up."
+        self.status_text.color = Styles.TEXT_COLOR
+        self.page.update()
+
+        try:
+            dropdown_product_data, dropdown_ingredient_data = self.get_products_and_ingredients()
+        except Exception:
+            self.status_text.value = "⚠️ The database service is offline or still starting up. Please reload the page in a moment."
+            self.status_text.color = Styles.RED_COLOR
+            self.page.update()
+            return
         self.product_dropdown.options = [ft.dropdown.Option(item) for item in dropdown_product_data]
         self.ingredient_dropdown.options = [ft.dropdown.Option(item) for item in dropdown_ingredient_data]
+
+        if dropdown_product_data:
+            self.status_text.value = ""
+        else:
+            self.status_text.value = "No saved recipes yet. Save one in the Recipe Generator to see statistics."
         self.page.update()
 
     def build(self):
@@ -473,6 +517,7 @@ class StatisticsView:
                                 spacing=20,
                             ),
                             buttons_row,
+                            self.status_text,
                             self.chart_container,  # Chart placeholder
                         ],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,

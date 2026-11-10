@@ -1,13 +1,13 @@
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 
-from hts_lib.frontend.src.product_submit_handler import ProductSubmitHandler
-import hts_lib.frontend.src.product_submit_handler as handler_module
+from frontend.src.product_submit_handler import ProductSubmitHandler
+import frontend.src.product_submit_handler as handler_module
 
 import flet as ft
+from frontend.src.styles import Styles
 
 
 class testField(ft.TextField):
@@ -99,14 +99,14 @@ def test_handle_submit():
 
     handler_module.ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page, fake_store_values_callback, fake_loading_indicator)  # type: ignore[arg-type]
     assert msg.value == "✅ Product is valid. Recipe generated!"
-    assert msg.color == "#67CD6B"
+    assert msg.color == Styles.GREEN_COLOR
     assert page.updated  # type: ignore[arg-type]
 
     # Case 2: empty product name → should print error message
     name_input = testField("   ")
     handler_module.ProductSubmitHandler.handle_submit(name_input, [row1, row2], msg, page, fake_store_values_callback, fake_loading_indicator)  # type: ignore[arg-type]
     assert msg.value == "⚠️ Please enter a product name."
-    assert msg.color == "red"
+    assert msg.color == Styles.RED_COLOR
 
     # Case 3: one ingredient missing name → should print error message
     invalid_row = ft.Container(
