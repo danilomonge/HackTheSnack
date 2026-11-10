@@ -10,11 +10,15 @@ authors = [
   { name = "Danilo Monge" },
 ]
 # Packages bundled into the app (also into the browser build, so keep it lean).
-# numpy / scipy versions match the ones Pyodide ships for the Flet web build.
+# numpy matches the version Pyodide ships for the Flet web build.
+# SciPy is deliberately not bundled: its Pyodide wheel needs a BLAS library
+# that `flet build web` does not package, so it cannot be imported in the
+# browser (and added ~45 MB). The estimator then finds its starting point with
+# NumPy (backend/algorithm/computation.py). Desktop runs use SciPy from
+# requirements-dev.txt / environment.yaml.
 dependencies = [
   "flet==0.28.3",
   "numpy==2.0.2",
-  "scipy==1.14.1",
   "httpx==0.28.1",
 ]
 
