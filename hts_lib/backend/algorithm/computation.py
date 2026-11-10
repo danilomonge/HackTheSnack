@@ -1,6 +1,5 @@
 import numpy as np
 from numpy.random import rand, randn
-from scipy.optimize import linprog
 
 try:
     from tqdm.auto import tqdm
@@ -13,6 +12,21 @@ class Computation:
     """
     Class for performing MCMC sampling to estimate values for unknown components under linear constraints.
     """
+
+    @staticmethod
+    def _load_linprog():
+        """
+        Returns ``scipy.optimize.linprog``, or None where SciPy is not available.
+
+        The browser build (Pyodide) ships without SciPy: its wheel needs a BLAS
+        library that ``flet build web`` does not package. The starting point is
+        then found with NumPy only (see ``_feasible_point``).
+        """
+        try:
+            from scipy.optimize import linprog
+        except Exception:  # ImportError, or a native library that fails to load
+            return None
+        return linprog
 
     @staticmethod
     def _find_initial_point(A, a, B, b, eps):
@@ -31,6 +45,15 @@ class Computation:
             np.ndarray: Feasible starting point x0.
         """
 
+        linprog = Computation._load_linprog()
+        if linprog is None:
+            x0 = Computation._feasible_point(A, a - eps, B, b)
+            if x0 is None:
+                print(
+                    f"⚠️ No feasible solution found for the constraint system with the given eps: {eps}."
+                )
+            return x0
+
         D = A.shape[1]
         out = linprog(
             np.ones(D), A_ub=A, b_ub=a - eps, A_eq=B, b_eq=b, method="highs-ipm"
@@ -42,6 +65,90 @@ class Computation:
             return None
 
         return out.x
+
+    @staticmethod
+    def _feasible_point(A, a, B, b, tol=1e-9, feasibility_tol=1e-7):
+        """
+        Finds x with B @ x = b and A @ x <= a using NumPy only (no SciPy).
+
+        Phase-I barrier method (Boyd & Vandenberghe, Convex Optimization, 11.4):
+        x is written as x_p + N z, where x_p solves the equalities and the
+        columns of N span the null space of B. Then the smallest s with
+        G z - c <= s (G = A N, c = a - A x_p) is found with Newton steps on a
+        log-barrier. The system is feasible iff that s is <= 0; the returned
+        point is the one with the largest common slack, i.e. well inside the
+        polytope, which is a good start for the sampler.
+
+        Returns:
+            np.ndarray | None: a feasible point, or None if there is none.
+        """
+        A = np.asarray(A, dtype=float)
+        a = np.asarray(a, dtype=float)
+        B = np.asarray(B, dtype=float)
+        b = np.asarray(b, dtype=float)
+
+        # Equalities: particular solution + null space.
+        x_p = np.linalg.lstsq(B, b, rcond=None)[0]
+        if np.linalg.norm(B @ x_p - b) > 1e-9 * max(1.0, np.linalg.norm(b)):
+            return None  # inconsistent equalities
+        N, _ = Computation._svd_projection(B)
+
+        c = a - A @ x_p
+        if N.shape[1] == 0:  # the equalities fix the point
+            return x_p if np.all(c >= -feasibility_tol) else None
+
+        G = A @ N
+        m, k = G.shape
+        # Variables y = (z, s). Constraints F y <= d:  G z - s <= c  and  -s <= 1.
+        F = np.vstack([np.hstack([G, -np.ones((m, 1))]), np.hstack([np.zeros((1, k)), [[-1.0]]])])
+        d = np.concatenate([c, [1.0]])
+        e_s = np.zeros(k + 1)
+        e_s[-1] = 1.0
+
+        s0 = max(float(np.max(-c)), -1.0) + 1.0  # z = 0 and s0 is strictly inside
+        y = np.concatenate([np.zeros(k), [s0]])
+
+        def barrier(point, tau):
+            slack = d - F @ point
+            if np.any(slack <= 0):
+                return np.inf
+            return tau * point[-1] - np.sum(np.log(slack))
+
+        tau = 1.0
+        while True:
+            for _ in range(100):  # Newton's method on the barrier problem
+                slack = d - F @ y
+                grad = tau * e_s + F.T @ (1.0 / slack)
+                hess = F.T @ (F / slack[:, None] ** 2)
+                try:
+                    step = -np.linalg.solve(hess, grad)
+                except np.linalg.LinAlgError:
+                    step = -np.linalg.lstsq(hess, grad, rcond=None)[0]
+                decrement = float(-grad @ step)
+                if not np.isfinite(decrement) or decrement / 2 <= 1e-12:
+                    break
+                # Backtracking line search; never leaves the barrier's domain.
+                t = 1.0
+                current = barrier(y, tau)
+                while barrier(y + t * step, tau) > current - 0.25 * t * decrement:
+                    t *= 0.5
+                    if t < 1e-14:
+                        break
+                else:
+                    y = y + t * step
+                    continue
+                break  # no acceptable step left at this precision
+            if (m + 1) / tau < tol:
+                break
+            tau *= 10.0
+
+        # Feasible iff the best point satisfies every constraint (up to the 1e-7
+        # feasibility tolerance HiGHS uses in linprog; a polytope that is a single face, e.g. two
+        # equal neighbouring shares, is only feasible on its boundary).
+        x = x_p + N @ y[:-1]
+        if np.max(A @ x - a) > feasibility_tol or np.max(np.abs(B @ x - b)) > feasibility_tol:
+            return None
+        return x
 
     @staticmethod
     def _svd_projection(B):
