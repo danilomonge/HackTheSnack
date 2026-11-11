@@ -4,19 +4,24 @@ from frontend.src.styles import Styles
 class NavigationBar:
     def __init__(self, page: ft.Page):
         self.page = page
+        self._compact = False
 
     def _button_style(self, is_active: bool, hovered: bool = False):
         return ft.ButtonStyle(
             bgcolor=Styles.NAVBAR_HOVER_COLOR if hovered else Styles.NAVBAR_COLOR,
             color=Styles.NAVBAR_ACTIVE_COLOR if is_active else Styles.NAVBAR_TEXT_COLOR,
             text_style=ft.TextStyle(
-                size=Styles.NAVBAR_TEXT_SIZE,
+                size=self._text_size(),
                 weight=ft.FontWeight.BOLD,
             ),
             alignment=ft.alignment.center,
-            padding=ft.padding.symmetric(horizontal=18, vertical=12),
+            padding=ft.padding.symmetric(horizontal=10, vertical=6) if self._compact
+            else ft.padding.symmetric(horizontal=18, vertical=12),
             shape=ft.RoundedRectangleBorder(radius=8),
         )
+
+    def _text_size(self) -> int:
+        return 15 if self._compact else Styles.NAVBAR_TEXT_SIZE
 
     def navbar_button(self, text, route):
         """
@@ -48,17 +53,17 @@ class NavigationBar:
             self.page.go(route)
             self.page.update()  
 
+        label = ft.Text(
+            text,
+            size=self._text_size(),
+            weight=ft.FontWeight.BOLD,
+            text_align=ft.TextAlign.CENTER,
+            color=Styles.NAVBAR_ACTIVE_COLOR if is_active else Styles.NAVBAR_TEXT_COLOR,
+        )
         btn = ft.TextButton(
-            content=ft.Container(
-                content=ft.Text(
-                    text,
-                    size=Styles.NAVBAR_TEXT_SIZE,
-                    weight=ft.FontWeight.BOLD,
-                    text_align=ft.TextAlign.CENTER,
-                    color=Styles.NAVBAR_ACTIVE_COLOR if is_active else Styles.NAVBAR_TEXT_COLOR,
-                ),
-                alignment=ft.alignment.center,
-            ),
+            # On phones the label is used directly: an aligned Container would
+            # stretch every button to the full width (one button per line).
+            content=label if self._compact else ft.Container(content=label, alignment=ft.alignment.center),
             on_click=on_click,
             on_hover=on_hover,
             style=self._button_style(is_active)
@@ -66,7 +71,12 @@ class NavigationBar:
         return btn
 
     def build(self):
-        use_scroll = bool(getattr(self.page, "width", 0) and self.page.width < 900)
+        # Phones: smaller buttons that wrap onto a second line instead of
+        # running off the screen. Tablets: one line that scrolls if needed.
+        self._compact = Styles.is_compact(self.page)
+        use_scroll = (not self._compact) and bool(
+            Styles._page_width(self.page) and Styles._page_width(self.page) < 900
+        )
 
         return ft.Container(
             content=ft.Container(
@@ -80,7 +90,9 @@ class NavigationBar:
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    wrap=False,
+                    wrap=self._compact,
+                    spacing=2 if self._compact else 10,
+                    run_spacing=2,
                     scroll=ft.ScrollMode.AUTO if use_scroll else None,
                     tight=True,
                 ),
@@ -88,7 +100,7 @@ class NavigationBar:
                 width=float("inf"),
             ),
             bgcolor=Styles.NAVBAR_COLOR,
-            padding=10,
-            height=70,
+            padding=ft.padding.symmetric(horizontal=6, vertical=6) if self._compact else 10,
+            height=None if self._compact else 70,
             width=float("inf"),
         )
