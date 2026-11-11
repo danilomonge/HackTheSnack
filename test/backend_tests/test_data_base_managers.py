@@ -270,3 +270,15 @@ def test_desktop_warm_up_uses_a_background_thread(monkeypatch):
     monkeypatch.setattr(api_client.threading, "Thread", ImmediateThread)
     api_client.warm_up("https://api.test/actuator/health", "")
     assert seen == ["https://api.test/actuator/health"]
+
+
+def test_warm_up_targets_ping_each_service_once():
+    api = "https://api.test/user-management"
+    # Nutrition served by the API itself: one ping is enough.
+    assert api_client.warm_up_targets(api, api + "/") == [api + "/actuator/health"]
+    # A separate nutrition proxy is woken too.
+    assert api_client.warm_up_targets(api, "https://proxy.test") == [
+        api + "/actuator/health",
+        "https://proxy.test/health",
+    ]
+    assert api_client.warm_up_targets(api, "") == [api + "/actuator/health"]

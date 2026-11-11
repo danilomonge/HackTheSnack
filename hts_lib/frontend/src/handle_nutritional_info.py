@@ -2,9 +2,10 @@
 
 Where the data comes from:
 
-* **Web build** (GitHub Pages / Pyodide): the nutrition proxy configured in
-  ``assets/runtime-config.json`` (``nutrition_proxy_url``). The browser never
-  sees the USDA / DeepL keys.
+* **Web build** (GitHub Pages / Pyodide): ``nutrition_proxy_url`` from
+  ``assets/runtime-config.json``, i.e. the HackTheSnackDB API, which serves
+  ``/api/nutrition`` and ``/api/translate``. The browser never sees the
+  USDA / DeepL keys.
 * **Desktop run**: USDA and DeepL directly, with ``USDA_API_KEY`` /
   ``DEEPL_API_KEY`` from the environment or from the encrypted
   ``Secure_env/.env.enc`` file.
@@ -32,7 +33,7 @@ if not IS_WEB:
     # Loads USDA_API_KEY / DEEPL_API_KEY for native runs (no-op if unavailable).
     SecureEnvLoader.load_env()
 
-#: The proxy runs on a free Render instance that may need ~1 minute to wake up.
+#: The API runs on a free Render instance; at night it may need ~1 minute to wake up.
 PROXY_TIMEOUT = 75.0
 
 
@@ -163,8 +164,8 @@ class NutritionalInfoHandler:
             if IS_WEB and not get_nutrition_proxy_url(self.page):
                 self.dialog.content = ft.Text(
                     "Nutrition lookup is not configured for the web build yet. "
-                    "Add a secure proxy URL in assets/runtime-config.json "
-                    "or via the NUTRITION_PROXY_URL build variable."
+                    "Set nutrition_proxy_url (the HackTheSnackDB API URL) in "
+                    "assets/runtime-config.json or via the NUTRITION_PROXY_URL build variable."
                 )
             else:
                 self.dialog.content = ft.Text(

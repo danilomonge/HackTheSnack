@@ -1,13 +1,12 @@
 """USDA nutrition lookup and DeepL translation (server-side logic).
 
-Used in two places, so the behaviour is identical everywhere:
+Used by desktop runs (``frontend/src/handle_nutritional_info.py``), which call
+USDA and DeepL directly with keys from the local environment.
 
-* ``backend/nutrition_proxy_api.py``: the FastAPI proxy that keeps the API keys
-  secret for the public web build.
-* ``frontend/src/handle_nutritional_info.py``: desktop runs, which call the
-  services directly with keys from the local environment.
-
-Only depends on ``httpx`` so the proxy stays lightweight.
+The public web build must not contain the keys, so it calls the HackTheSnackDB
+API instead (``/api/nutrition``, ``/api/translate``), which implements the same
+rules server-side (exact branded matches, median of every nutrient, DeepL
+Free/Pro host from the key, header authentication). Keep both in sync.
 """
 
 from __future__ import annotations

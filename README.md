@@ -36,24 +36,23 @@ Food labels in the EU list ingredients in descending order of weight, and only s
 ```
 GitHub Pages ─ static Flet web app (Python running in the browser via Pyodide)
    │
-   ├─▶ HackTheSnackDB API (Spring Boot on Render) ─▶ PostgreSQL on Supabase
-   │      products, ingredients, recipes, saved evaluations
-   │      repo: https://github.com/danilomonge/HackTheSnackDB
-   │
-   └─▶ Nutrition proxy (FastAPI on Render, this repo) ─▶ USDA FoodData Central, DeepL
-          keeps the API keys out of the browser
+   └─▶ HackTheSnackDB API (Spring Boot on Render) ─▶ PostgreSQL on Supabase
+          products, ingredients, recipes, saved evaluations
+          + nutrition facts / translation ─▶ USDA FoodData Central, DeepL
+            (the API keys stay on the server, never in the browser)
+          repo: https://github.com/danilomonge/HackTheSnackDB
 ```
 
-The app reads both URLs from [`hts_lib/assets/runtime-config.json`](hts_lib/assets/runtime-config.json):
+The app reads its backend URLs from [`hts_lib/assets/runtime-config.json`](hts_lib/assets/runtime-config.json). Both point at the API, which also serves `/api/nutrition` and `/api/translate`:
 
 ```json
 {
   "user_management_url": "https://fakethesnackdb-api.onrender.com/user-management",
-  "nutrition_proxy_url": "https://hackthesnack-nutrition-proxy.onrender.com"
+  "nutrition_proxy_url": "https://fakethesnackdb-api.onrender.com/user-management"
 }
 ```
 
-The Render services are on the free plan and stop after 15 idle minutes. During the day (about 06:00–23:00 German time) a scheduled ping in HackTheSnackDB keeps the API awake. The app also pings both services when it starts, so they are usually ready by the time you click *Search* or *Save*; if one is still starting, the page shows a progress bar and waits up to about a minute.
+The API runs on Render's free plan, which stops a service after 15 idle minutes. From 06:00 to 23:00 (German time) the API keeps itself awake, so *Search*, *Save* and nutrition lookups answer immediately. At night the first request may take up to a minute: the app pings the API as soon as it starts, and the page shows a progress bar while it waits.
 
 ### Repository layout
 
@@ -75,16 +74,13 @@ HackTheSnack/
 │   │   ├── recipe_generator.py     # chooses the exact solution or MCMC
 │   │   ├── algorithm/              # constraints + slice sampling
 │   │   ├── data_base_manager/      # HackTheSnackDB REST client
-│   │   ├── nutrition_service.py    # USDA + DeepL calls (shared by app and proxy)
-│   │   ├── nutrition_proxy_api.py  # FastAPI proxy deployed on Render
+│   │   ├── nutrition_service.py    # USDA + DeepL calls for desktop runs (the web uses the API)
 │   │   └── translation.py          # API responses -> UI data
 │   └── Secure_env/                 # encrypted API keys for desktop runs (not in the web build)
 ├── test/                           # pytest suite (no network needed)
 ├── notebooks/MakerSpace.ipynb      # the algorithm, step by step
 ├── requirements-dev.txt            # pip setup for development
-├── requirements-proxy.txt          # dependencies of the proxy
 ├── environment.yaml                # conda setup for development
-├── render.yaml                     # Render Blueprint for the proxy
 └── .github/workflows/deploy.yml    # tests + GitHub Pages deployment
 ```
 
@@ -126,7 +122,7 @@ By default the app talks to the **production API** configured in `runtime-config
 USER_MANAGEMENT_BASE_URL=http://localhost:8087/user-management python main.py
 ```
 
-Nutrition facts on the desktop need `USDA_API_KEY` (free at https://fdc.nal.usda.gov/api-key-signup) and, for translation, `DEEPL_API_KEY`. Either export them, or decrypt `Secure_env/.env.enc` by setting `HTS_ENV_PASSWORD` (ask the team for the password). Alternatively, point `NUTRITION_PROXY_URL` at the deployed proxy.
+Nutrition facts on the desktop need `USDA_API_KEY` (free at https://fdc.nal.usda.gov/api-key-signup) and, for translation, `DEEPL_API_KEY`. Either export them, or decrypt `Secure_env/.env.enc` by setting `HTS_ENV_PASSWORD` (ask the team for the password).
 
 ### Test
 
@@ -151,39 +147,18 @@ Optional repository **variables** (Settings → Secrets and variables → Action
 | Variable | Example |
 |---|---|
 | `USER_MANAGEMENT_URL` | `https://fakethesnackdb-api.onrender.com/user-management` |
-| `NUTRITION_PROXY_URL` | `https://hackthesnack-nutrition-proxy.onrender.com` |
+| `NUTRITION_PROXY_URL` | `https://fakethesnackdb-api.onrender.com/user-management` (base URL serving `/api/nutrition`, `/api/translate`) |
 
 These URLs are public. **Never** put `USDA_API_KEY` or `DEEPL_API_KEY` into the web build: GitHub Pages serves everything to the browser.
 
-### Nutrition proxy → Render
-
-[`render.yaml`](render.yaml) defines the service, `uvicorn hts_lib.backend.nutrition_proxy_api:app`. Set these in the Render dashboard:
-
-| Variable | Value |
-|---|---|
-| `USDA_API_KEY` | USDA FoodData Central key |
-| `DEEPL_API_KEY` | DeepL key (Free keys end in `:fx`; the right endpoint is chosen automatically) |
-| `ALLOWED_ORIGINS` | `https://danilomonge.github.io` |
-
-Check it with:
-
-```bash
-curl https://hackthesnack-nutrition-proxy.onrender.com/health
-curl "https://hackthesnack-nutrition-proxy.onrender.com/api/nutrition?ingredient=sugar"
-curl -X POST https://hackthesnack-nutrition-proxy.onrender.com/api/translate \
-     -H "Content-Type: application/json" -d '{"text":"Zucker"}'
-```
-
-Run it locally with `uvicorn hts_lib.backend.nutrition_proxy_api:app --reload` from the repository root.
-
 ### Database → Supabase
 
-The API and its database live in [HackTheSnackDB](https://github.com/danilomonge/HackTheSnackDB). That README covers the Supabase setup, the schema and the API reference.
+The API and its database live in [HackTheSnackDB](https://github.com/danilomonge/HackTheSnackDB). That README covers the Supabase setup, the schema, the API reference (including the nutrition endpoints) and the Render configuration (`USDA_API_KEY`, `DEEPL_API_KEY`).
 
 ---
 
 ## Security notes
 
-* API keys live only on the proxy (Render) or in your local environment. `Secure_env` is excluded from the web build (`tool.flet.app.exclude`).
-* The browser only knows the public URLs of the API and the proxy. The API allows cross-origin calls only from the GitHub Pages origin and localhost.
+* API keys live only on the API's Render service or in your local environment. `Secure_env` is excluded from the web build (`tool.flet.app.exclude`).
+* The browser only knows the public URL of the API, which allows cross-origin calls only from the GitHub Pages origin and localhost.
 * If a key may have leaked, rotate it at USDA / DeepL and update it on Render.

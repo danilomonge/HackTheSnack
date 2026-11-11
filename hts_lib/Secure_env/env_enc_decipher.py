@@ -11,7 +11,7 @@ Keys are read, in this order:
    and is decrypted with the password from the ``HTS_ENV_PASSWORD``
    environment variable. ``openssl`` must be installed.
 
-The public web build never uses this module; it talks to the nutrition proxy.
+The public web build never uses this module; it gets nutrition data from the HackTheSnackDB API.
 """
 
 import os
