@@ -43,13 +43,9 @@ def main(page: ft.Page):
     # Resolve the API base URL once (env var > runtime-config.json > localhost).
     initialize_db_url(page)
 
-    # Wake the free-tier backends in the background so the first Search,
+    # Wake the free-tier backend in the background so the first Search,
     # Save or nutrition lookup does not have to wait for a cold start.
-    proxy_url = get_nutrition_proxy_url(page)
-    api_client.warm_up(
-        f"{get_user_management_url()}/actuator/health",
-        f"{proxy_url}/health" if proxy_url else "",
-    )
+    api_client.warm_up(*api_client.warm_up_targets(get_user_management_url(), get_nutrition_proxy_url(page)))
 
     navbar = NavigationBar(page)
 

@@ -55,6 +55,19 @@ def json_data(response: httpx.Response, default=None):
     return default if data is None else data
 
 
+def warm_up_targets(api_url: str, nutrition_url: str) -> list[str]:
+    """
+    Health URLs to ping on start-up. The nutrition endpoints are normally
+    served by the API itself; a separately hosted nutrition proxy is pinged too.
+    """
+    api = (api_url or "").strip().rstrip("/")
+    nutrition = (nutrition_url or "").strip().rstrip("/")
+    targets = [f"{api}/actuator/health"] if api else []
+    if nutrition and nutrition != api:
+        targets.append(f"{nutrition}/health")
+    return targets
+
+
 def warm_up(*urls: str) -> None:
     """Fire-and-forget GET requests that wake sleeping free-tier services.
 

@@ -57,7 +57,7 @@ jobs:
       # The committed hts_lib/assets/runtime-config.json already points at the
       # production services. Repository variables (or secrets) override them:
       #   USER_MANAGEMENT_URL  -> HackTheSnackDB API base URL
-      #   NUTRITION_PROXY_URL  -> nutrition / translation proxy URL
+      #   NUTRITION_PROXY_URL  -> base URL serving /api/nutrition and /api/translate (the API)
       # These URLs are public; API keys never go into the web build.
       - name: Write runtime web config
         env:

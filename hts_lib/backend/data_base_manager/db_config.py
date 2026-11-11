@@ -1,10 +1,10 @@
-"""Runtime configuration: where the HackTheSnackDB API and the nutrition proxy live.
+"""Runtime configuration: where the HackTheSnackDB API (and its nutrition endpoints) live.
 
 Both URLs come from ``assets/runtime-config.json``::
 
     {
       "user_management_url": "https://fakethesnackdb-api.onrender.com/user-management",
-      "nutrition_proxy_url": "https://hackthesnack-nutrition-proxy.onrender.com"
+      "nutrition_proxy_url": "https://fakethesnackdb-api.onrender.com/user-management"
     }
 
 Resolution order for each value:
@@ -110,7 +110,7 @@ def get_user_management_url() -> str:
 
 
 def get_nutrition_proxy_url(page=None) -> str:
-    """Base URL of the nutrition/translation proxy, or "" if none is configured."""
+    """Base URL serving ``/api/nutrition`` and ``/api/translate`` (normally the API), or "" if none."""
     env_url = _normalize_url(os.environ.get("NUTRITION_PROXY_URL"))
     if env_url:
         return env_url
