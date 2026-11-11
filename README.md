@@ -52,7 +52,7 @@ The app reads its backend URLs from [`hts_lib/assets/runtime-config.json`](hts_l
 }
 ```
 
-The API runs on Render's free plan, which stops a service after 15 idle minutes. From 06:00 to 23:00 (German time) the API keeps itself awake, so *Search*, *Save* and nutrition lookups answer immediately. At night the first request may take up to a minute: the app pings the API as soon as it starts, and the page shows a progress bar while it waits.
+The API runs on Render's free plan, which stops a service after 15 idle minutes. The API keeps itself awake around the clock (it is the workspace's only free service, so this fits the free instance hours), so *Search*, *Save* and nutrition lookups answer immediately. If it ever has to start again (e.g. right after a deploy), the app pings it as soon as the page loads and shows a progress bar while it waits.
 
 ### Repository layout
 
