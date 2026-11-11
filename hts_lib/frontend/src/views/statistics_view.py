@@ -34,7 +34,8 @@ class StatisticsView:
         return ft.Dropdown(
             label=label,
             options=[ft.dropdown.Option(item) for item in items],
-            width=200,
+            # Phones: one full-width dropdown per line.
+            width=Styles.fit_width(self.page, 320, margin=64) if Styles.is_compact(self.page) else 200,
             border_color=Styles.BUTTON_FILL_COLOR,
             focused_border_color=Styles.BUTTON_FILL_COLOR,
             text_style=ft.TextStyle(color=Styles.TEXT_COLOR, size=16),
@@ -515,6 +516,8 @@ class StatisticsView:
                                 ],
                                 alignment=ft.MainAxisAlignment.CENTER,
                                 spacing=20,
+                                run_spacing=12,
+                                wrap=Styles.is_compact(self.page),
                             ),
                             buttons_row,
                             self.status_text,

@@ -40,7 +40,11 @@ class IngredientRowManager:
         Returns:
             ft.TextField: Configured text field for the ingredient name.
         """
-        return ft.TextField(label="Ingredient", width=200, on_change=self.on_user_input_change, **style)
+        width = 200
+        if Styles.is_compact(self.page):
+            # Phones: the name takes the whole first line of the row.
+            width = Styles.fit_width(self.page, 600) - 40
+        return ft.TextField(label="Ingredient", width=width, on_change=self.on_user_input_change, **style)
 
     def percent_input(self, style, last_valid, page):
         """
@@ -122,10 +126,16 @@ class IngredientRowManager:
         Returns:
             ft.Container: A styled container with the complete row layout.
         """
+        # Phones: the row wraps into two lines (name / percentage + delete).
+        # The controls and their order stay the same on every screen size,
+        # because the table logic reads them by index.
+        compact = Styles.is_compact(self.page)
+        row_width = Styles.fit_width(self.page, 600)
+        name_width = row_width - 30 if compact else 210
         return ft.Container(
             content=ft.Row(
                 controls=[
-                    ft.Container(content=name_input, width=210, padding=5, alignment=ft.alignment.center),
+                    ft.Container(content=name_input, width=name_width, padding=5, alignment=ft.alignment.center),
                     ft.Container(content=percent_section, width=194, padding=5, alignment=ft.alignment.center),
                     ft.Container(
                         content=Styles.icon_button(ft.Icons.DELETE,lambda e: on_delete(), Styles.RED_COLOR, "Remove ingredient"),
@@ -135,9 +145,11 @@ class IngredientRowManager:
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=20,
+                spacing=8 if compact else 20,
+                run_spacing=4,
+                wrap=compact,
             ),
-            width=600,
+            width=row_width,
             bgcolor=Styles.TABLE_ROW_COLOR,
             border_radius=Styles.BORDER_RADIUS,
             padding=10,

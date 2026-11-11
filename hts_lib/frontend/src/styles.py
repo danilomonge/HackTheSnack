@@ -65,6 +65,29 @@ class Styles:
 
     BORDER_RADIUS = 10
 
+    # ------------------------------------------------------------ responsive
+    #: Below this window width (phones) views switch to their compact layout.
+    COMPACT_MAX_WIDTH = 640
+
+    @staticmethod
+    def _page_width(page) -> float:
+        width = getattr(page, "width", None)
+        return float(width) if isinstance(width, (int, float)) and width > 0 else 0.0
+
+    @staticmethod
+    def is_compact(page) -> bool:
+        """True on narrow screens (phones), where views use their compact layout."""
+        width = Styles._page_width(page)
+        return 0 < width < Styles.COMPACT_MAX_WIDTH
+
+    @staticmethod
+    def fit_width(page, desktop_width: float, margin: float = 40) -> float:
+        """``desktop_width`` on large screens; on narrow ones the screen width minus ``margin``."""
+        width = Styles._page_width(page)
+        if not width:
+            return desktop_width
+        return max(200.0, min(float(desktop_width), width - margin))
+
     @staticmethod
     def build_button(text, icon=None, on_click=None):
         btn = ft.ElevatedButton(

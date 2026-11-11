@@ -250,6 +250,10 @@ class ProductTableUI:
         Returns:
             ft.Container: A container with label, input field, and find button.
         """
+        compact = Styles.is_compact(self.page)
+        if compact:
+            # Phones: the field takes the full width, Search / Save wrap below it.
+            self.product_name.width = Styles.fit_width(self.page, 420, margin=48)
         return ft.Container(
             content=ft.Column(
                 [
@@ -266,8 +270,9 @@ class ProductTableUI:
                             ],
                             alignment=ft.MainAxisAlignment.CENTER,
                             spacing=10,
-                            scroll=ft.ScrollMode.AUTO,
-                            wrap=False,
+                            run_spacing=10,
+                            scroll=None if compact else ft.ScrollMode.AUTO,
+                            wrap=compact,
                         ),
                         alignment=ft.alignment.center,
                     ),
@@ -369,11 +374,13 @@ class ProductTableUI:
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=20,
             ),
-            width=600,
+            width=Styles.fit_width(self.page, 600),
             bgcolor=Styles.TABLE_HEADER_COLOR,
             padding=10,
             border_radius=Styles.BORDER_RADIUS,
             margin=5,
+            # On phones each row shows its own "Ingredient" / "Percentage" labels.
+            visible=not Styles.is_compact(self.page),
         )
 
     def build_table_buttons(self):
@@ -404,8 +411,10 @@ class ProductTableUI:
                     ),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
-                spacing=20,
-                scroll=ft.ScrollMode.AUTO,
+                spacing=10 if Styles.is_compact(self.page) else 20,
+                run_spacing=10,
+                wrap=Styles.is_compact(self.page),
+                scroll=None if Styles.is_compact(self.page) else ft.ScrollMode.AUTO,
             ),
             padding=10,
         )
@@ -432,10 +441,12 @@ class ProductTableUI:
                                     self.build_table_header(),
                                     self.ingredient_rows,
                                 ]),
-                                width=600,
+                                width=Styles.fit_width(self.page, 600),
                             )
                         ],
-                        scroll=ft.ScrollMode.AUTO,
+                        alignment=ft.MainAxisAlignment.CENTER if Styles.is_compact(self.page)
+                        else ft.MainAxisAlignment.START,
+                        scroll=None if Styles.is_compact(self.page) else ft.ScrollMode.AUTO,
                     ),
                     self.feedback,
                     self.build_table_buttons(),

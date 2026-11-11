@@ -109,39 +109,47 @@ class RecipeResultUI:
             result (dict): Recipe output.
         """
         
+        compact = Styles.is_compact(self.page)
+        # Fits the 640 px results column of the two-column desktop layout.
         col_widths = {
-        "ingredient": 160,
-        "amount": 130,
-        "variation": 130,
-        "actions": 130,
+        "ingredient": 150,
+        "amount": 120,
+        "variation": 120,
+        "actions": 125,
         }
+        if compact:
+            # Phones: four narrow columns fit a ~350 px wide screen.
+            col_widths = {"ingredient": 88, "amount": 60, "variation": 62, "actions": 40}
+        header_style = {"weight": ft.FontWeight.BOLD, "color": Styles.TEXT_COLOR, "size": 12 if compact else None}
+        cell_size = 13 if compact else None
         
         rows = [
             ft.Container(
                 content=ft.Row(
                     [
                     ft.Container(
-                        content=ft.Text("Ingredient", weight=ft.FontWeight.BOLD, color= Styles.TEXT_COLOR),
+                        content=ft.Text("Ingredient", **header_style),
                         width=col_widths["ingredient"],
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
-                        content=ft.Text("% Amount", weight=ft.FontWeight.BOLD, color=Styles.TEXT_COLOR),
+                        content=ft.Text("%" if compact else "% Amount", **header_style),
                         width=col_widths["amount"],
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
-                        content=ft.Text("± Variation", weight=ft.FontWeight.BOLD, color=Styles.TEXT_COLOR),
+                        content=ft.Text("±" if compact else "± Variation", **header_style),
                         width=col_widths["variation"],
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
-                        content=ft.Text("Nutrition Facts", weight=ft.FontWeight.BOLD, color=Styles.TEXT_COLOR),
+                        content=ft.Text("Info" if compact else "Nutrition Facts", **header_style),
                         width=col_widths["actions"],
                         alignment=ft.alignment.center,
                     ),
                 ],
                     alignment=ft.MainAxisAlignment.CENTER,
+                    spacing=6 if compact else 10,
                 ),
                 bgcolor=Styles.TABLE_HEADER_COLOR,
                 padding=10,
@@ -152,17 +160,17 @@ class RecipeResultUI:
 
         for i, (name, data) in enumerate(result.items()):
             ingredient_text = ft.Container(
-                content=ft.Text(name, color=Styles.TEXT_COLOR),
+                content=ft.Text(name, color=Styles.TEXT_COLOR, size=cell_size, text_align=ft.TextAlign.CENTER),
                 width=col_widths["ingredient"],
                 alignment=ft.alignment.center,
             )
             amount_text = ft.Container(
-                content=ft.Text(f"{data['mean']}%", color=Styles.TEXT_COLOR),
+                content=ft.Text(f"{data['mean']}%", color=Styles.TEXT_COLOR, size=cell_size),
                 width=col_widths["amount"],
                 alignment=ft.alignment.center,
             )
             variation_text = ft.Container(
-                content=ft.Text(f"±{data['variation']}%", color=Styles.TEXT_COLOR),
+                content=ft.Text(f"±{data['variation']}%", color=Styles.TEXT_COLOR, size=cell_size),
                 width=col_widths["variation"],
                 alignment=ft.alignment.center,
             )
@@ -184,6 +192,7 @@ class RecipeResultUI:
                         icon_button,
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
+                        spacing=6 if compact else 10,
                     ),
                     bgcolor=Styles.TABLE_ROW_COLOR,
                     padding=10,
@@ -272,13 +281,15 @@ class RecipeResultUI:
             ], vertical_alignment=ft.CrossAxisAlignment.CENTER, spacing=6)
         )
 
+     # Phones: the legend wraps below the chart instead of beside it.
+     compact = Styles.is_compact(self.page)
      return ft.Container(
          content=ft.Row(
             [
                 ft.PieChart(
                     sections=chart_sections,
-                    width=350,
-                    height=250,
+                    width=Styles.fit_width(self.page, 350, margin=60) if compact else 350,
+                    height=220 if compact else 250,
                     center_space_radius=50,
                 ),
                 ft.Column(
@@ -289,7 +300,9 @@ class RecipeResultUI:
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            scroll=ft.ScrollMode.AUTO,
+            wrap=compact,
+            run_spacing=12,
+            scroll=None if compact else ft.ScrollMode.AUTO,
         ),
         alignment=ft.alignment.center,
      )

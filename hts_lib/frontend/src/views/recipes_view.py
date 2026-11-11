@@ -234,10 +234,14 @@ class RecipesView:
                 )
             )
 
+        if Styles.is_compact(self.page):
+            versions = ft.Row(controls=version_buttons, wrap=True, spacing=6, run_spacing=0)
+        else:
+            versions = ft.Column(controls=version_buttons, spacing=2, scroll=ft.ScrollMode.AUTO)
         return ft.Column(
             controls=[
                 ft.Text("Versions:", size=16, weight=ft.FontWeight.BOLD, color=Styles.TEXT_COLOR),
-                ft.Column(controls=version_buttons, spacing=2, scroll=ft.ScrollMode.AUTO)
+                versions,
             ],
             spacing=10
         )
@@ -253,6 +257,8 @@ class RecipesView:
             ft.Container: The complete overlay content as a Flet Container.
         """
 
+        # Phones: everything stacked in one column that fits the screen.
+        compact = Styles.is_compact(self.page)
         main_content = ft.Container(
             content=ft.Column(
                 controls=[
@@ -264,16 +270,22 @@ class RecipesView:
                             spacing=2,
                             scroll=ft.ScrollMode.ALWAYS
                         ),
-                        height=370
+                        height=300 if compact else 370
                     )
                 ],
-                spacing=15,
+                spacing=10 if compact else 15,
             ),
-            padding=20,
+            padding=ft.padding.only(top=10) if compact else 20,
             expand=True
         )
 
-        if version_selector:
+        if version_selector and compact:
+            recipe_content = ft.Column(
+                controls=[version_selector, ft.Divider(height=1, color=Styles.TEXT_COLOR), main_content],
+                spacing=10,
+                expand=True,
+            )
+        elif version_selector:
             recipe_content = ft.Row(
                 controls=[
                     version_selector,
@@ -292,7 +304,8 @@ class RecipesView:
                 controls=[
                     ft.Row(
                         controls=[
-                            ft.Text(recipe_title, size=24, weight=ft.FontWeight.BOLD, color=Styles.TEXT_COLOR),
+                            ft.Text(recipe_title, size=20 if compact else 24, weight=ft.FontWeight.BOLD,
+                                    color=Styles.TEXT_COLOR, expand=compact),
                             Styles.icon_button(
                                 icon=ft.Icons.CLOSE,
                                 on_click=self.close_overlay,
@@ -307,8 +320,8 @@ class RecipesView:
             ),
             bgcolor=Styles.BOX_COLOR,
             border_radius=25,
-            padding=30,
-            width=750, 
+            padding=16 if compact else 30,
+            width=Styles.fit_width(self.page, 750, margin=24),
             height=600
         )
 
@@ -342,7 +355,10 @@ class RecipesView:
             modal=True,
             content=overlay_content,
             bgcolor=Styles.BOX_COLOR,
-            content_padding=0
+            content_padding=0,
+            # Default insets (40 px per side) would leave too little room on phones.
+            inset_padding=ft.padding.symmetric(horizontal=12, vertical=24)
+            if Styles.is_compact(self.page) else None,
         )
 
         self.page.overlay.append(self.recipe_overlay)
