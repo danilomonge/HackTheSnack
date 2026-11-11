@@ -17,6 +17,8 @@ Team project at the University of Tübingen by Katja Greiffenhagen, Jana Danner,
 | **Statistics** | How the estimated share of each ingredient changed across saved versions of a product, or how one ingredient is used across all products. |
 | **About us** | The team and the project. |
 
+The layout adapts to phones (below 640 px the navigation wraps, ingredient rows stack name / percentage, and dialogs fill the screen).
+
 ### How the estimation works
 
 Food labels in the EU list ingredients in descending order of weight, and only some percentages are printed. The unknown shares therefore satisfy linear constraints:
@@ -51,7 +53,7 @@ The app reads both URLs from [`hts_lib/assets/runtime-config.json`](hts_lib/asse
 }
 ```
 
-The Render services are on the free plan and stop after 15 idle minutes. The app pings both when it starts, so they are usually awake by the time you click *Search* or *Save*. If one is still starting, the page shows a progress bar and waits up to about a minute.
+The Render services are on the free plan and stop after 15 idle minutes. During the day (about 06:00–23:00 German time) a scheduled ping in HackTheSnackDB keeps the API awake. The app also pings both services when it starts, so they are usually ready by the time you click *Search* or *Save*; if one is still starting, the page shows a progress bar and waits up to about a minute.
 
 ### Repository layout
 
