@@ -18,9 +18,3 @@ os.environ.pop("USDA_API_KEY", None)
 os.environ.pop("DEEPL_API_KEY", None)
 os.environ.pop("HTS_ENV_PASSWORD", None)
 os.environ["USER_MANAGEMENT_BASE_URL"] = "http://api.test/user-management"
-
-# The nutrition proxy is imported as `hts_lib.backend…` (how Render runs it),
-# so the repository root must be importable too.
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if REPO_ROOT not in sys.path:
-    sys.path.append(REPO_ROOT)

@@ -1,4 +1,4 @@
-# Conda environment for developing HackTheSnack (app, tests, proxy, notebook).
+# Conda environment for developing HackTheSnack (app, tests, notebook).
 #   conda env create -f environment.yaml && conda activate mainEnv
 name: mainEnv
 channels:
@@ -19,7 +19,4 @@ dependencies:
   - tqdm
   - pip:
       - flet[all]==0.28.3
-      # nutrition proxy (hts_lib/backend/nutrition_proxy_api.py)
-      - fastapi==0.115.12
-      - uvicorn==0.34.2
       - tueplots==0.2.0
