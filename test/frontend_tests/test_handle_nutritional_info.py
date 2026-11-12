@@ -1,7 +1,7 @@
 """Tests of the nutrition lookup and translation.
 
 The unit tests mock HTTP, so they need no network and no API keys.
-The live tests at the bottom run only when USDA_API_KEY / DEEPL_API_KEY are set.
+The live tests at the bottom run only when LIVE_USDA_API_KEY / LIVE_AZURE_TRANSLATOR_KEY are set.
 """
 
 import os
@@ -114,31 +114,36 @@ def test_lookup_usda_without_key_returns_none(monkeypatch):
     assert nutrition_service.lookup_usda("sugar", None) is None
 
 
-# -------------------------------------------------------------------- DeepL
+# ------------------------------------------------------- Azure AI Translator
 
-@pytest.mark.parametrize(
-    "key, expected_url",
-    [
-        ("abc:fx", nutrition_service.DEEPL_FREE_URL),
-        ("abc", nutrition_service.DEEPL_PRO_URL),
-    ],
-)
-def test_deepl_endpoint_depends_on_key_type(key, expected_url):
-    assert nutrition_service.deepl_endpoint(key) == expected_url
+AZURE_SUGAR = [{"translations": [{"text": "Sugar", "to": "en"}]}]
 
 
-def test_translate_uses_header_authentication(monkeypatch):
+def test_translate_sends_key_region_and_lowercase_languages(monkeypatch):
     captured = {}
 
-    def fake_post(url, headers=None, json=None, timeout=None):
-        captured.update(url=url, headers=headers, json=json)
-        return FakeResponse({"translations": [{"text": "Sugar"}]})
+    def fake_post(url, params=None, headers=None, json=None, timeout=None):
+        captured.update(url=url, params=params, headers=headers, json=json)
+        return FakeResponse(AZURE_SUGAR)
 
     monkeypatch.setattr(nutrition_service.httpx, "post", fake_post)
-    assert nutrition_service.translate("Zucker", "secret:fx") == "Sugar"
-    assert captured["headers"] == {"Authorization": "DeepL-Auth-Key secret:fx"}
-    assert captured["json"] == {"text": ["Zucker"], "source_lang": "DE", "target_lang": "EN"}
-    assert captured["url"] == nutrition_service.DEEPL_FREE_URL
+    assert nutrition_service.translate("Zucker", "secret", region="westeurope") == "Sugar"
+    assert captured["url"] == nutrition_service.TRANSLATOR_URL
+    assert captured["params"] == {"api-version": "3.0", "from": "de", "to": "en"}
+    assert captured["headers"] == {"Ocp-Apim-Subscription-Key": "secret", "Ocp-Apim-Subscription-Region": "westeurope"}
+    assert captured["json"] == [{"Text": "Zucker"}]
+
+
+def test_translate_global_resource_sends_no_region(monkeypatch):
+    captured = {}
+
+    def fake_post(url, params=None, headers=None, json=None, timeout=None):
+        captured.update(headers=headers)
+        return FakeResponse(AZURE_SUGAR)
+
+    monkeypatch.setattr(nutrition_service.httpx, "post", fake_post)
+    assert nutrition_service.translate("Zucker", "secret") == "Sugar"
+    assert captured["headers"] == {"Ocp-Apim-Subscription-Key": "secret"}
 
 
 def test_translate_without_key_returns_input(monkeypatch):
@@ -151,10 +156,10 @@ def test_translate_without_key_returns_input(monkeypatch):
 def test_desktop_helpers_use_environment_keys(monkeypatch):
     monkeypatch.setattr(nutrition_ui, "IS_WEB", False)
     monkeypatch.setenv("USDA_API_KEY", "usda-key")
-    monkeypatch.setenv("DEEPL_API_KEY", "deepl-key:fx")
+    monkeypatch.setenv("AZURE_TRANSLATOR_KEY", "translator-key")
     monkeypatch.setattr(nutrition_service.httpx, "get", lambda *a, **k: FakeResponse(USDA_SUGAR))
     monkeypatch.setattr(
-        nutrition_service.httpx, "post", lambda *a, **k: FakeResponse({"translations": [{"text": "sugar"}]})
+        nutrition_service.httpx, "post", lambda *a, **k: FakeResponse([{"translations": [{"text": "sugar"}]}])
     )
 
     assert nutrition_ui.translate_to_english("Zucker") == "sugar"
@@ -196,7 +201,9 @@ def test_web_without_proxy_returns_no_data(monkeypatch):
 # ---------------------------------------------------------------- live APIs
 
 live_usda = pytest.mark.skipif(not os.getenv("LIVE_USDA_API_KEY"), reason="set LIVE_USDA_API_KEY to run")
-live_deepl = pytest.mark.skipif(not os.getenv("LIVE_DEEPL_API_KEY"), reason="set LIVE_DEEPL_API_KEY to run")
+live_translator = pytest.mark.skipif(
+    not os.getenv("LIVE_AZURE_TRANSLATOR_KEY"), reason="set LIVE_AZURE_TRANSLATOR_KEY (and region) to run"
+)
 
 
 @live_usda
@@ -206,7 +213,9 @@ def test_live_usda_salt():
     assert abs(data["sodium"] - 39300) < 1000
 
 
-@live_deepl
-def test_live_deepl_translation():
-    translated = nutrition_service.translate("Zucker", os.environ["LIVE_DEEPL_API_KEY"])
+@live_translator
+def test_live_azure_translation():
+    translated = nutrition_service.translate(
+        "Zucker", os.environ["LIVE_AZURE_TRANSLATOR_KEY"], region=os.getenv("LIVE_AZURE_TRANSLATOR_REGION")
+    )
     assert "sugar" in translated.lower()

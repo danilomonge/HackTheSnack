@@ -1,12 +1,12 @@
-"""USDA nutrition lookup and DeepL translation (server-side logic).
+"""USDA nutrition lookup and Azure AI Translator translation (server-side logic).
 
 Used by desktop runs (``frontend/src/handle_nutritional_info.py``), which call
-USDA and DeepL directly with keys from the local environment.
+USDA and Azure directly with keys from the local environment.
 
 The public web build must not contain the keys, so it calls the HackTheSnackDB
 API instead (``/api/nutrition``, ``/api/translate``), which implements the same
-rules server-side (exact branded matches, median of every nutrient, DeepL
-Free/Pro host from the key, header authentication). Keep both in sync.
+rules server-side (exact branded matches, median of every nutrient, translator
+key and optional region as headers). Keep both in sync.
 """
 
 from __future__ import annotations
@@ -16,40 +16,45 @@ import statistics
 import httpx
 
 USDA_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
-DEEPL_FREE_URL = "https://api-free.deepl.com/v2/translate"
-DEEPL_PRO_URL = "https://api.deepl.com/v2/translate"
+TRANSLATOR_URL = "https://api.cognitive.microsofttranslator.com/translate"
 
 #: How many USDA search hits are checked for an exact name match.
 USDA_PAGE_SIZE = 25
 TIMEOUT = 15.0
 
 
-def deepl_endpoint(api_key: str) -> str:
-    """DeepL Free keys end with ":fx" and use a different host than Pro keys."""
-    return DEEPL_FREE_URL if api_key.strip().endswith(":fx") else DEEPL_PRO_URL
-
-
-def translate(text: str, api_key: str | None, source_lang: str = "DE", target_lang: str = "EN") -> str:
+def translate(
+    text: str,
+    api_key: str | None,
+    source_lang: str = "DE",
+    target_lang: str = "EN",
+    region: str | None = None,
+) -> str:
     """
-    Translates ``text`` with DeepL. Returns the text unchanged when no key is set.
+    Translates ``text`` with Azure AI Translator. Returns the text unchanged when no key is set.
 
-    Uses header authentication (``Authorization: DeepL-Auth-Key …``); DeepL
-    no longer accepts the legacy ``auth_key`` form parameter.
+    ``region`` is the Azure region of the Translator resource (e.g. ``westeurope``);
+    leave it empty for a *Global* resource. Language codes are case-insensitive.
 
     Raises:
-        httpx.HTTPError: if DeepL rejects the request.
+        httpx.HTTPError: if Azure rejects the request.
     """
     if not api_key or not text.strip():
         return text
 
+    headers = {"Ocp-Apim-Subscription-Key": api_key.strip()}
+    if region and region.strip():
+        headers["Ocp-Apim-Subscription-Region"] = region.strip()
     response = httpx.post(
-        deepl_endpoint(api_key),
-        headers={"Authorization": f"DeepL-Auth-Key {api_key.strip()}"},
-        json={"text": [text], "source_lang": source_lang, "target_lang": target_lang},
+        TRANSLATOR_URL,
+        params={"api-version": "3.0", "from": source_lang.lower(), "to": target_lang.lower()},
+        headers=headers,
+        json=[{"Text": text}],
         timeout=TIMEOUT,
     )
     response.raise_for_status()
-    translations = response.json().get("translations") or []
+    results = response.json() or [{}]
+    translations = results[0].get("translations") or []
     return translations[0].get("text", text) if translations else text
 
 

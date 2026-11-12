@@ -15,6 +15,6 @@ if HTS_LIB_DIR not in sys.path:
 
 # Tests must never depend on real API keys or a running backend.
 os.environ.pop("USDA_API_KEY", None)
-os.environ.pop("DEEPL_API_KEY", None)
-os.environ.pop("HTS_ENV_PASSWORD", None)
+os.environ.pop("AZURE_TRANSLATOR_KEY", None)
+os.environ.pop("AZURE_TRANSLATOR_REGION", None)
 os.environ["USER_MANAGEMENT_BASE_URL"] = "http://api.test/user-management"
