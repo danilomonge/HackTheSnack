@@ -5,10 +5,10 @@ Where the data comes from:
 * **Web build** (GitHub Pages / Pyodide): ``nutrition_proxy_url`` from
   ``assets/runtime-config.json``, i.e. the HackTheSnackDB API, which serves
   ``/api/nutrition`` and ``/api/translate``. The browser never sees the
-  USDA / DeepL keys.
-* **Desktop run**: USDA and DeepL directly, with ``USDA_API_KEY`` /
-  ``DEEPL_API_KEY`` from the environment or from the encrypted
-  ``Secure_env/.env.enc`` file.
+  USDA / translator keys.
+* **Desktop run**: USDA and Azure AI Translator directly, with
+  ``USDA_API_KEY`` / ``AZURE_TRANSLATOR_KEY`` (and, for regional resources,
+  ``AZURE_TRANSLATOR_REGION``) from the environment.
 """
 
 import os
@@ -23,15 +23,6 @@ from backend.data_base_manager.db_config import get_nutrition_proxy_url
 from .styles import Styles
 
 IS_WEB = sys.platform == "emscripten"
-
-if not IS_WEB:
-    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-    if BASE_DIR not in sys.path:
-        sys.path.insert(0, BASE_DIR)
-    from Secure_env.env_enc_decipher import SecureEnvLoader
-
-    # Loads USDA_API_KEY / DEEPL_API_KEY for native runs (no-op if unavailable).
-    SecureEnvLoader.load_env()
 
 #: The API runs on a free Render instance; at night it may need ~1 minute to wake up.
 PROXY_TIMEOUT = 75.0
@@ -96,7 +87,9 @@ def translate_to_english(text: str, page: ft.Page | None = None) -> str:
             return _translate_via_proxy(text, page)
         except Exception:
             return text
-    return nutrition_service.translate(text, os.environ.get("DEEPL_API_KEY"))
+    return nutrition_service.translate(
+        text, os.environ.get("AZURE_TRANSLATOR_KEY"), region=os.environ.get("AZURE_TRANSLATOR_REGION")
+    )
 
 
 def get_nutrition_usda(ingredient_name: str, page: ft.Page | None = None):

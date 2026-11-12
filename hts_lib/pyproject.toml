@@ -29,8 +29,8 @@ company = "HackTheSnack"
 copyright = "Copyright (C) 2025 HackTheSnack"
 
 [tool.flet.app]
-# Never ship the (encrypted) desktop API keys or local build output to the web.
-exclude = ["Secure_env", "build", "storage", "__pycache__"]
+# Never ship local build output to the web.
+exclude = ["build", "storage", "__pycache__"]
 
 [tool.flet.web]
 pwa = true
