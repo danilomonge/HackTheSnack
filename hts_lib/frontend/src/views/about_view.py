@@ -136,7 +136,7 @@ class AboutView:
                                 ),
                                 Styles.build_explanation_subtitle("Multilingual support with automatic translation"),
                                 Styles.build_explanation(
-                                    "Ingredient names can also be written in German. With the help of the integrated DeepL API, they are automatically translated into English, "
+                                    "Ingredient names can also be written in German. With the help of the integrated Azure AI Translator, they are automatically translated into English, "
                                     "ensuring compatibility with international nutrition databases and providing a smooth experience for multilingual users.\n"
                                 ),
                                 Styles.build_explanation_subtitle("A complete tool for creative minds and food enthusiasts"),
