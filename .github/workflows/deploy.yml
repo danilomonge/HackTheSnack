@@ -31,17 +31,15 @@ jobs:
       - name: Run tests
         run: pytest
 
-      # Checks that the API keys kept as repository secrets still work (the API on
-      # Render uses the same keys) and that keyless MyMemory translates. Tests skip
-      # when a secret is missing. Never runs on pull requests, and a USDA / Azure /
+      # Checks that the USDA key kept as a repository secret still works (the API on
+      # Render uses the same key) and that keyless MyMemory translates. Tests skip
+      # when the secret is missing. Never runs on pull requests, and a USDA /
       # MyMemory outage does not block the deploy.
       - name: Live API checks
         if: github.event_name != 'pull_request'
         continue-on-error: true
         env:
           LIVE_USDA_API_KEY: ${{ secrets.USDA_API_KEY }}
-          LIVE_AZURE_TRANSLATOR_KEY: ${{ secrets.AZURE_TRANSLATOR_KEY }}
-          LIVE_AZURE_TRANSLATOR_REGION: ${{ secrets.AZURE_TRANSLATOR_REGION }}
           LIVE_MYMEMORY: "1"
         run: pytest -k live -rs
 
