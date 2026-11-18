@@ -1,7 +1,7 @@
 """Tests of the nutrition lookup and translation.
 
 The unit tests mock HTTP, so they need no network and no API keys.
-The live tests at the bottom run only when LIVE_USDA_API_KEY / LIVE_AZURE_TRANSLATOR_KEY are set.
+The live tests at the bottom run only when LIVE_USDA_API_KEY / LIVE_AZURE_TRANSLATOR_KEY / LIVE_MYMEMORY are set.
 """
 
 import os
@@ -146,9 +146,38 @@ def test_translate_global_resource_sends_no_region(monkeypatch):
     assert captured["headers"] == {"Ocp-Apim-Subscription-Key": "secret"}
 
 
-def test_translate_without_key_returns_input(monkeypatch):
-    monkeypatch.setattr(nutrition_service.httpx, "post", lambda *a, **k: pytest.fail("no request expected"))
-    assert nutrition_service.translate("Zucker", None) == "Zucker"
+def test_translate_blank_text_returns_input(monkeypatch):
+    monkeypatch.setattr(nutrition_service.httpx, "get", lambda *a, **k: pytest.fail("no request expected"))
+    assert nutrition_service.translate("  ", None) == "  "
+
+
+# ------------------------------------------------------------------ MyMemory
+
+def mymemory_answer(text, status=200, quota_finished=False):
+    return {"responseData": {"translatedText": text}, "responseStatus": status, "quotaFinished": quota_finished}
+
+
+def test_translate_without_key_uses_mymemory_with_ingredient_context(monkeypatch):
+    captured = {}
+
+    def fake_get(url, params=None, timeout=None):
+        captured.update(url=url, params=params)
+        return FakeResponse(mymemory_answer("Ingredient: skimmed milk powder"))
+
+    monkeypatch.setattr(nutrition_service.httpx, "get", fake_get)
+    assert nutrition_service.translate("Magermilchpulver", None) == "skimmed milk powder"
+    assert captured["url"] == nutrition_service.MYMEMORY_URL
+    assert captured["params"] == {"q": "Zutat: Magermilchpulver", "langpair": "de|en"}
+
+    nutrition_service.translate("Zucker", None, email="team@example.org")
+    assert captured["params"]["de"] == "team@example.org"
+
+
+def test_mymemory_quota_warning_raises(monkeypatch):
+    warning = mymemory_answer("MYMEMORY WARNING: YOU USED ALL AVAILABLE FREE TRANSLATIONS", 429, True)
+    monkeypatch.setattr(nutrition_service.httpx, "get", lambda *a, **k: FakeResponse(warning))
+    with pytest.raises(httpx.HTTPStatusError):
+        nutrition_service.translate("Zucker", None)
 
 
 # --------------------------------------------------------- UI module (desktop)
@@ -185,10 +214,19 @@ def test_web_build_uses_the_proxy(monkeypatch):
     assert data["sodium"] == 39300.0 and data["fat"] == 0.0 and data["per"] == "100g"
 
 
-def test_web_translation_falls_back_to_input_when_proxy_fails(monkeypatch):
+def test_web_translation_asks_mymemory_from_the_browser_when_proxy_fails(monkeypatch):
     monkeypatch.setattr(nutrition_ui, "IS_WEB", True)
     monkeypatch.setattr(nutrition_ui, "get_nutrition_proxy_url", lambda page=None: "https://proxy.test")
     monkeypatch.setattr(nutrition_ui.httpx, "post", lambda *a, **k: FakeResponse({}, status_code=502))
+    monkeypatch.setattr(nutrition_ui.httpx, "get", lambda *a, **k: FakeResponse(mymemory_answer("Ingredient: sugar")))
+    assert nutrition_ui.translate_to_english("Zucker") == "sugar"
+
+
+def test_web_translation_falls_back_to_input_when_everything_fails(monkeypatch):
+    monkeypatch.setattr(nutrition_ui, "IS_WEB", True)
+    monkeypatch.setattr(nutrition_ui, "get_nutrition_proxy_url", lambda page=None: "https://proxy.test")
+    monkeypatch.setattr(nutrition_ui.httpx, "post", lambda *a, **k: FakeResponse({}, status_code=502))
+    monkeypatch.setattr(nutrition_ui.httpx, "get", lambda *a, **k: FakeResponse({}, status_code=429))
     assert nutrition_ui.translate_to_english("Zucker") == "Zucker"
 
 
@@ -204,6 +242,7 @@ live_usda = pytest.mark.skipif(not os.getenv("LIVE_USDA_API_KEY"), reason="set L
 live_translator = pytest.mark.skipif(
     not os.getenv("LIVE_AZURE_TRANSLATOR_KEY"), reason="set LIVE_AZURE_TRANSLATOR_KEY (and region) to run"
 )
+live_mymemory = pytest.mark.skipif(not os.getenv("LIVE_MYMEMORY"), reason="set LIVE_MYMEMORY=1 to run")
 
 
 @live_usda
@@ -219,3 +258,8 @@ def test_live_azure_translation():
         "Zucker", os.environ["LIVE_AZURE_TRANSLATOR_KEY"], region=os.getenv("LIVE_AZURE_TRANSLATOR_REGION")
     )
     assert "sugar" in translated.lower()
+
+
+@live_mymemory
+def test_live_mymemory_translation():
+    assert nutrition_service.translate("Speisesalz", None).lower() == "table salt"
