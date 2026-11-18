@@ -1,12 +1,15 @@
-"""USDA nutrition lookup and Azure AI Translator translation (server-side logic).
+"""USDA nutrition lookup and translation (server-side logic).
 
 Used by desktop runs (``frontend/src/handle_nutritional_info.py``), which call
-USDA and Azure directly with keys from the local environment.
+USDA and the translator directly with keys from the local environment.
+Translation uses Azure AI Translator when a key is set and the keyless MyMemory
+API otherwise.
 
 The public web build must not contain the keys, so it calls the HackTheSnackDB
 API instead (``/api/nutrition``, ``/api/translate``), which implements the same
-rules server-side (exact branded matches, median of every nutrient, translator
-key and optional region as headers). Keep both in sync.
+rules server-side (exact branded matches, median of every nutrient, Azure key and
+optional region as headers, MyMemory with the German ingredient context). Keep
+both in sync.
 """
 
 from __future__ import annotations
@@ -17,6 +20,10 @@ import httpx
 
 USDA_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 TRANSLATOR_URL = "https://api.cognitive.microsofttranslator.com/translate"
+MYMEMORY_URL = "https://api.mymemory.translated.net/get"
+#: Prefixed to German input for MyMemory: with this context it answers with machine
+#: translation instead of noisy translation-memory matches ("Zucker" -> "Sugars").
+GERMAN_CONTEXT = "Zutat: "
 
 #: How many USDA search hits are checked for an exact name match.
 USDA_PAGE_SIZE = 25
@@ -29,18 +36,24 @@ def translate(
     source_lang: str = "DE",
     target_lang: str = "EN",
     region: str | None = None,
+    email: str | None = None,
 ) -> str:
     """
-    Translates ``text`` with Azure AI Translator. Returns the text unchanged when no key is set.
+    Translates ``text`` with Azure AI Translator, or with MyMemory when no key is set.
+    Returns blank text unchanged.
 
     ``region`` is the Azure region of the Translator resource (e.g. ``westeurope``);
-    leave it empty for a *Global* resource. Language codes are case-insensitive.
+    leave it empty for a *Global* resource. ``email`` is an optional contact address
+    for MyMemory (raises its free limit from 5,000 to 50,000 characters a day).
+    Language codes are case-insensitive.
 
     Raises:
-        httpx.HTTPError: if Azure rejects the request.
+        httpx.HTTPError: if the translator rejects the request or MyMemory's quota is used up.
     """
-    if not api_key or not text.strip():
+    if not text.strip():
         return text
+    if not api_key:
+        return _translate_with_mymemory(text.strip(), source_lang.lower(), target_lang.lower(), email)
 
     headers = {"Ocp-Apim-Subscription-Key": api_key.strip()}
     if region and region.strip():
@@ -56,6 +69,29 @@ def translate(
     results = response.json() or [{}]
     translations = results[0].get("translations") or []
     return translations[0].get("text", text) if translations else text
+
+
+def _translate_with_mymemory(text: str, source_lang: str, target_lang: str, email: str | None) -> str:
+    """German input gets ``GERMAN_CONTEXT``, which is cut from the answer again."""
+    with_context = source_lang == "de"
+    params = {"q": GERMAN_CONTEXT + text if with_context else text, "langpair": f"{source_lang}|{target_lang}"}
+    if email and email.strip():
+        params["de"] = email.strip()
+    response = httpx.get(MYMEMORY_URL, params=params, timeout=TIMEOUT)
+    response.raise_for_status()
+    body = response.json()
+
+    # An exhausted daily quota still answers HTTP 200, with a warning as "translation".
+    status = str(body.get("responseStatus"))
+    if status != "200" or body.get("quotaFinished"):
+        request = httpx.Request("GET", MYMEMORY_URL)
+        code = int(status) if status.isdigit() and int(status) >= 400 else 503
+        raise httpx.HTTPStatusError("MyMemory quota or error", request=request, response=httpx.Response(code, request=request))
+
+    translated = ((body.get("responseData") or {}).get("translatedText") or "").strip()
+    if with_context and ":" in translated:
+        translated = translated.split(":", 1)[1].strip()
+    return translated or text
 
 
 def lookup_usda(ingredient_name: str, api_key: str | None) -> dict | None:

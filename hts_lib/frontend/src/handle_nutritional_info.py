@@ -6,9 +6,10 @@ Where the data comes from:
   ``assets/runtime-config.json``, i.e. the HackTheSnackDB API, which serves
   ``/api/nutrition`` and ``/api/translate``. The browser never sees the
   USDA / translator keys.
-* **Desktop run**: USDA and Azure AI Translator directly, with
-  ``USDA_API_KEY`` / ``AZURE_TRANSLATOR_KEY`` (and, for regional resources,
-  ``AZURE_TRANSLATOR_REGION``) from the environment.
+* **Desktop run**: USDA and the translator directly, with ``USDA_API_KEY``
+  and, optionally, ``AZURE_TRANSLATOR_KEY`` / ``AZURE_TRANSLATOR_REGION`` from
+  the environment. Without an Azure key the keyless MyMemory API translates
+  (``MYMEMORY_EMAIL`` optionally raises its daily limit).
 """
 
 import os
@@ -88,7 +89,10 @@ def translate_to_english(text: str, page: ft.Page | None = None) -> str:
         except Exception:
             return text
     return nutrition_service.translate(
-        text, os.environ.get("AZURE_TRANSLATOR_KEY"), region=os.environ.get("AZURE_TRANSLATOR_REGION")
+        text,
+        os.environ.get("AZURE_TRANSLATOR_KEY"),
+        region=os.environ.get("AZURE_TRANSLATOR_REGION"),
+        email=os.environ.get("MYMEMORY_EMAIL"),
     )
 
 

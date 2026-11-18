@@ -17,4 +17,5 @@ if HTS_LIB_DIR not in sys.path:
 os.environ.pop("USDA_API_KEY", None)
 os.environ.pop("AZURE_TRANSLATOR_KEY", None)
 os.environ.pop("AZURE_TRANSLATOR_REGION", None)
+os.environ.pop("MYMEMORY_EMAIL", None)
 os.environ["USER_MANAGEMENT_BASE_URL"] = "http://api.test/user-management"
