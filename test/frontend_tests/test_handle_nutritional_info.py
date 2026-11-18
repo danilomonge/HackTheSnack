@@ -214,10 +214,19 @@ def test_web_build_uses_the_proxy(monkeypatch):
     assert data["sodium"] == 39300.0 and data["fat"] == 0.0 and data["per"] == "100g"
 
 
-def test_web_translation_falls_back_to_input_when_proxy_fails(monkeypatch):
+def test_web_translation_asks_mymemory_from_the_browser_when_proxy_fails(monkeypatch):
     monkeypatch.setattr(nutrition_ui, "IS_WEB", True)
     monkeypatch.setattr(nutrition_ui, "get_nutrition_proxy_url", lambda page=None: "https://proxy.test")
     monkeypatch.setattr(nutrition_ui.httpx, "post", lambda *a, **k: FakeResponse({}, status_code=502))
+    monkeypatch.setattr(nutrition_ui.httpx, "get", lambda *a, **k: FakeResponse(mymemory_answer("Ingredient: sugar")))
+    assert nutrition_ui.translate_to_english("Zucker") == "sugar"
+
+
+def test_web_translation_falls_back_to_input_when_everything_fails(monkeypatch):
+    monkeypatch.setattr(nutrition_ui, "IS_WEB", True)
+    monkeypatch.setattr(nutrition_ui, "get_nutrition_proxy_url", lambda page=None: "https://proxy.test")
+    monkeypatch.setattr(nutrition_ui.httpx, "post", lambda *a, **k: FakeResponse({}, status_code=502))
+    monkeypatch.setattr(nutrition_ui.httpx, "get", lambda *a, **k: FakeResponse({}, status_code=429))
     assert nutrition_ui.translate_to_english("Zucker") == "Zucker"
 
 

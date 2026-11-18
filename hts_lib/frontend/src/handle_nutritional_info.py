@@ -5,7 +5,8 @@ Where the data comes from:
 * **Web build** (GitHub Pages / Pyodide): ``nutrition_proxy_url`` from
   ``assets/runtime-config.json``, i.e. the HackTheSnackDB API, which serves
   ``/api/nutrition`` and ``/api/translate``. The browser never sees the
-  USDA / translator keys.
+  USDA / translator keys. If the API cannot translate, the browser asks the
+  keyless MyMemory API directly.
 * **Desktop run**: USDA and the translator directly, with ``USDA_API_KEY``
   and, optionally, ``AZURE_TRANSLATOR_KEY`` / ``AZURE_TRANSLATOR_REGION`` from
   the environment. Without an Azure key the keyless MyMemory API translates
@@ -86,6 +87,12 @@ def translate_to_english(text: str, page: ft.Page | None = None) -> str:
     if IS_WEB:
         try:
             return _translate_via_proxy(text, page)
+        except Exception:
+            pass
+        # The API's keyless quota is shared by its server IP and can run out; the
+        # browser then asks MyMemory itself (no key, its own daily quota, CORS allowed).
+        try:
+            return nutrition_service.translate(text, None)
         except Exception:
             return text
     return nutrition_service.translate(
