@@ -5,12 +5,12 @@ Where the data comes from:
 * **Web build** (GitHub Pages / Pyodide): ``nutrition_proxy_url`` from
   ``assets/runtime-config.json``, i.e. the HackTheSnackDB API, which serves
   ``/api/nutrition`` and ``/api/translate``. The browser never sees the
-  USDA / translator keys. If the API cannot translate, the browser asks the
-  keyless MyMemory API directly.
-* **Desktop run**: USDA and the translator directly, with ``USDA_API_KEY``
-  and, optionally, ``AZURE_TRANSLATOR_KEY`` / ``AZURE_TRANSLATOR_REGION`` from
-  the environment. Without an Azure key the keyless MyMemory API translates
-  (``MYMEMORY_EMAIL`` optionally raises its daily limit).
+  USDA key. Names are translated by the free MyMemory API (no key), called
+  from the browser with each user's own daily quota; ``/api/translate`` is
+  the fallback.
+* **Desktop run**: USDA directly with ``USDA_API_KEY`` from the environment,
+  and MyMemory for translation (``MYMEMORY_EMAIL`` optionally raises its daily
+  limit).
 """
 
 import os
@@ -85,22 +85,17 @@ def translate_to_english(text: str, page: ft.Page | None = None) -> str:
     translation is unavailable).
     """
     if IS_WEB:
+        # MyMemory's free quota is per IP: the browser has its own, while the API's
+        # server IP is shared and often used up, so the API is only the fallback.
+        try:
+            return nutrition_service.translate(text)
+        except Exception:
+            pass
         try:
             return _translate_via_proxy(text, page)
         except Exception:
-            pass
-        # The API's keyless quota is shared by its server IP and can run out; the
-        # browser then asks MyMemory itself (no key, its own daily quota, CORS allowed).
-        try:
-            return nutrition_service.translate(text, None)
-        except Exception:
             return text
-    return nutrition_service.translate(
-        text,
-        os.environ.get("AZURE_TRANSLATOR_KEY"),
-        region=os.environ.get("AZURE_TRANSLATOR_REGION"),
-        email=os.environ.get("MYMEMORY_EMAIL"),
-    )
+    return nutrition_service.translate(text, email=os.environ.get("MYMEMORY_EMAIL"))
 
 
 def get_nutrition_usda(ingredient_name: str, page: ft.Page | None = None):

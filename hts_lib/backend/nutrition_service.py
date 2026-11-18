@@ -1,15 +1,14 @@
 """USDA nutrition lookup and translation (server-side logic).
 
 Used by desktop runs (``frontend/src/handle_nutritional_info.py``), which call
-USDA and the translator directly with keys from the local environment.
-Translation uses Azure AI Translator when a key is set and the keyless MyMemory
-API otherwise.
+USDA directly with the key from the local environment. Translation uses the free
+MyMemory API, which needs no key; the web build calls it from the browser too.
 
-The public web build must not contain the keys, so it calls the HackTheSnackDB
-API instead (``/api/nutrition``, ``/api/translate``), which implements the same
-rules server-side (exact branded matches, median of every nutrient, Azure key and
-optional region as headers, MyMemory with the German ingredient context). Keep
-both in sync.
+The public web build must not contain the USDA key, so it gets nutrition facts
+from the HackTheSnackDB API (``/api/nutrition``, plus ``/api/translate`` as a
+translation fallback), which implements the same rules server-side (exact branded
+matches, median of every nutrient, MyMemory with the German ingredient context).
+Keep both in sync.
 """
 
 from __future__ import annotations
@@ -19,7 +18,6 @@ import statistics
 import httpx
 
 USDA_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
-TRANSLATOR_URL = "https://api.cognitive.microsofttranslator.com/translate"
 MYMEMORY_URL = "https://api.mymemory.translated.net/get"
 #: Prefixed to German input for MyMemory: with this context it answers with machine
 #: translation instead of noisy translation-memory matches ("Zucker" -> "Sugars").
@@ -30,49 +28,22 @@ USDA_PAGE_SIZE = 25
 TIMEOUT = 15.0
 
 
-def translate(
-    text: str,
-    api_key: str | None,
-    source_lang: str = "DE",
-    target_lang: str = "EN",
-    region: str | None = None,
-    email: str | None = None,
-) -> str:
+def translate(text: str, source_lang: str = "DE", target_lang: str = "EN", email: str | None = None) -> str:
     """
-    Translates ``text`` with Azure AI Translator, or with MyMemory when no key is set.
-    Returns blank text unchanged.
+    Translates ``text`` with the free MyMemory API (no key, account or card).
+    Returns blank text unchanged. Language codes are case-insensitive.
 
-    ``region`` is the Azure region of the Translator resource (e.g. ``westeurope``);
-    leave it empty for a *Global* resource. ``email`` is an optional contact address
-    for MyMemory (raises its free limit from 5,000 to 50,000 characters a day).
-    Language codes are case-insensitive.
+    ``email`` is an optional contact address for MyMemory (raises its free limit
+    from 5,000 to 50,000 characters a day). German input gets ``GERMAN_CONTEXT``,
+    which is cut from the answer again.
 
     Raises:
-        httpx.HTTPError: if the translator rejects the request or MyMemory's quota is used up.
+        httpx.HTTPError: if MyMemory rejects the request or its daily quota is used up.
     """
     if not text.strip():
         return text
-    if not api_key:
-        return _translate_with_mymemory(text.strip(), source_lang.lower(), target_lang.lower(), email)
-
-    headers = {"Ocp-Apim-Subscription-Key": api_key.strip()}
-    if region and region.strip():
-        headers["Ocp-Apim-Subscription-Region"] = region.strip()
-    response = httpx.post(
-        TRANSLATOR_URL,
-        params={"api-version": "3.0", "from": source_lang.lower(), "to": target_lang.lower()},
-        headers=headers,
-        json=[{"Text": text}],
-        timeout=TIMEOUT,
-    )
-    response.raise_for_status()
-    results = response.json() or [{}]
-    translations = results[0].get("translations") or []
-    return translations[0].get("text", text) if translations else text
-
-
-def _translate_with_mymemory(text: str, source_lang: str, target_lang: str, email: str | None) -> str:
-    """German input gets ``GERMAN_CONTEXT``, which is cut from the answer again."""
+    source_lang, target_lang = source_lang.lower(), target_lang.lower()
+    text = text.strip()
     with_context = source_lang == "de"
     params = {"q": GERMAN_CONTEXT + text if with_context else text, "langpair": f"{source_lang}|{target_lang}"}
     if email and email.strip():

@@ -12,7 +12,7 @@ Team project at the University of Tübingen by Katja Greiffenhagen, Jana Danner,
 
 | Page | What it does |
 |---|---|
-| **Recipe Generator** | Enter ingredients from most to least used. Fill in the percentages you know and leave the others empty. *Submit Product* estimates the unknown shares (mean ± variation) and draws a pie chart. The 🔍 icon shows USDA nutrition facts; German names are machine-translated (MyMemory, or Azure AI Translator when configured). *Save* stores the recipe. *Search* loads the ingredients of a saved product. |
+| **Recipe Generator** | Enter ingredients from most to least used. Fill in the percentages you know and leave the others empty. *Submit Product* estimates the unknown shares (mean ± variation) and draws a pie chart. The 🔍 icon shows USDA nutrition facts; German names are machine-translated with the free MyMemory API (no key, account or card). *Save* stores the recipe. *Search* loads the ingredients of a saved product. |
 | **My Recipes** | Every saved product. Click a card to see its ingredients per 100 g. A version picker appears when the recipe was saved more than once. |
 | **Statistics** | How the estimated share of each ingredient changed across saved versions of a product, or how one ingredient is used across all products. |
 | **About us** | The team and the project. |
@@ -38,7 +38,7 @@ GitHub Pages ─ static Flet web app (Python running in the browser via Pyodide)
    │
    └─▶ HackTheSnackDB API (Spring Boot on Render) ─▶ PostgreSQL on Supabase
           products, ingredients, recipes, saved evaluations
-          + nutrition facts / translation ─▶ USDA FoodData Central, MyMemory / Azure AI Translator
+          + nutrition facts / translation ─▶ USDA FoodData Central, MyMemory
             (the API keys stay on the server, never in the browser)
           repo: https://github.com/danilomonge/HackTheSnackDB
 ```
@@ -121,7 +121,7 @@ By default the app talks to the **production API** configured in `runtime-config
 USER_MANAGEMENT_BASE_URL=http://localhost:8087/user-management python main.py
 ```
 
-Nutrition facts on the desktop need `USDA_API_KEY` (free at https://fdc.nal.usda.gov/api-key-signup). Translation works without a key through [MyMemory](https://mymemory.translated.net/doc/spec.php) (5,000 characters a day, 50,000 with `MYMEMORY_EMAIL`); set `AZURE_TRANSLATOR_KEY` (free F0 tier of [Azure AI Translator](https://azure.microsoft.com/pricing/details/translator/), 2 M characters / month) plus `AZURE_TRANSLATOR_REGION` if the resource is regional to use Azure instead. Export them in your shell; keys are never committed to this repository.
+Nutrition facts on the desktop need `USDA_API_KEY` (free at https://fdc.nal.usda.gov/api-key-signup). Translation needs nothing: it uses the free [MyMemory](https://mymemory.translated.net/doc/spec.php) API (no key, account or card; 5,000 characters a day per IP, 50,000 with `MYMEMORY_EMAIL`). In the web build every browser calls MyMemory with its own daily quota. Export the USDA key in your shell; keys are never committed to this repository.
 
 ### Test
 
@@ -129,7 +129,7 @@ Nutrition facts on the desktop need `USDA_API_KEY` (free at https://fdc.nal.usda
 pytest
 ```
 
-The suite covers the algorithm, input validation, the database client (against an in-memory fake API), the generator page and the statistics page. It needs no network or keys. Optional live tests run only when `LIVE_USDA_API_KEY`, `LIVE_AZURE_TRANSLATOR_KEY` (+ `LIVE_AZURE_TRANSLATOR_REGION`) or `LIVE_MYMEMORY=1` are set; CI runs them on `main` with the keys kept as repository secrets.
+The suite covers the algorithm, input validation, the database client (against an in-memory fake API), the generator page and the statistics page. It needs no network or keys. Optional live tests run only when `LIVE_USDA_API_KEY` or `LIVE_MYMEMORY=1` are set; CI runs them on `main` with the USDA key kept as a repository secret.
 
 ---
 
@@ -148,11 +148,11 @@ Optional repository **variables** (Settings → Secrets and variables → Action
 | `USER_MANAGEMENT_URL` | `https://fakethesnackdb-api.onrender.com/user-management` |
 | `NUTRITION_PROXY_URL` | `https://fakethesnackdb-api.onrender.com/user-management` (base URL serving `/api/nutrition`, `/api/translate`) |
 
-These URLs are public. **Never** put `USDA_API_KEY` or `AZURE_TRANSLATOR_KEY` into the web build: GitHub Pages serves everything to the browser.
+These URLs are public. **Never** put `USDA_API_KEY` into the web build: GitHub Pages serves everything to the browser.
 
 ### Database → Supabase
 
-The API and its database live in [HackTheSnackDB](https://github.com/danilomonge/HackTheSnackDB). That README covers the Supabase setup, the schema, the API reference (including the nutrition endpoints) and the Render configuration (`USDA_API_KEY`, optional `AZURE_TRANSLATOR_KEY` / `AZURE_TRANSLATOR_REGION` / `MYMEMORY_EMAIL`).
+The API and its database live in [HackTheSnackDB](https://github.com/danilomonge/HackTheSnackDB). That README covers the Supabase setup, the schema, the API reference (including the nutrition endpoints) and the Render configuration (`USDA_API_KEY`, optional `MYMEMORY_EMAIL`).
 
 ---
 
@@ -160,4 +160,4 @@ The API and its database live in [HackTheSnackDB](https://github.com/danilomonge
 
 * API keys live only on the API's Render service or in your local environment; none are stored in this repository.
 * The browser only knows the public URL of the API, which allows cross-origin calls only from the GitHub Pages origin and localhost.
-* If a key may have leaked, rotate it at USDA / Azure and update it on Render.
+* If the USDA key may have leaked, rotate it at USDA and update it on Render and in the repository secrets.
